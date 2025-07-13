@@ -1,21 +1,21 @@
 <!--
-<meta name="keywords" content="AgileX, TurtleBot, Turtlesim, Gazebo, ROS1, Codespaces, ROS Melodic, robotics, navigation, SLAM, catkin"/>
+<meta name="keywords" content="AgileX, TurtleBot, Turtlesim, Gazebo, ROS1, ROS Melodic, Codespaces, robotics, SLAM, navigation"/>
 -->
 
-# AgileX TurtleBot ROS1 Codespace
+# AgileX TurtleBot ROS1 Melodic Codespace
 
-[![ROS Noetic](https://img.shields.io/badge/ROS-Noetic-blue)](#) [![AgileX](https://img.shields.io/badge/Platform-AgileX-green)](#) [![Gazebo](https://img.shields.io/badge/Simulator-Gazebo-orange)](#) [![Turtlesim](https://img.shields.io/badge/Simulator-Turtlesim-lightgrey)](#)
+[![ROS Melodic](https://img.shields.io/badge/ROS-Melodic-blue)](#) [![AgileX](https://img.shields.io/badge/Platform-AgileX-green)](#) [![Gazebo](https://img.shields.io/badge/Simulator-Gazebo-orange)](#) [![Turtlesim](https://img.shields.io/badge/Simulator-Turtlesim-lightgrey)](#)
 
-> A containerized **GitHub Codespace** for developing **ROS Noetic** (ROS1) TurtleBot applications on **AgileX** platforms, with Gazebo simulation, Turtlesim demos, SLAM, navigation, and cross-compilation toolchains.
+> A containerized **GitHub Codespace** for developing **ROS Melodic** (ROS1) TurtleBot applications on **AgileX** platforms, with Gazebo simulation, Turtlesim demos, SLAM, navigation, and ARM cross-compilation toolchains.
 
 ---
 
 ## 🚀 Features
 
-- **AgileX–Ready**: Out-of-the-box support for AgileX TurtleBot hardware series (Scout, Limo).  
-- **TurtleBot & Turtlesim**: Launch real-world TurtleBot demos or lightweight Turtlesim tutorials.  
-- **Gazebo & RViz**: Full simulation stack—Gazebo worlds, custom URDFs, RViz visualization.  
-- **ROS Noetic (Ubuntu 20.04)**: Pre-installed `ros-noetic-desktop-full`, `navigation`, `slam_gmapping`, and more.  
+- **AgileX–Ready**: Out-of-the-box support for AgileX TurtleBot hardware series (Scout, Limo) on Ubuntu 18.04.  
+- **TurtleBot & Turtlesim**: Launch real TurtleBot demos or lightweight Turtlesim tutorials under Melodic.  
+- **Gazebo & RViz**: Full simulation stack—Gazebo 9 worlds, custom URDFs, RViz visualization.  
+- **ROS Melodic (Ubuntu 18.04)**: Pre-installed `ros-melodic-desktop-full`, `ros-melodic-navigation`, `ros-melodic-slam-gmapping`.  
 - **Catkin Workspace**: Auto-build on container start; seamless `catkin build` workflow.  
 - **ARM Cross-Compile**: Build for AgileX’s ARM-based onboard computer via toolchains and udev rules.
 
@@ -31,7 +31,7 @@
 
 ## 🏷️ Keywords
 
-`AgileX` • `TurtleBot` • `Turtlesim` • `Gazebo` • `ROS1` • `ROS Noetic` • `GitHub Codespaces` • `robotics` • `SLAM` • `navigation`
+`AgileX` • `TurtleBot` • `Turtlesim` • `Gazebo` • `ROS1` • `ROS Melodic` • `GitHub Codespaces` • `robotics` • `SLAM` • `navigation`
 
 ---
 
@@ -39,7 +39,7 @@
 
 1. **Clone** this repo to GitHub.  
 2. Click **Code ▶ Open with Codespaces ▶ New codespace**.  
-3. Wait ~3–5 min for the dev container (with ROS Noetic, Gazebo, Turtlesim, etc.) to spin up.  
+3. Wait ~3–5 min for the dev container (Ubuntu 18.04 + ROS Melodic + Gazebo 9 + Turtlesim) to spin up.  
 4. Terminal lands in `/workspaces/<repo>/src`—you’re ready to build.
 
 ---
@@ -48,9 +48,9 @@
 
 See `.devcontainer/devcontainer.json`:
 
-- **Base:** Ubuntu 20.04  
-- **ROS:** `ros-noetic-desktop-full` + `ros-noetic-navigation`, `slam-gmapping`  
-- **Simulators:** Gazebo 11, Turtlesim  
+- **Base:** Ubuntu 18.04  
+- **ROS:** `ros-melodic-desktop-full` + `ros-melodic-navigation`, `ros-melodic-slam-gmapping`  
+- **Simulators:** Gazebo 9, Turtlesim  
 - **Build Tools:** `catkin-tools`, `colcon`  
 - **Cross-Compile:** ARM toolchain for AgileX  
 - **VS Code Exts:** Remote-Containers, ROS, C/C++
