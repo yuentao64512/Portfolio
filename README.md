@@ -1,63 +1,60 @@
-<!--
-<meta name="keywords" content="AgileX, TurtleBot, Turtlesim, Gazebo, ROS1, ROS Melodic, Codespaces, robotics, SLAM, navigation"/>
--->
+# AgileX TurtleBot ROS1 Melodic Portfolio
 
-# AgileX TurtleBot ROS1 Melodic Codespace
+Welcome to my GitHub portfolio showcasing my journey and learnings while developing ROS1 (Melodic) TurtleBot applications on AgileX platforms. This repository captures experiments with containerized development, simulation, SLAM, navigation, object detection, and ARM cross-compilation.
 
-[![ROS Melodic](https://img.shields.io/badge/ROS-Melodic-blue)](#) [![AgileX](https://img.shields.io/badge/Platform-AgileX-green)](#) [![Gazebo](https://img.shields.io/badge/Simulator-Gazebo-orange)](#) [![Turtlesim](https://img.shields.io/badge/Simulator-Turtlesim-lightgrey)](#)
+## 📚 Topics Covered
 
-> A containerized **GitHub Codespace** for developing **ROS Melodic** (ROS1) TurtleBot applications on **AgileX** platforms, with Gazebo simulation, Turtlesim demos, SLAM, navigation, and ARM cross-compilation toolchains.
+### AgileX Integration
 
----
+* Connected AgileX TurtleBot Limo and Scout hardware.
+* Configured udev rules and ros\_serial drivers for onboard sensors and actuators.
 
-## 🚀 Features
+### Darknet\_ROS (YOLO Object Detection)
 
-- **AgileX–Ready**: Out-of-the-box support for AgileX TurtleBot hardware series (Scout, Limo) on Ubuntu 18.04.  
-- **TurtleBot & Turtlesim**: Launch real TurtleBot demos or lightweight Turtlesim tutorials under Melodic.  
-- **Gazebo & RViz**: Full simulation stack—Gazebo 9 worlds, custom URDFs, RViz visualization.  
-- **ROS Melodic (Ubuntu 18.04)**: Pre-installed `ros-melodic-desktop-full`, `ros-melodic-navigation`, `ros-melodic-slam-gmapping`.  
-- **Catkin Workspace**: Auto-build on container start; seamless `catkin build` workflow.  
-- **ARM Cross-Compile**: Build for AgileX’s ARM-based onboard computer via toolchains and udev rules.
+* Integrated `darknet_ros` package for real-time object detection (YOLOv3/YOLOv4).
+* Tuned detection parameters and visualized bounding boxes in RViz.
+* Logged detection results to ROS topics for downstream processing.
 
----
+### Turtlesim Tutorials
 
-## 📋 Prerequisites
+* Created step-by-step Turtlesim demos to explore ROS topics, services, parameters, and node lifecycles.
+* Illustrated `roscpp` and `rospy` examples for publishing, subscribing, and service calls.
 
-- GitHub account **with Codespaces enabled**  
-- AgileX TurtleBot hardware (e.g., Scout, Limo)  
-- Optional: SSH or serial console access to your AgileX robot
+### TurtleBot Applications
 
----
+* Developed navigation demos using TurtleBot3 Waffle and Waffle Pi configurations.
+* Explored SLAM (`slam_gmapping`) and autonomous patrol routines with `move_base` and costmap tuning.
 
-## 🏷️ Keywords
+### Gazebo Simulations
 
-`AgileX` • `TurtleBot` • `Turtlesim` • `Gazebo` • `ROS1` • `ROS Melodic` • `GitHub Codespaces` • `robotics` • `SLAM` • `navigation`
+* Designed custom Gazebo 9 worlds with AgileX TurtleBot URDFs and environment models.
+* Automated world spawning and camera sensor plugins for perception testing.
+* Visualized simulated sensor data streams (LIDAR, depth) in RViz.
 
----
+### Waffle Platform
 
-## ⚙️ Getting Started in Codespaces
+* Examined differences between TurtleBot3 Waffle and Waffle Pi.
+* Benchmarked performance for navigation and mapping tasks under constrained resources.
 
-1. **Clone** this repo to GitHub.  
-2. Click **Code ▶ Open with Codespaces ▶ New codespace**.  
-3. Wait ~3–5 min for the dev container (Ubuntu 18.04 + ROS Melodic + Gazebo 9 + Turtlesim) to spin up.  
-4. Terminal lands in `/workspaces/<repo>/src`—you’re ready to build.
+### ARM Cross-Compilation
 
----
+* Configured cross-compile toolchain for AgileX’s ARM-based onboard computer.
+* Wrote CMake toolchain files and tested builds on hardware via SSH.
 
-## 🐳 Development Container
 
-See `.devcontainer/devcontainer.json`:
+## 🎯 Highlights
 
-- **Base:** Ubuntu 18.04  
-- **ROS:** `ros-melodic-desktop-full` + `ros-melodic-navigation`, `ros-melodic-slam-gmapping`  
-- **Simulators:** Gazebo 9, Turtlesim  
-- **Build Tools:** `catkin-tools`, `colcon`  
-- **Cross-Compile:** ARM toolchain for AgileX  
-- **VS Code Exts:** Remote-Containers, ROS, C/C++
+* Demo launch files under `src/*/launch` for quick exploration.
+* Video recordings of object detection and navigation in `videos/`.
+* Parameter files for SLAM, detection, and costmaps in `src/turtlebot_apps/config`.
 
-> To tweak, edit `.devcontainer/Dockerfile` and restart Codespace.
+## 🚶‍♂️ How to Explore
+
+* **Browse** each package to see code structure and launch examples.
+* **Inspect** the `.devcontainer` folder for environment setup details.
+* **Watch** `videos/` to see live demos of detection and mapping.
+* **Compare** Waffle vs. Waffle Pi performance in `waffle_benchmarks`.
 
 ---
 
-## 🗂 Workspace Layout
-
+> This portfolio documents my learning process and key insights across AgileX, object detection, simulation, and navigation—focused.
