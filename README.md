@@ -1,6 +1,13 @@
 # AgileX TurtleBot ROS1 Melodic Portfolio
 
-Hi, I’m **Yuentao** from **SIT Robotics Systems Engineering**. In this portfolio, I showcase what I have learned about SEP 1: Limo robot, Turtlesim, TurtleBot, Gazebo simulations, and Darknet\_ROS integration on the Limo platform.
+Hi, I’m **Ng Yuen tao** from **SIT Robotics Systems Engineering**. In this portfolio, I showcase what I have learned about SEP 1: Limo robot, Turtlesim, TurtleBot, Gazebo simulations, and Darknet\_ROS integration on the Limo platform.
+
+## 📂 Quick Overview
+
+* **Turtlesim Tutorials**: Learn ROS fundamentals (publishers, subscribers, services, parameters) using the Turtlesim simulator. [Jump »](#turtlesim-tutorials)
+* **TurtleBot Applications**: Explore SLAM mapping and autonomous navigation demos on TurtleBot3 Waffle & Waffle Pi. [Jump »](#turtlebot-applications)
+* **AgileX Integration**: Conduct software experiments on the AgileX Limo platform, focusing on simulation configurations. [Jump »](#agilex-integration)
+* **Darknet\_ROS (YOLO Object Detection)**: Integrate real-time YOLOv3 and YOLOv4 object detection into ROS workflows. [Jump »](#darknet_ros-yolo-object-detection)
 
 ## 📚 Topics Covered
 
@@ -57,14 +64,14 @@ src/                     - ROS workspace with packages
 ## 🎯 Highlights
 
 * Demo launch files under `src/*/launch` for quick exploration.
-* Video recordings of object detection and navigation in `videos/`.
+* Code examples in each folder demonstrate how to run the demos and interpret the results.
 * Parameter files for SLAM, detection, and costmaps in `src/turtlebot_apps/config`.
 
 ## 🚶‍♂️ How to Explore
 
 * **Browse** each package to see code structure and launch examples.
 * **Inspect** the `.devcontainer` folder for environment setup details.
-* **Watch** `videos/` to see live demos of detection and mapping.
+* **Review** code examples in each folder to see how to run the demos and interpret the results.
 * **Compare** Waffle vs. Waffle Pi performance in `waffle_benchmarks`.
 
 ---
