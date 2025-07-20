@@ -1,13 +1,12 @@
 # AgileX TurtleBot ROS1 Melodic Portfolio
 
-Welcome to my GitHub portfolio showcasing my journey and learnings while developing ROS1 (Melodic) TurtleBot applications on AgileX platforms. This repository captures experiments with containerized development, simulation, SLAM, navigation, object detection, and ARM cross-compilation.
+Hi, I’m **Yuentao** from **SIT Robotics Systems Engineering**. In this portfolio, I showcase what I have learned about SEP 1: Limo robot, Turtlesim, TurtleBot, Gazebo simulations, and Darknet\_ROS integration on the Limo platform.
 
 ## 📚 Topics Covered
 
 ### AgileX Integration
 
-* Connected AgileX TurtleBot Limo and Scout hardware.
-* Configured udev rules and ros\_serial drivers for onboard sensors and actuators.
+* Leveraged the robot’s pre-installed ROS packages for the AgileX TurtleBot Limo and focused on simulation configurations and software experiments.
 
 ### Darknet\_ROS (YOLO Object Detection)
 
@@ -41,6 +40,19 @@ Welcome to my GitHub portfolio showcasing my journey and learnings while develop
 * Configured cross-compile toolchain for AgileX’s ARM-based onboard computer.
 * Wrote CMake toolchain files and tested builds on hardware via SSH.
 
+## 🔍 Repository Structure
+
+```
+.devcontainer            - Container configuration files
+src/                     - ROS workspace with packages
+├── agilex_bringup        - Drivers and bringup for AgileX platforms
+├── darknet_ros_demo      - YOLO detection integration and launch files
+├── turtlesim_tutorials   - Interactive Turtlesim examples
+├── turtlebot_apps        - SLAM & navigation demos for TurtleBot3 Waffle
+├── gazebo_worlds         - Custom Gazebo worlds and sensor plugins
+├── waffle_benchmarks     - Performance scripts and logs for Waffle series
+└── cross_compile_tooling - ARM toolchain setup
+```
 
 ## 🎯 Highlights
 
@@ -57,4 +69,4 @@ Welcome to my GitHub portfolio showcasing my journey and learnings while develop
 
 ---
 
-> This portfolio documents my learning process and key insights across AgileX, object detection, simulation, and navigation—focused.
+> This portfolio documents my learning process and key insights across AgileX, object detection, simulation, and navigation—focused on experimentation rather than turnkey usage.
