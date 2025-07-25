@@ -1,0 +1,130 @@
+# Turtlesim Demo Package
+
+A ROS1 package demonstrating the use of the built-in `turtlesim` simulator. Quickly get started with ROS concepts such as nodes, topics, services, and parameters by controlling and interacting with a virtual turtle.
+
+## Features
+
+* Launch the `turtlesim_node` simulator
+* Spawn additional turtles at runtime
+* Control turtle movement via topics and services
+* Teleoperate the turtle with keyboard
+* Draw shapes by publishing velocity commands
+* Reset and clear the simulator canvas
+
+## Prerequisites
+
+* ROS1 Melodic or Noetic
+* A catkin workspace (assumed: `~/catkin_ws`)
+
+## Installation
+
+1. **Create or navigate** to your catkin workspace:
+
+   ```bash
+   mkdir -p ~/catkin_ws/src
+   cd ~/catkin_ws/src
+   ```
+2. **Clone this demo package**:
+
+   ```bash
+   git clone https://github.com/yourusername/turtlesim_demo.git
+   ```
+3. **Build and source**:
+
+   ```bash
+   cd ~/catkin_ws
+   catkin_make
+   source devel/setup.bash
+   ```
+
+## Usage
+
+### 1. Launch the Simulator
+
+Start the ROS core and the turtlesim node:
+
+```bash
+roslaunch turtlesim_demo demo.launch
+```
+
+This will open the `turtlesim` window with a single turtle at the center.
+
+### 2. Teleoperate with Keyboard
+
+In a new terminal (source your workspace first):
+
+```bash
+rosrun turtlesim_demo turtle_teleop_key.py
+```
+
+Use `W/A/S/D` or arrow keys to move the turtle around.
+
+### 3. Spawn Additional Turtles
+
+Call the spawn service to add a new turtle:
+
+```bash
+rosservice call /spawn 2.0 2.0 0.0 "turtle2"
+```
+
+Now you can teleoperate or programmatically control `turtle2` by targeting its topics.
+
+### 4. Draw a Shape
+
+Run the shape-drawing script:
+
+```bash
+rosrun turtlesim_demo draw_circle.py
+```
+
+This node publishes velocity commands to `/turtle1/cmd_vel` to draw a circle.
+
+### 5. Clear the Canvas
+
+Reset the background to white:
+
+```bash
+rosservice call /clear
+```
+
+### 6. Reset Simulator
+
+To reset turtle position and clear drawings:
+
+```bash
+rosservice call /reset
+```
+
+## Package Contents
+
+```
+turtlesim_demo/
+├── launch/
+│   └── demo.launch           # Launches turtlesim_node and teleop
+├── scripts/
+│   ├── turtle_teleop_key.py  # Keyboard teleop node
+│   ├── draw_circle.py        # Draws a circle automatically
+│   └── draw_square.py        # (optional) Draws a square pattern
+├── README.md                 # This file
+└── package.xml
+```
+
+## Scripts Overview
+
+* **turtle\_teleop\_key.py**: Subscribes to keyboard input and publishes geometry\_msgs/Twist messages.
+* **draw\_circle.py**: Publishes constant linear and angular velocities to draw a circle.
+* **draw\_square.py**: (Optional) Moves the turtle in straight lines and 90° turns to form a square.
+
+## Troubleshooting
+
+* **`command not found`**: Ensure scripts are executable: `chmod +x scripts/*.py`.
+* **`[Err] No module named rospy`**: Make sure you sourced your workspace: `source ~/catkin_ws/devel/setup.bash` and have ROS installed.
+* **Simulator window not opening**: Confirm `roscore` is running and `turtlesim_node` is launched.
+
+## Contributing
+
+1. Fork this repository
+2. Create a new branch (`git checkout -b feature/name`)
+3. Add or modify scripts
+4. Test your changes
+5. Submit a pull request
