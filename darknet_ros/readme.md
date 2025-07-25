@@ -27,7 +27,6 @@ A ROS1 wrapper for Darknet YOLO real-time object detection.
 ### Prerequisites
 
 * ROS1 Melodic or Noetic
-* CUDA Toolkit (optional for GPU)
 * OpenCV
 * CMake
 * A catkin workspace (`~/catkin_ws` assumed)
@@ -52,7 +51,7 @@ Place your YOLO config files, weights, and label files in the `yolo_network_conf
 ```bash
 cd ~/catkin_ws/src/darknet_ros/darknet_ros/yolo_network_config/weights
 # Download YOLOv3 pre-trained weights
-wget https://pjreddie.com/media/files/yolov3.weights
+e.g. wget https://pjreddie.com/media/files/yolov3.weights
 
 # Download YOLOv3-tiny .conv.15 pre-trained convolutional layers (for partial training)
 wget https://raw.githubusercontent.com/hamzaMahdi/darknet/master/yolov3-tiny.conv.15
@@ -97,14 +96,66 @@ Parameters can be set via YAML or launch arguments:
 ## Launch Files
 
 * **darknet\_ros.launch**: Main detection node
-* **visualization.launch**: RViz visualization
+* **dabai_u3.launch**: Camera Module
+
+## Terminal Quickstart
+
+Follow these steps in separate terminals to build, run detection, capture images, and overlay boundaries:
+
+1. **Clone & build** your workspace:
+
+   ```bash
+   cd ~/catkin_ws/src
+   git clone https://github.com/leggedrobotics/darknet_ros.git
+   rosdep install --from-paths . --ignore-src -r -y
+   cd ~/catkin_ws
+   catkin_make
+   source devel/setup.bash
+   ```
+
+2. **Download YOLO weights**:
+
+   ```bash
+   cd ~/catkin_ws/src/darknet_ros/darknet_ros/yolo_network_config/weights
+   wget https://pjreddie.com/media/files/yolov3.weights
+   wget https://raw.githubusercontent.com/hamzaMahdi/darknet/master/yolov3-tiny.conv.15
+   ```
+
+3. **Launch YOLO detection**:
+
+   ```bash
+   roslaunch darknet_ros darknet_ros.launch
+   ```
+
+4. **Capture camera frames** (optional):
+
+   ```bash
+   rosrun image_view image_saver \
+     image:=/camera/rgb/image_raw \
+     _filename_format:=frame_%04d.jpg \
+     _sec_per_frame:=1
+   ```
+
+5. **Make boundary script executable**:
+
+   ```bash
+   chmod +x ~/catkin_ws/src/darknet_ros/scripts/boundary.py
+   ```
+
+6. **Run boundary overlay**:
+
+   ```bash
+   rosrun darknet_ros boundary.py \
+     image_topic:=/camera/rgb/image_raw \
+     boxes_topic:=/darknet_ros/bounding_boxes
+   ```
 
 ## Examples
 
-**Visualize in RViz**:
+**On camera**:
 
 ```bash
-roslaunch darknet_ros visualization.launch
+roslaunch astra_camera dabai_u3.launch
 ```
 
 **Run on rosbag**:
@@ -113,6 +164,51 @@ roslaunch darknet_ros visualization.launch
 rosbag play sample.bag
 roslaunch darknet_ros darknet_ros.launch
 ```
+
+## Capturing Images & Running `boundary.py`
+
+To save raw camera frames and overlay YOLO detections via `boundary.py`, follow these steps:
+
+1. **Install the image view tool** (if not already):
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install ros-melodic-image-view
+   ```
+
+2. **Capture images** from your camera topic:
+
+   ```bash
+   # Save one image per second with filenames frame_0001.jpg, frame_0002.jpg, etc.
+   rosrun image_view image_saver image:=/camera/rgb/image_raw _filename_format:=frame_%04d.jpg _sec_per_frame:=1
+   ```
+
+   Let it run until you have the desired snapshots then Ctrl+C to stop.
+
+3. **Add `boundary.py`** to your package's `scripts/` directory:
+
+ 
+4. **Make it executable**:
+
+   ```bash
+   chmod +x scripts/boundary.py
+   ```
+
+5. **Run the boundary node**:
+
+   In one terminal, launch YOLO detection:
+
+   ```bash
+   roslaunch darknet_ros darknet_ros.launch
+   ```
+
+   In another terminal, start the boundary overlay:
+
+   ```bash
+   rosrun darknet_ros boundary.py image_topic:=/camera/rgb/image_raw boxes_topic:=/darknet_ros/bounding_boxes
+   ```
+
+You should see an OpenCV window showing each frame with detected object boundaries overlaid.
 
 ## Troubleshooting
 
@@ -129,3 +225,6 @@ Contributions welcome! Please:
 3. Implement changes with tests
 4. Submit a pull request with description and issue reference
 
+## License
+
+MIT License. See the [LICENSE](LICENSE) file for details.
