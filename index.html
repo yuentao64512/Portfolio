@@ -4,147 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YuenTao — Robotics Systems Engineering</title>
-  <style>
-    /* 1. Animated background gradient */
-    @keyframes moveGradient {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      color: #fff;
-      line-height: 1.6;
-      background: linear-gradient(135deg, #0d1b2a, #001f3f, #002b5c);
-      background-size: 400% 400%;
-      animation: moveGradient 20s ease infinite;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* 2. Nav with animated underline */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0;
-      padding: 1rem;
-      backdrop-filter: blur(5px);
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-    }
-    nav ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex; justify-content: center; gap: 2rem;
-    }
-    nav a {
-      position: relative;
-      color: #fff;
-      text-decoration: none;
-      font-weight: bold;
-      padding: 0.25rem;
-    }
-    nav a::after {
-      content: "";
-      position: absolute; left: 0; bottom: -2px;
-      width: 0; height: 2px;
-      background: #5bd0ff;
-      transition: width 0.3s ease;
-    }
-    nav a:hover::after {
-      width: 100%;
-    }
-
-    /* 3. Section panels + reveal */
-    section {
-      max-width: 800px;
-      margin: 0 auto 4rem;
-      padding: 6rem 2rem 4rem;
-      background: rgba(0,0,0,0.4);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-    section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    header { text-align: center; margin-bottom: 2rem; }
-    header h1 { font-size: 3rem; margin: 0; }
-    header p { color: #ddd; font-size: 1.2rem; }
-
-    /* 4. Typewriter effect */
-    .typewriter {
-      display: inline-block;
-      overflow: hidden;
-      border-right: .15em solid #5bd0ff;
-      white-space: nowrap;
-      animation: typing 3s steps(30, end), blinkCaret .75s step-end infinite;
-      font-size: 1.1rem;
-      color: #eee;
-    }
-    @keyframes typing {
-      from { width: 0; }
-      to   { width: 100%; }
-    }
-    @keyframes blinkCaret {
-      from, to { border-color: transparent; }
-      50%      { border-color: #5bd0ff; }
-    }
-
-    /* 5. Feature list & image */
-    ul.features { list-style: disc inside; margin-left: 1rem; }
-    ul.features li { margin-bottom: 0.75rem; }
-    ul.features code {
-      background: rgba(255,255,255,0.1);
-      padding: 0.1rem 0.3rem;
-      border-radius: 3px;
-    }
-    .project-img {
-      display: block;
-      max-width: 100%;
-      border-radius: 4px;
-      margin: 1.5rem auto 0;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.7);
-    }
-
-    /* 6. Skills dots */
-    #skills h2 { color: #5bd0ff; text-align: center; }
-    .skills-card {
-      background: rgba(0,0,0,0.6);
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    .skill-row {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1rem;
-    }
-    .skill-name { color: #eee; }
-    .skill-dots { display: flex; gap: 0.5rem; }
-    .dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      transition: transform 0.3s ease;
-    }
-    .dot.filled { background: #5bd0ff; }
-    .dot.filled:hover { transform: scale(1.4); }
-
-    /* 7. Contact button */
-    .contact a {
-      display: inline-block; margin-top: 1rem;
-      padding: 0.6rem 1.2rem;
-      background: #007acc; color: #fff;
-      text-decoration: none; border-radius: 4px;
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-    .contact a:hover {
-      background: #005fa3;
-      transform: translateY(-2px);
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -157,19 +17,19 @@
     </ul>
   </nav>
 
-  <!-- ABOUT -->
+  <!-- About -->
   <section id="about">
     <header>
       <h1>YuenTao</h1>
       <p class="typewriter">Robotics &amp; Systems Engineering Student</p>
     </header>
     <p>
-      I’m building my System Engineering Project 1: the “Limo” autonomous robot.
+      I’m building my System Engineering Project 1: the “Limo” autonomous robot.
       Explore my mapping, navigation, Python scripts, and computer‑vision integrations below.
     </p>
   </section>
 
-  <!-- PROJECT -->
+  <!-- Project -->
   <section id="project">
     <h2>SEP1: Limo Robot</h2>
     <ul class="features">
@@ -188,7 +48,7 @@
       class="project-img">
   </section>
 
-  <!-- SKILLS -->
+  <!-- Skills -->
   <section id="skills">
     <h2>Technical Skills</h2>
     <div class="skills-card">
@@ -219,4 +79,33 @@
       <div class="skill-row">
         <span class="skill-name">ROS Launch &amp; Integration</span>
         <div class="skill-dots">
-          <span class="dot filled"></span><span class="dot filled"></span><span clas
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="contact">
+    <h2>Get in Touch</h2>
+    <p>Questions or collaboration ideas? Let’s talk!</p>
+    <a href="mailto:yuentao@example.com">Email Me</a>
+  </section>
+
+  <script>
+    // Scroll‐reveal: add .visible when each section enters the viewport
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('section').forEach(sec => {
+      observer.observe(sec);
+    });
+  </script>
+</body>
+</html>
