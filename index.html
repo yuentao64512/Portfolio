@@ -61,6 +61,12 @@
     section h2 {
       color:#fff; margin-bottom:1rem;
     }
+    section h3 {
+      color:#fff;
+      margin-top:1.5rem;
+      margin-bottom:0.5rem;
+      font-size:1.3rem;
+    }
 
     /* About */
     #about header h1 {
@@ -79,6 +85,21 @@
     @keyframes blink {50%{border-color:transparent}}
     #about p { margin-top:1rem; }
 
+    /* Project Details List */
+    .project-details {
+      list-style: disc inside;
+      margin:1rem 0;
+      color: var(--text-light);
+    }
+    .project-details li {
+      margin-bottom:0.5rem;
+    }
+    .project-details code {
+      background: rgba(255,255,255,0.1);
+      padding:0.1rem 0.3rem;
+      border-radius:3px;
+    }
+
     /* Project Figures */
     .project-figure {
       text-align:center;
@@ -93,15 +114,6 @@
       margin-top:.5rem;
       color: var(--text-muted);
       font-size:.9rem;
-    }
-    .features {
-      list-style: disc inside;
-      margin:1rem 0;
-    }
-    .features code {
-      background: rgba(255,255,255,0.1);
-      padding:0.1rem 0.3rem;
-      border-radius:3px;
     }
 
     /* Skills */
@@ -180,6 +192,23 @@
   <section id="project">
     <h2>SEP1: Limo Robot</h2>
 
+    <!-- Role & Objectives -->
+    <h3>Role &amp; Objectives</h3>
+    <ul class="project-details">
+      <li><strong>Role:</strong> Develop and test Python scripts to integrate <code>darknet_ros</code> with the Limo robot.</li>
+      <li><strong>Objectives:</strong> Enable reliable obstacle avoidance and recreate the “jewel” retrieval scenario autonomously.</li>
+    </ul>
+
+    <!-- Systems Engineering Approach -->
+    <h3>Systems Engineering Approach</h3>
+    <p>Applied a structured trade‑off analysis (System Approach) to select the best mapping/navigation stack:</p>
+    <ul class="project-details">
+      <li><strong>Cartographer:</strong> Good loop closure but higher CPU usage.</li>
+      <li><strong>GMapping:</strong> Lightweight, reliable in small arenas, but drift over time.</li>
+      <li><strong>RTAB‑Map:</strong> Rich 3D mapping but complex tuning and memory‑heavy.</li>
+    </ul>
+    <p><em>Conclusion:</em> Chose GMapping for its balance of performance and resource usage in our test arena, then tuned parameters to reduce drift.</p>
+
     <!-- Overview -->
     <figure class="project-figure">
       <img src="images/DSC07073.jpg" alt="Limo robot in arena">
@@ -242,11 +271,11 @@
   <!-- Contact -->
   <section id="contact" class="contact">
     <h2>Get in Touch</h2>
-    <p>Interested in robotics or open‑source collaboration? Reach out via any of the following:</p>
+    <p>Feel free to reach out on any of my handles for any connections:</p>
     <ul class="contact-list">
-      <li><a href="mailto:yuentao@example.com">✉️ Email Me</a></li>
-      <li><a href="https://www.linkedin.com/in/your‑linkedin‑handle" target="_blank" rel="noopener">🔗 LinkedIn</a></li>
-      <li><a href="https://github.com/your‑username/ros‑repo" target="_blank" rel="noopener">📂 ROS Repository</a></li>
+      <li><a href="mailto:ng.yuentao21@gmail.com">✉️ Email Me</a></li>
+      <li><a href="https://www.linkedin.com/in/yuen-tao-rse/" target="_blank" rel="noopener">🔗 LinkedIn</a></li>
+      <li><a href="https://github.com/yuentao64512" target="_blank" rel="noopener">📂 GitHub</a></li>
     </ul>
   </section>
 
