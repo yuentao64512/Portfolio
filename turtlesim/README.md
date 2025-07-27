@@ -13,7 +13,7 @@ A ROS1 package demonstrating the use of the built-in `turtlesim` simulator. Quic
 
 ## Prerequisites
 
-* ROS1 Melodic or Noetic
+* ROS1 Melodic
 * A catkin workspace (assumed: `~/catkin_ws`)
 
 ## Installation
@@ -38,23 +38,30 @@ A ROS1 package demonstrating the use of the built-in `turtlesim` simulator. Quic
    ```
 
 ## Usage
-
 ### 1. Launch the Simulator
 
 Start the ROS core and the turtlesim node:
 
 ```bash
-roslaunch turtlesim_demo demo.launch
+roscore
+#new terminal
+Rosrun turtlesim turlesim_node
 ```
 
 This will open the `turtlesim` window with a single turtle at the center.
+```bash
+#additional to change turtlenode name
+rosrun turtlesim turtlesim_node __name:=YOUR_NODE
+#to verify new terminal
+rosnode list
+```
 
 ### 2. Teleoperate with Keyboard
 
 In a new terminal (source your workspace first):
 
 ```bash
-rosrun turtlesim_demo turtle_teleop_key.py
+rosrun turtlesim turtle_teleop_key.py
 ```
 
 Use `W/A/S/D` or arrow keys to move the turtle around.
@@ -74,7 +81,7 @@ Now you can teleoperate or programmatically control `turtle2` by targeting its t
 Run the shape-drawing script:
 
 ```bash
-rosrun turtlesim_demo draw_circle.py
+rosrun turtlesim draw_circle.py
 ```
 
 This node publishes velocity commands to `/turtle1/cmd_vel` to draw a circle.
@@ -103,8 +110,6 @@ turtlesim_demo/
 │   └── demo.launch           # Launches turtlesim_node and teleop
 ├── scripts/
 │   ├── turtle_teleop_key.py  # Keyboard teleop node
-│   ├── draw_circle.py        # Draws a circle automatically
-│   └── draw_square.py        # (optional) Draws a square pattern
 ├── README.md                 # This file
 └── package.xml
 ```
@@ -112,8 +117,6 @@ turtlesim_demo/
 ## Scripts Overview
 
 * **turtle\_teleop\_key.py**: Subscribes to keyboard input and publishes geometry\_msgs/Twist messages.
-* **draw\_circle.py**: Publishes constant linear and angular velocities to draw a circle.
-* **draw\_square.py**: (Optional) Moves the turtle in straight lines and 90° turns to form a square.
 
 ## Troubleshooting
 
@@ -124,7 +127,6 @@ turtlesim_demo/
 ## Contributing
 
 1. Fork this repository
-2. Create a new branch (`git checkout -b feature/name`)
-3. Add or modify scripts
-4. Test your changes
-5. Submit a pull request
+2. Add or modify scripts
+3. Test your changes
+4. Submit a pull request
