@@ -15,19 +15,13 @@ A custom ROS1 package of Python scripts developed for my robot to handle slope d
 
 ## Installation
 
-1. **Clone the repo** into your workspace:
-
-   ```bash
-   cd ~/catkin_ws/src
-   git clone <your-repo-url> slope_waypoint_tools
-   ```
-2. **Install dependencies**:
+1. **Install dependencies**:
 
    ```bash
    cd ~/catkin_ws
    rosdep install --from-paths src --ignore-src -r -y
    ```
-3. **Build and source**:
+2. **Build and source**:
 
    ```bash
    catkin_make
@@ -39,7 +33,7 @@ A custom ROS1 package of Python scripts developed for my robot to handle slope d
 ```
 slope_waypoint_tools/
 ├── launch/
-│   └── slope_launch.launch   # Launches slope_detector.py
+│   └── limo_navigation_rtabmap.launch   # Launches navigation and slope detector
 ├── scripts/
 │   ├── slope_detector.py    # Used by the launch file
 │   ├── record_waypoint.py   # Record GPS or pose waypoints
@@ -54,7 +48,7 @@ All helper scripts live in `scripts/`. Before running:
 1. **Switch to scripts directory**:
 
    ```bash
-   cd ~/catkin_ws/src/slope_waypoint_tools/scripts
+   cd ~/agilex_ws/src/limo_ros/limo_bringup/scripts
    ```
 2. **Make all Python files executable**:
 
@@ -69,7 +63,7 @@ All helper scripts live in `scripts/`. Before running:
 This starts the `slope_detector.py` node as defined in the launch file:
 
 ```bash
-roslaunch slope_waypoint_tools slope_launch.launch
+roslaunch limo_bringup limo_navigation_rtabmap.launch
 ```
 
 ### 2. Record Waypoints
@@ -77,7 +71,7 @@ roslaunch slope_waypoint_tools slope_launch.launch
 In a new terminal (after sourcing your workspace):
 
 ```bash
-rosrun slope_waypoint_tools record_waypoint.py
+rosrun limo_bringup record_waypoint.py
 ```
 
 Follow console prompts or inputs to save waypoints to file.
@@ -87,19 +81,17 @@ Follow console prompts or inputs to save waypoints to file.
 In another terminal:
 
 ```bash
-rosrun slope_waypoint_tools waypoint.py
+rosrun limo_bringup waypoint.py
 ```
 
 Enter waypoint indices or filenames as prompted to send goals to the robot.
 
 ## Launch File Details
 
-* **slope\_launch.launch**:
-
-  * Starts ROS core if needed
-  * Runs `scripts/slope_detector.py`
-  * You can remap topics via `<arg>`s or `<remap>` tags if necessary
-
+  * roslaunch all the files in limo that is needed such as dabai_u3 camera, limo_start, limo_rtabmap_orbbec, limo_navigation_rtabmap, rviz.
+  * Runs `scripts/record_waypoint.py`
+  * to remap set localisation to false for orbbec. Once done set localisation back to true. map will be auto saved into rtabmap.db
+  * 
 ## Troubleshooting
 
 * **Permission errors**: Ensure `chmod +x *.py` was run in `scripts/`.
@@ -113,6 +105,3 @@ Enter waypoint indices or filenames as prompted to send goals to the robot.
 3. Add or update scripts/tests
 4. Submit a pull request
 
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
