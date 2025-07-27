@@ -1,6 +1,6 @@
 # AgileX TurtleBot ROS1 Melodic Portfolio
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![ROS1](https://img.shields.io/badge/ROS-Melodic-orange.svg)](http://wiki.ros.org/melodic)
+[![ROS1](https://img.shields.io/badge/ROS-Melodic-orange.svg)](http://wiki.ros.org/melodic)
 
 Welcome to my **AgileX TurtleBot ROS1 Melodic Portfolio**! I’m **Ng Yuen Tao**, a Robotics Systems Engineering student at SIT, showcasing hands‑on work with the AgileX Limo robot, Turtlesim, TurtleBot, Gazebo simulations, and Darknet\_ROS (YOLO) on the Limo platform.
 
@@ -82,10 +82,5 @@ Contributions, feedback, and pull requests are welcome! Please:
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
 
 *Created with ❤️ by Ng Yuen Tao*
