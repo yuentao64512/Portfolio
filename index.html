@@ -1,128 +1,218 @@
-<style>
-  /* smooth scrolling */
-  html { scroll-behavior: smooth; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YuenTao — Robotics Systems Engineering</title>
+  <style>
+    /* smooth scrolling */
+    html { scroll-behavior: smooth; }
 
-  /* full‑screen background */
-body {
-  margin: 0;
-  font-family: sans-serif;
-  color: #fff;
-  line-height: 1.5;
+    /* dark‑blue gradient background */
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      color: #fff;
+      line-height: 1.5;
+      background: linear-gradient(135deg, #0d1b2a 0%, #001f3f 100%);
+      min-height: 100vh;
+    }
 
-  /* dark blue gradient instead of image */
-  background: linear-gradient(135deg, #0d1b2a 0%, #001f3f 100%);
-}
-  /* fixed top nav */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 100;
-  }
-  nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin: 0;
-    padding: 0;
-  }
-  nav a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  nav a:hover {
-    text-decoration: underline;
-  }
+    /* fixed top nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 100;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
 
-  /* common section styles */
-  section {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 6rem 2rem 4rem;
-    backdrop-filter: blur(5px);
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  }
-  header { text-align: center; }
-  header h1 {
-    margin: 0.5rem 0;
-    font-size: 2.5rem;
-  }
-  header p { color: #ddd; }
+    /* panel look for each section */
+    section {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    header { text-align: center; }
+    header h1 {
+      margin: 0.5rem 0;
+      font-size: 2.5rem;
+    }
+    header p { color: #ddd; }
 
-  /* features list */
-  ul.features {
-    list-style: disc inside;
-    margin-left: 1rem;
-  }
-  ul.features li {
-    margin-bottom: 0.75rem;
-  }
-  ul.features code {
-    background: rgba(255,255,255,0.1);
-    padding: 0.1rem 0.3rem;
-    border-radius: 3px;
-  }
+    /* features list */
+    ul.features {
+      list-style: disc inside;
+      margin-left: 1rem;
+    }
+    ul.features li {
+      margin-bottom: 0.75rem;
+    }
+    ul.features code {
+      background: rgba(255,255,255,0.1);
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+    }
 
-  /* Skills Section */
-  #skills {
-    margin-top: 4rem;
-  }
-  #skills h2 {
-    color: #5bd0ff;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  .skills-card {
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(6px);
-    padding: 2rem;
-    border-radius: 8px;
-    max-width: 800px;
-    margin: 0 auto;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  }
-  .skill-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  .skill-name {
-    font-size: 1rem;
-    color: #e0e0e0;
-  }
-  .skill-dots {
-    display: flex;
-    gap: 0.5rem;
-  }
-  .dot {
-    width: 12px;
-    height: 12px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 50%;
-  }
-  .dot.filled {
-    background: #5bd0ff;
-    box-shadow: 0 0 6px #5bd0ff;
-  }
+    /* Skills Section */
+    #skills {
+      margin-top: 4rem;
+    }
+    #skills h2 {
+      color: #5bd0ff;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .skills-card {
+      background: rgba(0,0,0,0.6);
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .skill-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .skill-name {
+      font-size: 1rem;
+      color: #e0e0e0;
+    }
+    .skill-dots {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+    }
+    .dot.filled {
+      background: #5bd0ff;
+      box-shadow: 0 0 6px #5bd0ff;
+    }
 
-  /* contact button */
-  .contact a {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
-    background: #007acc;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background 0.2s ease;
-  }
-  .contact a:hover {
-    background: #005fa3;
-  }
-</style>
+    /* contact button */
+    .contact a {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: #007acc;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+    .contact a:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#project">Project</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- About -->
+  <section id="about">
+    <header>
+      <h1>YuenTao</h1>
+      <p>Robotics Systems Engineering Student</p>
+    </header>
+    <p>
+      Welcome! I’m YuenTao, currently developing my System Engineering Project 1: the “Limo” autonomous robot. Below you’ll find a concise overview of my work.
+    </p>
+  </section>
+
+  <!-- Project -->
+  <section id="project">
+    <h2>SEP1: Limo Robot</h2>
+    <ul class="features">
+      <li><strong>Mapping & Navigation</strong><br>
+        Built occupancy grids and waypoint planners in ROS.</li>
+      <li><strong>Python Scripting</strong><br>
+        Automated waypoint generation and slope‑detection routines.</li>
+      <li><strong>Computer Vision</strong><br>
+        Integrated <code>darknet_ros</code> for real‑time bounding‑box detection.</li>
+      <li><strong>System Integration</strong><br>
+        Tuned ROS nodes and custom <code>.launch</code> files for seamless startup.</li>
+    </ul>
+    <p style="text-align:center;">
+      <img src="images/DSC07146.jpg" alt="Limo robot in test arena" style="max-width:100%; border-radius:4px; margin-top:1rem;">
+    </p>
+  </section>
+
+  <!-- Skills -->
+  <section id="skills">
+    <h2>Technical Skills</h2>
+    <div class="skills-card">
+      <div class="skill-row">
+        <span class="skill-name">Robot Operating System (ROS)</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-name">C/C++ Programming</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-name">Python</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-name">Computer Vision (darknet_ros)</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-name">ROS Launch & Integration</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="contact">
+    <h2>Get in Touch</h2>
+    <p>Interested in robotics or open‑source collaboration? Let’s connect!</p>
+    <a href="mailto:yuentao@example.com">Email Me</a>
+  </section>
+
+</body>
+</html>
