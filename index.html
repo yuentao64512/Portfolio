@@ -1,53 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF‑8" />
-  <meta name="viewport" content="width=device‑width, initial-scale=1.0" />
-  <title>My Portfolio</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YuenTao — Robotics Systems Engineering</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: sans-serif; line-height: 1.5; }
+    nav {
+      position: fixed; top: 0; width: 100%;
+      background: rgba(255,255,255,0.95); padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+    nav ul { list-style: none; display: flex; gap: 2rem; justify-content: center; margin: 0; padding: 0; }
+    nav a { text-decoration: none; color: #333; font-weight: bold; }
+    section { padding: 6rem 2rem 4rem; max-width: 800px; margin: 0 auto; }
+    header { text-align: center; padding-top: 4rem; }
+    header h1 { margin: 0.5rem 0; }
+    header p { color: #666; }
+    ul.features { list-style: disc inside; }
+    .contact a { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #007acc; color: #fff; text-decoration: none; border-radius: 4px; }
+  </style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="site-nav">
+
+  <nav>
     <ul>
       <li><a href="#about">About</a></li>
-      <li><a href="#projects">Projects</a></li>
+      <li><a href="#project">Project</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
   </nav>
 
-  <!-- Hero / Intro -->
   <section id="about">
-    <h1>Hi, I’m Your Name</h1>
-    <p>Short intro…</p>
+    <header>
+      <h1>YuenTao</h1>
+      <p>Robotics Systems Engineering Student</p>
+    </header>
+    <p>
+      Welcome to my portfolio! I’m currently working on my System Engineering Project 1 (SEP1), focused on the “Limo” autonomous robot. Here I share my design choices, code snippets, and lessons learned.
+    </p>
   </section>
 
-  <!-- Projects -->
-  <section id="projects">
-    <h2>Selected Work</h2>
-    <!-- Thumbnails / links to your projects -->
+  <section id="project">
+    <h2>SEP1: Limo Robot</h2>
+    <p>Key areas I explored:</p>
+    <ul class="features">
+      <li><strong>Mapping & Navigation</strong>  
+        • Constructed occupancy grids and waypoint planners.</li>
+      <li><strong>Python Scripting</strong>  
+        • Automated waypoint generation, slope detection routines.</li>
+      <li><strong>Computer Vision</strong>  
+        • Integrated <code>darknet_ros</code> for object detection with bounding‑boxes.</li>
+      <li><strong>System Integration</strong>  
+        • Tuned ROS nodes, launched nodes via custom <code>launch</code> files.</li>
+    </ul>
+    <!-- placeholder for a screenshot -->
+    <p style="text-align:center;">
+      <img src="images/limo-map.png" alt="Limo mapping overview" style="max-width:100%;border-radius:4px;">
+    </p>
   </section>
 
-  <!-- Contact -->
-  <section id="contact">
+  <section id="contact" class="contact">
     <h2>Get in Touch</h2>
-    <form action="https://formspree.io/f/your‑form‑id" method="POST">
-      <label>
-        Name<br/>
-        <input type="text" name="name" required>
-      </label>
-      <label>
-        Email<br/>
-        <input type="email" name="_replyto" required>
-      </label>
-      <label>
-        Message<br/>
-        <textarea name="message" rows="5" required></textarea>
-      </label>
-      <button type="submit">Send</button>
-    </form>
+    <p>If you’d like to discuss robotics or open‑source collaboration, drop me a line:</p>
+    <a href="mailto:yuentao@example.com">Email Me</a>
   </section>
 
-  <script src="scripts.js"></script>
 </body>
 </html>
