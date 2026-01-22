@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>YuenTao — Robotics Systems Engineering</title>
+
   <style>
     /* Reset & Variables */
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -166,6 +167,66 @@
       nav ul { gap:1rem; }
       section { margin:4rem 1rem 2rem; padding:1.5rem; }
     }
+
+    /* --- Additions for multiple projects --- */
+    .projects-intro { color: var(--text-muted); margin-bottom: 1rem; }
+
+    .project-card{
+      padding: 1.25rem 1.25rem 1rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      margin-top: 1.25rem;
+    }
+
+    .project-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .project-title{
+      font-size: 1.4rem;
+      margin: 0;
+      color: #fff;
+    }
+
+    .project-meta{
+      color: var(--text-muted);
+      font-size: .95rem;
+      margin-top: .25rem;
+    }
+
+    .tag-row{
+      display:flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .75rem;
+    }
+
+    .tag{
+      display:inline-block;
+      padding: .25rem .55rem;
+      border-radius: 999px;
+      font-size: .85rem;
+      background: rgba(91,208,255,0.14);
+      border: 1px solid rgba(91,208,255,0.25);
+      color: var(--text-light);
+    }
+
+    /* Image grid for project photos */
+    .figure-grid{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 1.25rem 0 0.5rem;
+    }
+    .figure-grid .project-figure{ margin: 0; }
+    @media(max-width:600px){
+      .figure-grid{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -173,7 +234,7 @@
   <nav>
     <ul>
       <li><a href="#about">About</a></li>
-      <li><a href="#project">Project</a></li>
+      <li><a href="#project">Projects</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -185,50 +246,127 @@
       <h1>YuenTao</h1>
       <p class="typewriter">Robotics &amp; Systems Engineering Student</p>
     </header>
-    <p>Welcome—I’m YuenTao. I’m building my System Engineering Project 1: the “Limo” autonomous robot. Below are key highlights of my work.</p>
+    <p>
+      Welcome—I’m YuenTao. I’m working on robotics, autonomy, and systems prototyping.
+      Below are key highlights of my projects.
+    </p>
   </section>
 
-  <!-- Project -->
+  <!-- Projects -->
   <section id="project">
-    <h2>SEP1: Limo Robot</h2>
+    <h2>Projects</h2>
+    <p class="projects-intro">A few highlights of what I’m building and contributing to.</p>
 
-    <!-- Role & Objectives -->
-    <h3>Role &amp; Objectives</h3>
-    <ul class="project-details">
-      <li><strong>Role:</strong> Develop and test Python scripts to integrate <code>darknet_ros</code> with the Limo robot.</li>
-      <li><strong>Objectives:</strong> Enable reliable obstacle avoidance and recreate the “jewel” retrieval scenario autonomously.</li>
-    </ul>
+    <!-- FWISH -->
+    <div class="project-card" id="fwish">
+      <div class="project-top">
+        <div>
+          <h3 class="project-title">FWISH — Water Takeoff Flying Craft</h3>
+          <div class="project-meta">
+            <strong>Status:</strong> Prototype (Model Complete) • <strong>Next:</strong> Flying prototype pending budget approval
+          </div>
+          <div class="tag-row">
+            <span class="tag">Systems</span>
+            <span class="tag">Prototype</span>
+            <span class="tag">Design</span>
+          </div>
+        </div>
+      </div>
 
-    <!-- Systems Engineering Approach -->
-    <h3>Systems Engineering Approach</h3>
-    <p>Applied a structured trade‑off analysis (System Approach) to select the best mapping/navigation stack:</p>
-    <ul class="project-details">
-      <li><strong>Cartographer:</strong> Good loop closure but higher CPU usage.</li>
-      <li><strong>GMapping:</strong> Lightweight, reliable in small arenas, but drift over time.</li>
-      <li><strong>RTAB‑Map:</strong> Rich 3D mapping but complex tuning and memory‑heavy.</li>
-    </ul>
-    <p><em>Conclusion:</em> we selected RTAB‑Map for its superior loop‑closure and 3D mapping capabilities, then tuned its memory and voxel settings for real‑time performance in our environment.</p>
+      <ul class="project-details">
+        <li><strong>Concept:</strong> A craft that can take off from water like a jet ski and transition into flight.</li>
+        <li><strong>Progress:</strong> Built physical prototypes for design validation and presentation.</li>
+        <li><strong>Next Steps:</strong> Develop the flying prototype once funding is approved (airframe + propulsion + control testing).</li>
+      </ul>
 
-    <!-- Overview -->
-    <figure class="project-figure">
-      <img src="images/DSC07073.jpg" alt="Limo robot in arena">
-      <figcaption><strong>Limo</strong> platform—rugged tracked chassis with on‑board compute and ROS interface.</figcaption>
-    </figure>
-    <p>This chassis provides stability on uneven surfaces and a modular mount for sensors.</p>
+      <div class="figure-grid">
+        <figure class="project-figure">
+          <img src="images/6307354255697841364.jpg" alt="FWISH 1:12 scaled 3D printed prototype">
+          <figcaption>FWISH prototype — 1:12 scaled-down 3D printed model.</figcaption>
+        </figure>
 
-    <!-- Mapping & Navigation -->
-    <figure class="project-figure">
-      <img src="images/DSC07146.jpg" alt="Limo mapping environment">
-      <figcaption>Real‑time occupancy grid via ROS <code>gmapping</code>, navigating waypoints while avoiding obstacles.</figcaption>
-    </figure>
-    <p>I leveraged LIDAR and camera feeds to build SLAM maps in ROS, and scripted Python routines to auto‑generate waypoints.</p>
+        <figure class="project-figure">
+          <img src="images/6307354255697841365.jpg" alt="FWISH 1:1 foam fitted display model">
+          <figcaption>FWISH prototype — 1:1 foam-fitted display model.</figcaption>
+        </figure>
+      </div>
+    </div>
 
-    <!-- Programming -->
-    <figure class="project-figure">
-      <img src="images/DSC07162.jpg" alt="Programming interface for Limo">
-      <figcaption>Live tuning via ROS <code>rqt</code> and custom Python/C++ nodes launched from a single <code>.launch</code> file.</figcaption>
-    </figure>
-    <p>My code includes IMU‑based slope compensation, <code>darknet_ros</code> object detection, and modular ROS nodes for autonomy.</p>
+    <!-- SAFMC -->
+    <div class="project-card" id="safmc">
+      <div class="project-top">
+        <div>
+          <h3 class="project-title">SAFMC — Drone Swarm Flocking (Work in Progress)</h3>
+          <div class="project-meta">
+            <strong>Role:</strong> Programmer • <strong>Scope:</strong> 3-drone flocking from scratch • <strong>Status:</strong> In progress
+          </div>
+          <div class="tag-row">
+            <span class="tag">Swarm</span>
+            <span class="tag">Control</span>
+            <span class="tag">Autonomy</span>
+            <span class="tag">WIP</span>
+          </div>
+        </div>
+      </div>
+
+      <ul class="project-details">
+        <li><strong>Objective:</strong> Implement flocking behavior for a 3-drone team (cohesion, separation, alignment).</li>
+        <li><strong>My task:</strong> Build the flocking logic and integration pipeline from scratch, then validate via step-by-step testing.</li>
+        <li><strong>Planned validation:</strong> Sim → controlled indoor tests → multi-drone formation trials.</li>
+      </ul>
+    </div>
+
+    <!-- SEP1: Limo Robot -->
+    <div class="project-card" id="limo">
+      <div class="project-top">
+        <div>
+          <h3 class="project-title">SEP1: Limo Autonomous Robot</h3>
+          <div class="project-meta">
+            <strong>Role:</strong> ROS Integration / Python Developer • <strong>Stack:</strong> ROS, LIDAR, SLAM, CV
+          </div>
+          <div class="tag-row">
+            <span class="tag">ROS</span>
+            <span class="tag">SLAM</span>
+            <span class="tag">Python</span>
+            <span class="tag">Computer Vision</span>
+            <span class="tag">Integration</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Role &amp; Objectives</h3>
+      <ul class="project-details">
+        <li><strong>Role:</strong> Develop and test Python scripts to integrate <code>darknet_ros</code> with the Limo robot.</li>
+        <li><strong>Objectives:</strong> Enable reliable obstacle avoidance and recreate the “jewel” retrieval scenario autonomously.</li>
+      </ul>
+
+      <h3>Systems Engineering Approach</h3>
+      <p>Applied a structured trade-off analysis (System Approach) to select the best mapping/navigation stack:</p>
+      <ul class="project-details">
+        <li><strong>Cartographer:</strong> Good loop closure but higher CPU usage.</li>
+        <li><strong>GMapping:</strong> Lightweight, reliable in small arenas, but drift over time.</li>
+        <li><strong>RTAB-Map:</strong> Rich 3D mapping but complex tuning and memory-heavy.</li>
+      </ul>
+      <p><em>Conclusion:</em> we selected RTAB-Map for its superior loop-closure and 3D mapping capabilities, then tuned its memory and voxel settings for real-time performance in our environment.</p>
+
+      <figure class="project-figure">
+        <img src="images/DSC07073.jpg" alt="Limo robot in arena">
+        <figcaption><strong>Limo</strong> platform—rugged tracked chassis with on-board compute and ROS interface.</figcaption>
+      </figure>
+      <p>This chassis provides stability on uneven surfaces and a modular mount for sensors.</p>
+
+      <figure class="project-figure">
+        <img src="images/DSC07146.jpg" alt="Limo mapping environment">
+        <figcaption>Real-time occupancy grid via ROS <code>gmapping</code>, navigating waypoints while avoiding obstacles.</figcaption>
+      </figure>
+      <p>I leveraged LIDAR and camera feeds to build SLAM maps in ROS, and scripted Python routines to auto-generate waypoints.</p>
+
+      <figure class="project-figure">
+        <img src="images/DSC07162.jpg" alt="Programming interface for Limo">
+        <figcaption>Live tuning via ROS <code>rqt</code> and custom Python/C++ nodes launched from a single <code>.launch</code> file.</figcaption>
+      </figure>
+      <p>My code includes IMU-based slope compensation, <code>darknet_ros</code> object detection, and modular ROS nodes for autonomy.</p>
+    </div>
   </section>
 
   <!-- Skills -->
