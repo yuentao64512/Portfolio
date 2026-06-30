@@ -247,8 +247,9 @@
       <p class="typewriter">Robotics &amp; Systems Engineering Student</p>
     </header>
     <p>
-      Welcome—I’m YuenTao. I’m working on robotics, autonomy, and systems prototyping.
-      Below are key highlights of my projects.
+      Welcome. I am Yuen Tao, a Robotics Systems undergraduate building autonomous systems across
+      UAVs, mobile robots, and AI-enabled perception-to-action workflows. My work focuses on ROS 2,
+      computer vision, embedded AI, simulation validation, and hardware-software integration.
     </p>
   </section>
 
@@ -296,24 +297,117 @@
     <div class="project-card" id="safmc">
       <div class="project-top">
         <div>
-          <h3 class="project-title">SAFMC — Drone Swarm Flocking (Work in Progress)</h3>
+          <h3 class="project-title">SAFMC — Drone Swarm Flocking</h3>
           <div class="project-meta">
-            <strong>Role:</strong> Programmer • <strong>Scope:</strong> 3-drone flocking from scratch • <strong>Status:</strong> In progress
+            <strong>Role:</strong> Autonomous Drone Programmer • <strong>Scope:</strong> 3-drone flocking from scratch • <strong>Status:</strong> Completed
           </div>
           <div class="tag-row">
             <span class="tag">Swarm</span>
             <span class="tag">Control</span>
             <span class="tag">Autonomy</span>
-            <span class="tag">WIP</span>
+            <span class="tag">Completed</span>
           </div>
         </div>
       </div>
 
       <ul class="project-details">
-        <li><strong>Objective:</strong> Implement flocking behavior for a 3-drone team (cohesion, separation, alignment).</li>
-        <li><strong>My task:</strong> Build the flocking logic and integration pipeline from scratch, then validate via step-by-step testing.</li>
-        <li><strong>Planned validation:</strong> Sim → controlled indoor tests → multi-drone formation trials.</li>
+        <li><strong>Challenge:</strong> Build autonomous behavior for a 3-drone team that could coordinate flocking, positioning, and validation in a controlled environment.</li>
+        <li><strong>Action:</strong> Developed and tested Python/ROS 2/MAVROS/MAVLink flight functions, integrated UWB indoor positioning with the flight controller, and processed UWB data for hover and navigation workflows.</li>
+        <li><strong>Result:</strong> Produced a tested autonomous drone pipeline for non-GPS positioning experiments, improving reliability through ROS 2 communication and flight-controller debugging.</li>
       </ul>
+    </div>
+
+    <!-- RobotX -->
+    <div class="project-card" id="robotx">
+      <div class="project-top">
+        <div>
+          <h3 class="project-title">RobotX — UAV Autonomy &amp; Multi-Robot Systems</h3>
+          <div class="project-meta">
+            <strong>Role:</strong> Lead - Unmanned Aerial Vehicle (UAV) &bull; <strong>Status:</strong> Ongoing &bull; <strong>Timeline:</strong> Apr 2026 - Nov 2026
+          </div>
+          <div class="tag-row">
+            <span class="tag">Ongoing</span>
+            <span class="tag">UAV Autonomy</span>
+            <span class="tag">ROS 2</span>
+            <span class="tag">MAVROS</span>
+            <span class="tag">ArduPilot</span>
+            <span class="tag">YOLOv11</span>
+            <span class="tag">Jetson Orin</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Challenge</h3>
+      <p>
+        RobotX requires a UAV autonomy stack that can work as part of a multi-domain robotics system,
+        coordinating aerial, marine, and underwater mission components while remaining testable before field deployment.
+      </p>
+
+      <h3>Action</h3>
+      <ul class="project-details">
+        <li>Lead UAV software and hardware integration for autonomous mission operations.</li>
+        <li>Develop Gazebo simulation environments to validate flight missions before field testing.</li>
+        <li>Implement ROS 2, MAVROS, ArduPilot, and MAVLink functions for takeoff, altitude hold, waypoint navigation, and mission execution.</li>
+        <li>Build communication pipelines between the UAV, autonomous surface vehicle, and ground station for real-time monitoring.</li>
+        <li>Train and deploy YOLOv11 perception on Jetson Orin for autonomous target detection and mission guidance.</li>
+      </ul>
+
+      <h3>Result</h3>
+      <p>
+        The ongoing work is creating a deployable UAV autonomy stack that connects simulation,
+        perception, flight control, onboard compute, communications, and field validation into one mission-ready system.
+      </p>
+    </div>
+
+    <!-- Autonomous Crane -->
+    <div class="project-card" id="autonomous-crane">
+      <div class="project-top">
+        <div>
+          <h3 class="project-title">Autonomous 3-Axis Robotic Crane System</h3>
+          <div class="project-meta">
+            <strong>Role:</strong> Robotics Software / Autonomy Developer &bull; <strong>Stack:</strong> ROS 2, YOLOv11, Jetson Orin Nano, G-code
+          </div>
+          <div class="tag-row">
+            <span class="tag">Autonomous Systems</span>
+            <span class="tag">ROS 2</span>
+            <span class="tag">Computer Vision</span>
+            <span class="tag">Edge AI</span>
+            <span class="tag">Motion Planning</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Challenge</h3>
+      <p>
+        A third-party logistics workflow needed a safer and more repeatable way to perform side
+        pallet-loading while accounting for changing box sizes, cage occupancy, and available loading space.
+      </p>
+
+      <h3>Action</h3>
+      <ul class="project-details">
+        <li>Designed the ROS 2 software architecture for an autonomous 3-axis robotic crane workflow.</li>
+        <li>Trained and deployed YOLOv11 on an NVIDIA Jetson Orin Nano to detect box sizes, estimate cage occupancy, and identify available loading space.</li>
+        <li>Built ROS 2 nodes to translate real-time vision outputs into G-code commands for robotic-controller motion execution.</li>
+        <li>Integrated perception, AI inference, motion planning, and robotic control into an end-to-end autonomous pick-and-place pipeline.</li>
+      </ul>
+
+      <h3>Result</h3>
+      <p>
+        The system connected vision, decision-making, and robotic motion into a working autonomy stack,
+        improving loading efficiency while maintaining load stability to reduce shifting during transportation.
+      </p>
+
+      <div class="figure-grid">
+        <figure class="project-figure">
+          <img src="images/autonomous-crane-closeup.jpg" alt="Autonomous 3-axis robotic crane prototype close-up">
+          <figcaption>Autonomous 3-axis robotic crane prototype with gantry structure, gripper, and test payloads.</figcaption>
+        </figure>
+
+        <figure class="project-figure">
+          <img src="images/autonomous-crane-system.jpg" alt="Autonomous 3-axis robotic crane full system view">
+          <figcaption>Full system test setup showing the gantry, motion hardware, controller wiring, and validation workspace.</figcaption>
+        </figure>
+      </div>
     </div>
 
     <!-- SEP1: Limo Robot -->
@@ -375,6 +469,18 @@
     <div class="skills-card">
       <div class="skill-row">
         <span>ROS</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span>ROS 2 / Autonomy Integration</span>
+        <div class="skill-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span>YOLO / Edge AI Deployment</span>
         <div class="skill-dots">
           <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span>
         </div>
