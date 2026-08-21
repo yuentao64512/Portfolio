@@ -1,0 +1,25 @@
+{
+  "sources": {
+    "clean": {
+      "video": "C:\\Users\\OptiPrime-UAV\\Desktop\\Clean Paper.MOV",
+      "total_video_frames": 3611,
+      "fps": 30.0,
+      "duration_seconds": 120.36666666666666,
+      "written": {
+        "train": 240,
+        "val": 60
+      }
+    },
+    "dirty": {
+      "video": "C:\\Users\\OptiPrime-UAV\\Desktop\\Dirty Paper.MOV",
+      "total_video_frames": 3612,
+      "fps": 30.0,
+      "duration_seconds": 120.4,
+      "written": {
+        "train": 240,
+        "val": 60
+      }
+    }
+  },
+  "split_strategy": "first 80% train, final 20% val"
+}

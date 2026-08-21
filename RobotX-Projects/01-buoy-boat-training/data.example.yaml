@@ -1,0 +1,7 @@
+path: C:/Users/OptiPrime-UAV/yolov11_train/usv_12082026_yolo11l/dataset
+train: images/train
+val: images/val
+names:
+  0: green_buoy
+  1: orange_red_buoy
+  2: boat

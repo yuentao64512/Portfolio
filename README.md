@@ -19,9 +19,20 @@ View the portfolio here:
 ### RobotX - UAV Autonomy & Multi-Robot Systems
 
 **Status:** Ongoing<br>
-**Role:** Lead - Unmanned Aerial Vehicle (UAV)
+**Role:** Lead - Unmanned Aerial Vehicle (UAV)<br>
+**Stack:** Python, YOLOv11, OpenCV, ROS 2, MAVROS, MAVLink, ArduPilot, Jetson Orin, serial radio
 
-Developing UAV autonomy for a multi-domain robotics platform involving aerial, marine, and underwater systems. The work includes Gazebo simulation, ROS 2/MAVROS flight control, ArduPilot/MAVLink integration, YOLOv11 perception on Jetson Orin, and communication pipelines between UAV, ASV, and ground station.
+Developing the aerial component of a multi-domain robotics platform involving aerial, marine, and underwater systems. The work includes Gazebo simulation, ROS 2/MAVROS flight control, ArduPilot/MAVLink integration, YOLOv11 perception on Jetson Orin, and communication pipelines between the UAV, ASV, and ground station.
+
+The organized [RobotX drone vision projects](RobotX-Projects/) cover several aerial perception and control cases:
+
+- Detecting green and orange/red buoys and boats from drone imagery.
+- Detecting blue, red, and green course markers from above.
+- Reducing false detections using human rejection and hard-negative training.
+- Inspecting walls, roofs, panels, and structures for clean or dirty regions.
+- Converting camera detections to grid coordinates and transmitting mission data over a serial radio link.
+
+The collection separates [aerial buoy and boat training](RobotX-Projects/01-buoy-boat-training/), [marker training](RobotX-Projects/02-marker-training/), [training rejects](RobotX-Projects/03-training-rejects/), [drone surface inspection](RobotX-Projects/04-clean-dirty-inspection/), and [drone RC control](RobotX-Projects/05-drone-rc-control/) into documented, reusable project folders.
 
 ### Autonomous 3-Axis Robotic Crane System
 
@@ -66,6 +77,7 @@ Portfolio/
 +-- gazebo/             # Gazebo simulation files
 +-- launch_files/       # ROS launch configurations
 +-- python_files/       # Python scripts and experiments
++-- RobotX-Projects/    # Aerial vision, detection training, and drone RC experiments
 +-- turtlesim/          # ROS fundamentals and examples
 ```
 

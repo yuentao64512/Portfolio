@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "weights": "C:\\Users\\OptiPrime-UAV\\yolov11_train\\clean_dirty_cls\\runs\\clean_dirty_yolo11n_cls\\weights\\best.pt",
+  "classes": {
+    "0": "clean",
+    "1": "dirty"
+  },
+  "validation_images": 120,
+  "top1_accuracy": 1.0,
+  "top5_accuracy": 1.0,
+  "python": "C:\\Users\\OptiPrime-UAV\\yolov11_train\\yoloenv\\Scripts\\python.exe"
+}

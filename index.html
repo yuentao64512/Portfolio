@@ -332,7 +332,9 @@
             <span class="tag">MAVROS</span>
             <span class="tag">ArduPilot</span>
             <span class="tag">YOLOv11</span>
+            <span class="tag">OpenCV</span>
             <span class="tag">Jetson Orin</span>
+            <span class="tag">Serial Radio</span>
           </div>
         </div>
       </div>
@@ -349,7 +351,10 @@
         <li>Develop Gazebo simulation environments to validate flight missions before field testing.</li>
         <li>Implement ROS 2, MAVROS, ArduPilot, and MAVLink functions for takeoff, altitude hold, waypoint navigation, and mission execution.</li>
         <li>Build communication pipelines between the UAV, autonomous surface vehicle, and ground station for real-time monitoring.</li>
-        <li>Train and deploy YOLOv11 perception on Jetson Orin for autonomous target detection and mission guidance.</li>
+        <li>Train and test YOLOv11 models on aerial imagery for buoy, boat, and coloured-marker detection.</li>
+        <li>Develop hard-negative and human-rejection workflows to reduce false detections in shoreline scenes.</li>
+        <li>Prototype surface-condition inspection and map camera detections to grid coordinates for radio transmission.</li>
+        <li>Prepare the perception pipeline for deployment on Jetson Orin and integration with autonomous mission guidance.</li>
       </ul>
 
       <h3>Result</h3>
@@ -357,6 +362,33 @@
         The ongoing work is creating a deployable UAV autonomy stack that connects simulation,
         perception, flight control, onboard compute, communications, and field validation into one mission-ready system.
       </p>
+
+      <p>
+        <a href="RobotX-Projects/">View the documented RobotX drone vision code, training workflows, and detection cases.</a>
+      </p>
+
+      <h3>Development Evidence</h3>
+      <p>
+        The following outputs document model training and prototype testing. They are development evidence from the
+        available datasets, not a claim of final field performance.
+      </p>
+
+      <div class="figure-grid">
+        <figure class="project-figure">
+          <img src="images/robotx-aerial-marker-detections.jpg" alt="YOLOv11 detecting coloured course markers in aerial shoreline imagery" loading="lazy">
+          <figcaption>Aerial validation frames with blue, red, and green marker detections.</figcaption>
+        </figure>
+
+        <figure class="project-figure">
+          <img src="images/robotx-marker-training-results.png" alt="YOLOv11 marker detector training and validation curves" loading="lazy">
+          <figcaption>Training history showing loss and validation metrics across the marker-detection run.</figcaption>
+        </figure>
+
+        <figure class="project-figure">
+          <img src="images/robotx-clean-dirty-detection.jpg" alt="Clean and dirty surface detection prototype output" loading="lazy">
+          <figcaption>Controlled clean/dirty surface prototype used to explore future drone inspection cases.</figcaption>
+        </figure>
+      </div>
     </div>
 
     <!-- Autonomous Crane -->

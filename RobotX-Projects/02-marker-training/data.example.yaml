@@ -1,0 +1,8 @@
+﻿path: C:/Users/OptiPrime-UAV/yolov11_train/water_test
+train: images/train
+val: images/val
+nc: 3
+names:
+  0: blue_marker
+  1: red_marker
+  2: green_marker
