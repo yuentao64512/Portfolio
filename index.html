@@ -220,6 +220,11 @@
     .tag-row { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .8rem; }
     .tag { display: inline-block; padding: .28rem .62rem; border-radius: 999px; font-size: .78rem; font-weight: 650; background: rgba(85,216,255,.09); border: 1px solid rgba(85,216,255,.2); color: #ccefff; }
 
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin: 1.25rem 0; }
+    .metric { padding: .9rem; border-radius: 12px; background: rgba(85,216,255,.055); border: 1px solid rgba(85,216,255,.14); }
+    .metric strong { display: block; color: #fff; font-size: 1.35rem; line-height: 1.2; }
+    .metric span { display: block; color: var(--text-muted); font-size: .76rem; margin-top: .25rem; }
+
     .figure-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.35rem 0 .5rem; }
     .figure-grid .project-figure { margin: 0; }
     .project-figure { text-align: left; margin: 1.5rem 0 1rem; overflow: hidden; background: rgba(3,7,14,.56); border: 1px solid var(--line); border-radius: 14px; }
@@ -277,6 +282,7 @@
       .project-top { padding-right: 1.8rem; }
       .project-card::before { font-size: 2rem; }
       .figure-grid { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .project-figure img { height: auto; max-height: 440px; object-fit: cover; }
       .skill-row { align-items: flex-start; flex-direction: column; }
       .dot { width: 20px; }
@@ -449,6 +455,72 @@
         <figure class="project-figure">
           <img src="images/robotx-clean-dirty-detection.jpg" alt="Clean and dirty surface detection prototype output" loading="lazy">
           <figcaption>Controlled clean/dirty surface prototype used to explore future drone inspection cases.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- Fall Action Detection -->
+    <div class="project-card" id="fall-action">
+      <div class="project-top">
+        <div>
+          <h3 class="project-title">Drone Fall &amp; Action Detection</h3>
+          <div class="project-meta">
+            <strong>Status:</strong> Research Prototype &bull; <strong>Platform:</strong> DJI aerial data + Jetson Orin Nano
+          </div>
+          <div class="tag-row">
+            <span class="tag">YOLO11 Pose</span>
+            <span class="tag">Action Recognition</span>
+            <span class="tag">Multi-Person Tracking</span>
+            <span class="tag">Random Forest</span>
+            <span class="tag">TensorRT</span>
+            <span class="tag">Safety Monitoring</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Challenge</h3>
+      <p>
+        Detecting a fall from a drone is more difficult than recognizing a single posture. The system must follow
+        people over time, separate a fall transition from normal movement, and confirm that the person remains down
+        before raising an alert.
+      </p>
+
+      <h3>Action</h3>
+      <ul class="project-details">
+        <li>Extracted 17-body-keypoint sequences with YOLO11 pose and normalized them across video resolution.</li>
+        <li>Built temporal position, confidence, and motion features for a lightweight Random Forest action classifier.</li>
+        <li>Combined GMDCSA24 fall footage with custom top-down DJI recordings to introduce an aerial viewpoint.</li>
+        <li>Implemented independent IDs, pose buffers, action states, and fall-to-lying timers for multiple people.</li>
+        <li>Prepared live-camera inference for Jetson Orin Nano using a TensorRT pose engine.</li>
+      </ul>
+
+      <div class="metric-grid" aria-label="Baseline evaluation results">
+        <div class="metric"><strong>84.1%</strong><span>Held-out accuracy</span></div>
+        <div class="metric"><strong>85.2%</strong><span>Falling-down F1</span></div>
+        <div class="metric"><strong>89.6%</strong><span>Lying-down F1</span></div>
+        <div class="metric"><strong>138</strong><span>Held-out sequences</span></div>
+      </div>
+
+      <h3>Current Result</h3>
+      <p>
+        The end-to-end prototype performs pose extraction, temporal action classification, multi-person tracking,
+        and configurable fall/lying alerts. The figures above are subject-grouped baseline results; wider independent
+        aerial testing is still required before any safety-critical use.
+      </p>
+
+      <p>
+        <a href="Fall-Action-Project/">View the source code, model, evaluation reports, limitations, and setup guide.</a>
+      </p>
+
+      <div class="figure-grid">
+        <figure class="project-figure">
+          <img src="images/fall-action-aerial-sequences.jpg" alt="Top-down DJI sequences showing walking, standing, lying, and falling actions" loading="lazy">
+          <figcaption>Custom top-down DJI sequences covering standing, walking, lying, and fall-transition cases.</figcaption>
+        </figure>
+
+        <figure class="project-figure">
+          <img src="images/fall-action-dataset-review.jpg" alt="Contact sheet used to review aerial and source fall-action video data" loading="lazy">
+          <figcaption>Dataset review sheet used to inspect camera angles, human scale, motion, and action coverage.</figcaption>
         </figure>
       </div>
     </div>

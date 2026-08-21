@@ -34,6 +34,17 @@ The organized [RobotX drone vision projects](RobotX-Projects/) cover several aer
 
 The collection separates [aerial buoy and boat training](RobotX-Projects/01-buoy-boat-training/), [marker training](RobotX-Projects/02-marker-training/), [training rejects](RobotX-Projects/03-training-rejects/), [drone surface inspection](RobotX-Projects/04-clean-dirty-inspection/), and [drone RC control](RobotX-Projects/05-drone-rc-control/) into documented, reusable project folders.
 
+### Drone Fall and Action Detection
+
+**Status:** Research prototype<br>
+**Stack:** Python, YOLO11 Pose, OpenCV, scikit-learn, Jetson Orin Nano, TensorRT
+
+Built an aerial safety-monitoring pipeline that extracts human pose sequences, classifies actions with a Random Forest model, tracks multiple people, and raises a configurable alert when a detected fall is followed by the person remaining down. The work combines the GMDCSA24 dataset with custom top-down DJI recordings and includes live-camera, video-demo, training, evaluation, and Jetson deployment workflows.
+
+The current subject-grouped baseline reports 84.1% accuracy, 85.2% falling-down F1, and 89.6% lying-down F1 on 138 held-out sequences. These are development results; broader aerial field validation is still required.
+
+[View the Fall Action Project, evidence, limitations, and setup instructions](Fall-Action-Project/).
+
 ### Autonomous 3-Axis Robotic Crane System
 
 **Role:** Robotics Software / Autonomy Developer<br>
@@ -78,6 +89,7 @@ Portfolio/
 +-- launch_files/       # ROS launch configurations
 +-- python_files/       # Python scripts and experiments
 +-- RobotX-Projects/    # Aerial vision, detection training, and drone RC experiments
++-- Fall-Action-Project/ # Aerial pose-based fall/action detection and alert prototype
 +-- turtlesim/          # ROS fundamentals and examples
 ```
 
