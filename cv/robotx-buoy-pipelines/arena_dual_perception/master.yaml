@@ -1,0 +1,16 @@
+path: ./master_dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: buoy_red
+  1: buoy_green
+  2: buoy_blue
+  3: buoy
+  4: dock
+  5: platform
+  6: obstacle
+  7: bay_red
+  8: bay_green
+  9: bay
+

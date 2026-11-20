@@ -1,0 +1,15 @@
+path: /home/robotx/Robotx_train/photo_214805_training_v1/number_detector_dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: '0'
+  1: '1'
+  2: '2'
+  3: '3'
+  4: '4'
+  5: '5'
+  6: '6'
+  7: '7'
+  8: '8'
+  9: '9'

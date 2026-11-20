@@ -1,0 +1,11 @@
+path: /home/robotx/buoy_actual/boat_yolo/datasets/model_a
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: buoy_led_red
+  1: buoy_led_green
+  2: buoy_no_led
+  3: dock
+  4: home
+  5: obstacle

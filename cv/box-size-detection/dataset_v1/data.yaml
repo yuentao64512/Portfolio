@@ -1,0 +1,8 @@
+path: /home/robotx/box_size_training/dataset_v1
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: small
+  1: medium
+  2: large

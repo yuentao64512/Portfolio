@@ -1,0 +1,6 @@
+path: /home/robotx/buoy_yolo26/dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: buoy

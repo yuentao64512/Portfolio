@@ -1,0 +1,6 @@
+path: /home/robotx/Robotx_train
+train: images
+val: images
+names:
+  0: number_buoy
+  1: boundary

@@ -1,0 +1,42 @@
+models:
+  nav: weights/nav_best.engine
+  dock: weights/dock_best.engine
+  image_size: 960
+  nav_confidence: 0.45
+  dock_confidence: 0.45
+camera:
+  calibration_file: null
+  locked_exposure: null
+  locked_white_balance: null
+  latency_seconds: null
+  height_above_water_m: null
+  tilt_down_degrees: null
+  offset_from_gps_m: null
+objects:
+  buoy_height_above_water_m: null
+  bay_height_above_water_m: null
+  dock_height_above_water_m: null
+mavlink:
+  endpoint: udpin:0.0.0.0:14550
+  component_id: 191
+  attitude_hz: 50
+  local_position_hz: 10
+mapping:
+  enabled: false
+  maximum_tilt_degrees: 10.0
+  maximum_roll_rate_dps: 25.0
+  confirm_sightings: 3
+  unconfirmed_expiry_seconds: 20.0
+docking:
+  enabled: false
+  target_bay_colour: red
+  consecutive_lock_frames: 15
+  target_loss_timeout_seconds: 2.0
+  staging_distance_m: 3.0
+  stopping_distance_m: 1.0
+  enable_guided_commands: false
+safety:
+  require_rc_override: true
+  require_ardupilot_failsafes: true
+  hold_on_target_loss: true
+

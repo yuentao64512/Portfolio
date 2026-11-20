@@ -1,0 +1,6 @@
+path: /home/robotx/buoy_actual/buoy_project/retrain_robotx_do_not_touch_20261110/merged/buoy_dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: buoy

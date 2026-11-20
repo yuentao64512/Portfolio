@@ -1,0 +1,7 @@
+path: /home/robotx/Robotx_train/photo_214805_training_v1/buoy_detector_dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: number_buoy
+  1: boundary

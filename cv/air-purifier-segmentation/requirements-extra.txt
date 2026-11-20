@@ -1,0 +1,5 @@
+ddgs==9.16.0
+clip @ git+https://github.com/ultralytics/CLIP.git@a13192f8cb767260d7dfd98c843b0716593169e7
+ftfy==6.3.1
+regex==2026.9.3
+tqdm==4.67.1

@@ -1,0 +1,11 @@
+path: /home/robotx/buoy_actual/boundary_synthetic_v9_20261111/dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: buoy_red
+  1: buoy_green
+  2: buoy_blue
+  3: buoy_boundary_no_light
+  4: dock
+  5: obstacle

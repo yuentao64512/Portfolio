@@ -1,0 +1,11 @@
+path: /home/robotx/buoy_actual/v15_6class_20261111/autolabel_164851_v3
+train: images/train
+val: images/test_T1
+test: images/test_T1
+names:
+  0: buoy_red
+  1: buoy_green
+  2: buoy_blue
+  3: dock_red
+  4: dock_green
+  5: obstacle

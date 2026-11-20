@@ -1,0 +1,16 @@
+path: /home/robotx/buoy_actual/buoy_project/dataset_full
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: buoy
+  1: "0"
+  2: "1"
+  3: "2"
+  4: "3"
+  5: "4"
+  6: "5"
+  7: "6"
+  8: "7"
+  9: "8"
+  10: "9"

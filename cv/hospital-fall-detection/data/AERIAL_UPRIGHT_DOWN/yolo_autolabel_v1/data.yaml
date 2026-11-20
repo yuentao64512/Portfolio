@@ -1,0 +1,6 @@
+path: /home/robotx/fall_action_project/data/AERIAL_UPRIGHT_DOWN/yolo_autolabel_v1
+train: images/train
+val: images/val
+names:
+  0: upright
+  1: down

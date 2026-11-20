@@ -1,0 +1,7 @@
+path: /home/robotx/pipe_cones/dataset_recorded_400
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: pipe_cone

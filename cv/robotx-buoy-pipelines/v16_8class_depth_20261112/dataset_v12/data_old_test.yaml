@@ -1,0 +1,13 @@
+path: /home/robotx/buoy_actual/v16_8class_depth_20261112/dataset_v12
+train: images/train
+val: images/test_new
+test: images/test_old
+names:
+  0: buoy_red
+  1: buoy_green
+  2: buoy_blue
+  3: buoy_no_light
+  4: dock
+  5: dock_red
+  6: dock_green
+  7: obstacle

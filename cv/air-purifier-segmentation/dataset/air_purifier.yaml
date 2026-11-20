@@ -1,0 +1,6 @@
+path: /home/robotx/air_purifier_yolo/dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: air_purifier

@@ -1,0 +1,6 @@
+path: /home/robotx/cone_yolo26_v2
+train: images/train
+val: images/val
+names:
+  0: orange_cone
+  1: green_cone

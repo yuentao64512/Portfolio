@@ -1,0 +1,17 @@
+path: /home/robotx/buoy_actual/boat_yolo/datasets/model_b
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: circle
+  1: diamond
+  2: digit_0
+  3: digit_1
+  4: digit_2
+  5: digit_3
+  6: digit_4
+  7: digit_5
+  8: digit_6
+  9: digit_7
+  10: digit_8
+  11: digit_9
