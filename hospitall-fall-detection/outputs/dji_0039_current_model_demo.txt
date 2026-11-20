@@ -1,0 +1,6 @@
+Live detector started. Press q in the preview window to stop.
+state=warming_up       alert=False fps=1.2 top=
+state=warming_up       alert=False fps=52.4 top=
+state=walking          alert=False fps=115.9 top=walking:0.50, falling_down:0.16, lying_down:0.12
+state=walking          alert=False fps=140.2 top=walking:0.30, lying_down:0.24, sitting_kneeling:0.22
+Frame read failed; stopping.

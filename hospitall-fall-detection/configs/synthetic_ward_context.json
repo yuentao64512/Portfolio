@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "camera_id": "synthetic_ward_camera_1",
+  "reference_width": 1280,
+  "reference_height": 720,
+  "regions": [
+    {
+      "name": "foreground_bed",
+      "region_type": "bed",
+      "points": [[0.16, 0.25], [0.34, 0.24], [0.61, 0.42], [0.62, 0.72], [0.51, 0.84], [0.24, 0.75], [0.16, 0.51]]
+    },
+    {
+      "name": "background_bed",
+      "region_type": "bed",
+      "points": [[0.49, 0.06], [0.75, 0.06], [0.76, 0.29], [0.51, 0.34]]
+    },
+    {
+      "name": "open_floor_right",
+      "region_type": "floor",
+      "points": [[0.59, 0.27], [0.98, 0.25], [0.98, 0.98], [0.43, 0.98], [0.49, 0.78], [0.61, 0.70]]
+    },
+    {
+      "name": "open_floor_front",
+      "region_type": "floor",
+      "points": [[0.03, 0.83], [0.49, 0.77], [0.43, 0.98], [0.03, 0.98]]
+    }
+  ]
+}

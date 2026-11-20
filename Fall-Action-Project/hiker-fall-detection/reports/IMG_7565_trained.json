@@ -1,0 +1,12 @@
+{
+  "processed_frames": 40,
+  "wall_seconds": 1.8091789049940417,
+  "mean_processing_ms": 33.15805577512947,
+  "pose_model": "/home/robotx/fall_action_project/yolo11n-pose.pt",
+  "max_people": 1,
+  "skeleton": "body",
+  "action_rate_hz": 8.0,
+  "source": "IMG_7565.MOV",
+  "log": "/home/robotx/rse4207_ws/reports/live_20261014_213436.csv",
+  "output": "reports/IMG_7565_trained.mp4"
+}

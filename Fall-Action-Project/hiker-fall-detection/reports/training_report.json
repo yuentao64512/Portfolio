@@ -1,0 +1,204 @@
+{
+  "classes": [
+    "falling_down",
+    "lying_down",
+    "walking",
+    "standing",
+    "sitting"
+  ],
+  "num_sequences": 358,
+  "base_sequences": 357,
+  "falling_photo_augmented": 1,
+  "train_sequences": 255,
+  "test_sequences": 102,
+  "num_groups": 89,
+  "groups_by_source": {
+    "GMDCSA24": 83,
+    "falling_photo": 1,
+    "user_recording": 6
+  },
+  "class_counts": {
+    "falling_down": 80,
+    "lying_down": 83,
+    "walking": 60,
+    "standing": 57,
+    "sitting": 78
+  },
+  "comparison": {
+    "logistic_regression": {
+      "accuracy": 0.696078431372549,
+      "classification_report": {
+        "falling_down": {
+          "precision": 0.9375,
+          "recall": 0.7142857142857143,
+          "f1-score": 0.8108108108108109,
+          "support": 21.0
+        },
+        "lying_down": {
+          "precision": 0.8095238095238095,
+          "recall": 0.8095238095238095,
+          "f1-score": 0.8095238095238095,
+          "support": 21.0
+        },
+        "walking": {
+          "precision": 0.5416666666666666,
+          "recall": 0.5909090909090909,
+          "f1-score": 0.5652173913043478,
+          "support": 22.0
+        },
+        "standing": {
+          "precision": 0.5,
+          "recall": 0.5263157894736842,
+          "f1-score": 0.5128205128205128,
+          "support": 19.0
+        },
+        "sitting": {
+          "precision": 0.7619047619047619,
+          "recall": 0.8421052631578947,
+          "f1-score": 0.8,
+          "support": 19.0
+        },
+        "accuracy": 0.696078431372549,
+        "macro avg": {
+          "precision": 0.7101190476190476,
+          "recall": 0.6966279334700387,
+          "f1-score": 0.6996745048918962,
+          "support": 102.0
+        },
+        "weighted avg": {
+          "precision": 0.7115721288515405,
+          "recall": 0.696078431372549,
+          "f1-score": 0.7000529350912983,
+          "support": 102.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          15,
+          2,
+          2,
+          0,
+          2
+        ],
+        [
+          1,
+          17,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          13,
+          8,
+          0
+        ],
+        [
+          0,
+          0,
+          7,
+          10,
+          2
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          16
+        ]
+      ]
+    },
+    "random_forest": {
+      "accuracy": 0.7352941176470589,
+      "classification_report": {
+        "falling_down": {
+          "precision": 0.7727272727272727,
+          "recall": 0.8095238095238095,
+          "f1-score": 0.7906976744186046,
+          "support": 21.0
+        },
+        "lying_down": {
+          "precision": 0.7894736842105263,
+          "recall": 0.7142857142857143,
+          "f1-score": 0.75,
+          "support": 21.0
+        },
+        "walking": {
+          "precision": 0.7058823529411765,
+          "recall": 0.5454545454545454,
+          "f1-score": 0.6153846153846154,
+          "support": 22.0
+        },
+        "standing": {
+          "precision": 0.5714285714285714,
+          "recall": 0.631578947368421,
+          "f1-score": 0.6,
+          "support": 19.0
+        },
+        "sitting": {
+          "precision": 0.8260869565217391,
+          "recall": 1.0,
+          "f1-score": 0.9047619047619048,
+          "support": 19.0
+        },
+        "accuracy": 0.7352941176470589,
+        "macro avg": {
+          "precision": 0.7331197675658572,
+          "recall": 0.740168603326498,
+          "f1-score": 0.732168838913025,
+          "support": 102.0
+        },
+        "weighted avg": {
+          "precision": 0.7342002636417211,
+          "recall": 0.7352941176470589,
+          "f1-score": 0.7302312636443964,
+          "support": 102.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          17,
+          2,
+          0,
+          1,
+          1
+        ],
+        [
+          4,
+          15,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          12,
+          7,
+          1
+        ],
+        [
+          0,
+          1,
+          5,
+          12,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          19
+        ]
+      ]
+    }
+  },
+  "split": "grouped by source video/subject; random_state=42",
+  "selected_model": "random_forest",
+  "feature_version": "body12_centered_timed_v1",
+  "external_dataset": "GMDCSA24 local copy",
+  "user_segments": "data/user_segments.csv; approximate temporal annotations require review"
+}

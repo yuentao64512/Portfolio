@@ -1,0 +1,21 @@
+stateDiagram-v2
+    [*] --> CONNECTED
+    CONNECTED --> CHECKING_OUTPUT_MAP : heartbeat received
+    CHECKING_OUTPUT_MAP --> FAULT : front/rear function missing
+    CHECKING_OUTPUT_MAP --> FAULT : selected function != 0
+    CHECKING_OUTPUT_MAP --> PREFLIGHT : map accepted
+    PREFLIGHT --> FAULT : armed without --allow-armed
+    PREFLIGHT --> DRY_RUN : no --send
+    PREFLIGHT --> COMMANDING : --send
+    COMMANDING --> STOPPING : timeout or Ctrl+C
+    STOPPING --> COMPLETE : both outputs neutralized
+    FAULT --> [*]
+    DRY_RUN --> [*]
+    COMPLETE --> [*]
+
+    note right of FAULT
+      Do not bypass the output-map check.
+      Do not test with propellers connected.
+      Do not command an unsecured boat.
+      Do not assume the sign; verify left/right at low output.
+    end note

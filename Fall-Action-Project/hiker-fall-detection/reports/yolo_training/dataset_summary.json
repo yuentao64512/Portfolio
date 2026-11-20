@@ -1,0 +1,27 @@
+{
+  "dataset_root": "/home/robotx/fall_action_project/data/AERIAL_UPRIGHT_DOWN/yolo_autolabel_v1",
+  "classes": {
+    "0": "upright",
+    "1": "down"
+  },
+  "splits": {
+    "train": {
+      "images": 186,
+      "boxes": 186,
+      "class_boxes": {
+        "upright": 50,
+        "down": 136
+      }
+    },
+    "val": {
+      "images": 46,
+      "boxes": 46,
+      "class_boxes": {
+        "upright": 12,
+        "down": 34
+      }
+    }
+  },
+  "total_images": 232,
+  "total_boxes": 232
+}

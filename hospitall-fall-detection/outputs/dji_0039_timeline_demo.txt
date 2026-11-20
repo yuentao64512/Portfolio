@@ -1,0 +1,8 @@
+  1.40s  pred=falling_down      top=falling_down:0.52, lying_down:0.17, standing_still:0.15  alert=False
+  2.00s  pred=falling_down      top=falling_down:0.34, standing_still:0.21, walking:0.18  alert=False
+  3.00s  pred=walking           top=walking:0.31, standing_still:0.22, sitting_kneeling:0.20  alert=False
+  4.00s  pred=walking           top=walking:0.27, sitting_kneeling:0.27, lying_down:0.21  alert=False
+  5.00s  pred=sitting_kneeling  top=sitting_kneeling:0.27, lying_down:0.24, walking:0.22  alert=False
+  6.00s  pred=sitting_kneeling  top=sitting_kneeling:0.33, lying_down:0.23, walking:0.20  alert=False
+  7.00s  pred=falling_down      top=falling_down:0.53, lying_down:0.39, standing_still:0.04  alert=False
+  8.00s  pred=falling_down      top=falling_down:0.53, lying_down:0.40, standing_still:0.04  alert=False

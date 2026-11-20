@@ -11,6 +11,7 @@ A cleaned collection of RobotX aerial-drone computer-vision and radio-control ex
 | `03-training-rejects` | Aerial buoy/marker detections while suppressing people and other false positives | Preventing clothing, people, shoreline objects, or reflections from being mistaken for targets |
 | `04-clean-dirty-inspection` | Clean versus dirty surfaces viewed by a drone camera | Aerial wall, roof, panel, structure, or facility inspection |
 | `05-drone-rc-control` | Converts drone-camera detections to a 100 x 100 grid and communicates over serial radio | Drone RC/mission experimentation and sending target positions to a controller |
+| `simulation` | Gazebo boat and drone simulation with OCS/robocommand integration, ASV wave models, MAVLink control, worlds, and launch scripts | Testing the combined RobotX boat/drone control workflow before hardware deployment |
 
 Each project has its own README with its purpose, application cases, expected files, and commands.
 
@@ -44,4 +45,4 @@ git push -u origin main
 
 ## Origin
 
-This is an organized copy. The original `yolov11_train` workspace was not moved or deleted.
+This is an organized copy. The original `yolov11_train` and `/home/robotx/usv_sim_workspace` workspaces were not moved or deleted.

@@ -1,0 +1,5 @@
+scenario,label,source,source_fps,source_frames,stitched_start_sec,stitched_end_sec,stitched_frames,expected_frames
+1,Bed to floor transition,test_videos/synthetic_hospital_fall/synthetic_hospital_bed_to_floor.mp4,15.0,259,0.0,17.266666666666666,259,259
+2,Walking then fall,test_videos/generated_hospital/hospital_cctv_walking_then_fall.mp4,25.0,263,28.266666666666666,38.8,158,158
+3,Walking only control,test_videos/generated_hospital/hospital_cctv_walking_only_control.mp4,25.0,186,49.8,57.266666666666666,112,112
+4,Floor only control,test_videos/generated_hospital/hospital_cctv_floor_only_control.mp4,25.0,200,68.26666666666667,76.26666666666667,120,120

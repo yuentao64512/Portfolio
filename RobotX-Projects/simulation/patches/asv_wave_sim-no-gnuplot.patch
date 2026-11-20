@@ -1,0 +1,11 @@
+diff --git a/gz-waves/CMakeLists.txt b/gz-waves/CMakeLists.txt
+index 5755769..7e3fa84 100644
+--- a/gz-waves/CMakeLists.txt
++++ b/gz-waves/CMakeLists.txt
+@@ -46,2 +46,4 @@
+-# Find gnuplot-iostream - the header is used by the examples in test/plots
+-include(Add_gnuplot-iostream)
++# Find gnuplot-iostream - only needed for the plotting examples
++if(BUILD_TESTING)
++  include(Add_gnuplot-iostream)
++endif()

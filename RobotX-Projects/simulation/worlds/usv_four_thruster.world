@@ -1,0 +1,566 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="usv_four_thruster">
+
+    <physics type="ode">
+      <max_step_size>0.0025</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-user-commands-system"             name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+    <plugin filename="libNavigationBeacons.so" name="usv::NavigationBeacons">
+      <entrance_hz>0.5</entrance_hz>
+      <default_hz>1.0</default_hz>
+      <exit_hz>0.0</exit_hz><!-- Keep exit solid; set to 1.0 to blink. -->
+    </plugin>
+    <scene>
+      <ambient>0.54 0.57 0.60 1</ambient>
+      <background>0.68 0.80 0.92 1</background>
+      <shadows>true</shadows>
+      <grid>false</grid>
+    </scene>
+
+    <light name="sun" type="directional">
+      <pose>0 0 120 0 0 0</pose>
+      <cast_shadows>true</cast_shadows>
+      <diffuse>0.96 0.92 0.84 1</diffuse>
+      <specular>0.35 0.35 0.32 1</specular>
+      <direction>-0.45 0.30 -0.85</direction>
+    </light>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>0 -145 105 0 0.82 1.5708</pose>
+      </camera>
+    </gui>
+
+    <model name="base_ground">
+      <static>true</static>
+      <pose>0 0 -2 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>330 270 0.12</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>330 270 0.12</size></box></geometry>
+          <material><ambient>0.38 0.42 0.36 1</ambient><diffuse>0.45 0.50 0.42 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="waves">
+      <static>true</static>
+
+      <plugin filename="gz-waves1-waves-model-system" name="gz::sim::systems::WavesModel">
+        <static>0</static>
+        <update_rate>30</update_rate>
+        <wave>
+          <algorithm>fft</algorithm>
+          <tile_size>256</tile_size>
+          <cell_count>256</cell_count>
+          <!-- Gentle sea state for stable buoyancy and controller checks. -->
+          <wind_speed>1.0</wind_speed>
+          <wind_angle_deg>135</wind_angle_deg>
+          <steepness>0.1</steepness>
+        </wave>
+      </plugin>
+
+      <link name="base_link">
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>model://waves/materials/mesh_L256m_N256.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.0 0.05 0.8 0.92</ambient>
+            <diffuse>0.0 0.1 0.7 0.92</diffuse>
+            <specular>0.7 0.7 0.7 0.92</specular>
+            <pbr>
+              <metal>
+                <albedo_map>model://waves/materials/water.jpg</albedo_map>
+                <normal_map>model://waves/materials/wave_normals.dds</normal_map>
+                <environment_map>model://waves/materials/skybox_lowres.dds</environment_map>
+                <roughness>0.3</roughness>
+                <metalness>0.1</metalness>
+              </metal>
+            </pbr>
+          </material>
+
+          <!--
+            Keep WavesModel above for buoyancy and hydrodynamics.  The OGRE2
+            dynamic visual plugin triggers an OgreHlmsDatablock assertion when
+            Gazebo GUI shuts down, so this surface remains a static water
+            visual while the physics wavefield stays active.
+          -->
+        </visual>
+      </link>
+    </model>
+
+    <model name="mbs_waterfront_land">
+      <static>true</static>
+      <link name="land">
+        <visual name="mbs_top_land"><pose>-58 76 0.14 0 0 -0.10</pose><geometry><box><size>125 32 0.28</size></box></geometry><material><ambient>0.48 0.50 0.42 1</ambient><diffuse>0.62 0.65 0.54 1</diffuse></material></visual>
+        <visual name="left_promenade"><pose>-97 15 0.14 0 0 -0.08</pose><geometry><box><size>34 126 0.28</size></box></geometry><material><ambient>0.43 0.48 0.38 1</ambient><diffuse>0.56 0.62 0.48 1</diffuse></material></visual>
+        <visual name="right_fullerton_land"><pose>94 20 0.14 0 0 0.04</pose><geometry><box><size>40 137 0.28</size></box></geometry><material><ambient>0.48 0.47 0.40 1</ambient><diffuse>0.64 0.62 0.52 1</diffuse></material></visual>
+        <visual name="bottom_esplanade_land"><pose>-4 -78 0.14 0 0 0.04</pose><geometry><box><size>188 32 0.28</size></box></geometry><material><ambient>0.50 0.49 0.43 1</ambient><diffuse>0.66 0.64 0.56 1</diffuse></material></visual>
+        <visual name="top_walkway"><pose>-45 61 0.32 0 0 -0.10</pose><geometry><box><size>115 7 0.06</size></box></geometry><material><ambient>0.73 0.70 0.63 1</ambient><diffuse>0.87 0.84 0.75 1</diffuse></material></visual>
+        <visual name="right_walkway"><pose>77 15 0.32 0 0 0.04</pose><geometry><box><size>7 116 0.06</size></box></geometry><material><ambient>0.73 0.70 0.63 1</ambient><diffuse>0.87 0.84 0.75 1</diffuse></material></visual>
+        <visual name="bottom_walkway"><pose>-5 -62 0.32 0 0 0.04</pose><geometry><box><size>170 7 0.06</size></box></geometry><material><ambient>0.73 0.70 0.63 1</ambient><diffuse>0.87 0.84 0.75 1</diffuse></material></visual>
+        <visual name="top_seawall"><pose>-30 52 0.80 0 0 -0.08</pose><geometry><box><size>125 1.3 1.1</size></box></geometry><material><ambient>0.25 0.25 0.24 1</ambient><diffuse>0.40 0.40 0.38 1</diffuse></material></visual>
+        <visual name="right_seawall"><pose>72 1 0.80 0 0 0.03</pose><geometry><box><size>1.3 113 1.1</size></box></geometry><material><ambient>0.25 0.25 0.24 1</ambient><diffuse>0.40 0.40 0.38 1</diffuse></material></visual>
+        <visual name="bottom_seawall"><pose>-4 -50 0.80 0 0 0.04</pose><geometry><box><size>150 1.3 1.1</size></box></geometry><material><ambient>0.25 0.25 0.24 1</ambient><diffuse>0.40 0.40 0.38 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="marina_bay_sands_landmark">
+      <static>true</static>
+      <pose>-58 83 0 0 0 -0.16</pose>
+      <link name="mbs">
+        <visual name="podium"><pose>0 -12 4 0 0 0</pose><geometry><box><size>86 24 8</size></box></geometry><material><ambient>0.66 0.62 0.55 1</ambient><diffuse>0.82 0.78 0.68 1</diffuse></material></visual>
+        <visual name="tower_1"><pose>-26 0 30 0 0 0.08</pose><geometry><box><size>10 18 60</size></box></geometry><material><ambient>0.58 0.66 0.72 1</ambient><diffuse>0.76 0.84 0.90 1</diffuse><specular>0.8 0.8 0.8 1</specular></material></visual>
+        <visual name="tower_2"><pose>0 0 33 0 0 0</pose><geometry><box><size>11 18 66</size></box></geometry><material><ambient>0.58 0.66 0.72 1</ambient><diffuse>0.76 0.84 0.90 1</diffuse><specular>0.8 0.8 0.8 1</specular></material></visual>
+        <visual name="tower_3"><pose>26 0 30 0 0 -0.08</pose><geometry><box><size>10 18 60</size></box></geometry><material><ambient>0.58 0.66 0.72 1</ambient><diffuse>0.76 0.84 0.90 1</diffuse><specular>0.8 0.8 0.8 1</specular></material></visual>
+        <visual name="skypark"><pose>0 0 66 0 0 0</pose><geometry><box><size>76 20 3.2</size></box></geometry><material><ambient>0.40 0.44 0.42 1</ambient><diffuse>0.55 0.60 0.56 1</diffuse></material></visual>
+        <visual name="skypark_nose"><pose>42 0 66 0 1.5708 0</pose><geometry><cylinder><radius>10</radius><length>8</length></cylinder></geometry><material><ambient>0.40 0.44 0.42 1</ambient><diffuse>0.55 0.60 0.56 1</diffuse></material></visual>
+        <visual name="roof_pool"><pose>5 -5 67.8 0 0 0</pose><geometry><box><size>40 4 0.2</size></box></geometry><material><ambient>0.02 0.35 0.55 1</ambient><diffuse>0.03 0.55 0.78 1</diffuse><specular>0.9 0.9 0.9 1</specular></material></visual>
+      </link>
+    </model>
+
+    <model name="artscience_lotus">
+      <static>true</static>
+      <pose>-63 38 0 0 0 -0.20</pose>
+      <link name="lotus">
+        <visual name="base"><pose>0 0 3 0 0 0</pose><geometry><cylinder><radius>8.5</radius><length>6</length></cylinder></geometry><material><ambient>0.86 0.84 0.78 1</ambient><diffuse>0.98 0.96 0.88 1</diffuse></material></visual>
+        <visual name="petal_1"><pose>0 9 9 0.55 0 0</pose><geometry><box><size>7 16 2.2</size></box></geometry><material><ambient>0.90 0.88 0.82 1</ambient><diffuse>1 0.98 0.92 1</diffuse></material></visual>
+        <visual name="petal_2"><pose>9 3 9 0.35 0.3 0.85</pose><geometry><box><size>7 15 2.2</size></box></geometry><material><ambient>0.90 0.88 0.82 1</ambient><diffuse>1 0.98 0.92 1</diffuse></material></visual>
+        <visual name="petal_3"><pose>-9 3 9 0.35 -0.3 -0.85</pose><geometry><box><size>7 15 2.2</size></box></geometry><material><ambient>0.90 0.88 0.82 1</ambient><diffuse>1 0.98 0.92 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="helix_bridge">
+      <static>true</static>
+      <pose>-82 -4 4 0 0 0.78</pose>
+      <link name="bridge">
+        <visual name="deck"><geometry><box><size>76 5 1.0</size></box></geometry><material><ambient>0.35 0.35 0.36 1</ambient><diffuse>0.50 0.50 0.52 1</diffuse></material></visual>
+        <visual name="rail_l"><pose>0 2.8 1.2 0 0 0</pose><geometry><box><size>76 0.28 1.2</size></box></geometry><material><ambient>0.85 0.85 0.80 1</ambient><diffuse>0.95 0.95 0.90 1</diffuse></material></visual>
+        <visual name="rail_r"><pose>0 -2.8 1.2 0 0 0</pose><geometry><box><size>76 0.28 1.2</size></box></geometry><material><ambient>0.85 0.85 0.80 1</ambient><diffuse>0.95 0.95 0.90 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="esplanade_bridge">
+      <static>true</static>
+      <pose>88 -10 4 0 0 1.50</pose>
+      <link name="bridge">
+        <visual name="deck"><geometry><box><size>115 10 1.2</size></box></geometry><material><ambient>0.56 0.54 0.47 1</ambient><diffuse>0.73 0.70 0.62 1</diffuse></material></visual>
+        <visual name="road"><pose>0 0 0.7 0 0 0</pose><geometry><box><size>115 6 0.08</size></box></geometry><material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="merlion_point">
+      <static>true</static>
+      <pose>66 -29 0 0 0 2.75</pose>
+      <link name="merlion">
+        <visual name="platform"><pose>0 0 0.55 0 0 0</pose><geometry><cylinder><radius>6.5</radius><length>1.1</length></cylinder></geometry><material><ambient>0.52 0.50 0.45 1</ambient><diffuse>0.70 0.67 0.60 1</diffuse></material></visual>
+        <visual name="body"><pose>0 0 5.2 0 0 0</pose><geometry><cylinder><radius>2.2</radius><length>9.5</length></cylinder></geometry><material><ambient>0.86 0.86 0.82 1</ambient><diffuse>0.98 0.97 0.90 1</diffuse></material></visual>
+        <visual name="head"><pose>0 0 10.8 0 0 0</pose><geometry><sphere><radius>2.9</radius></sphere></geometry><material><ambient>0.86 0.86 0.82 1</ambient><diffuse>0.98 0.97 0.90 1</diffuse></material></visual>
+        <visual name="spout"><pose>0 -9.5 10.9 1.5708 0 0</pose><geometry><cylinder><radius>0.18</radius><length>11.5</length></cylinder></geometry><material><ambient>0.50 0.86 1.0 0.62</ambient><diffuse>0.50 0.86 1.0 0.62</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="fullerton_cbd_side">
+      <static>true</static>
+      <pose>106 45 0 0 0 0.05</pose>
+      <link name="buildings">
+        <visual name="fullerton_low"><pose>-16 -10 7 0 0 0</pose><geometry><box><size>24 18 14</size></box></geometry><material><ambient>0.72 0.68 0.58 1</ambient><diffuse>0.90 0.84 0.70 1</diffuse></material></visual>
+        <visual name="tower_a"><pose>8 5 34 0 0 0</pose><geometry><box><size>13 13 68</size></box></geometry><material><ambient>0.24 0.32 0.40 1</ambient><diffuse>0.34 0.46 0.58 1</diffuse></material></visual>
+        <visual name="tower_b"><pose>24 -2 45 0 0 0</pose><geometry><box><size>12 12 90</size></box></geometry><material><ambient>0.20 0.28 0.36 1</ambient><diffuse>0.30 0.42 0.52 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="esplanade_domes">
+      <static>true</static>
+      <pose>41 -82 0 0 0 0.25</pose>
+      <link name="domes">
+        <visual name="base"><pose>0 0 1.6 0 0 0</pose><geometry><box><size>34 18 3.2</size></box></geometry><material><ambient>0.54 0.50 0.44 1</ambient><diffuse>0.70 0.66 0.58 1</diffuse></material></visual>
+        <visual name="dome1"><pose>-8 0 5 0 0 0</pose><geometry><sphere><radius>7</radius></sphere></geometry><material><ambient>0.64 0.58 0.42 1</ambient><diffuse>0.86 0.78 0.56 1</diffuse></material></visual>
+        <visual name="dome2"><pose>8 1 5 0 0 0</pose><geometry><sphere><radius>7</radius></sphere></geometry><material><ambient>0.64 0.58 0.42 1</ambient><diffuse>0.86 0.78 0.56 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="floating_platform">
+      <static>true</static>
+      <pose>-62 -42 0 0 0 0.06</pose>
+      <link name="platform">
+        <visual name="walkway"><pose>0 -10 0.55 0 0 1.5708</pose><geometry><box><size>45 5 0.6</size></box></geometry><material><ambient>0.42 0.40 0.36 1</ambient><diffuse>0.58 0.56 0.50 1</diffuse></material></visual>
+        <visual name="head"><pose>0 15 0.65 0 0 0</pose><geometry><box><size>27 16 0.8</size></box></geometry><material><ambient>0.70 0.70 0.66 1</ambient><diffuse>0.88 0.88 0.82 1</diffuse></material></visual>
+      </link>
+    </model>
+
+
+
+    <model name="promenade_trees_lamps">
+      <static>true</static>
+      <link name="details">
+
+        <visual name="bottom_tree_trunk_0"><pose>-85 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_0"><pose>-85 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_0"><pose>-78 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_0"><pose>-78 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_1"><pose>-69 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_1"><pose>-69 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_1"><pose>-62 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_1"><pose>-62 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_2"><pose>-53 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_2"><pose>-53 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_2"><pose>-46 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_2"><pose>-46 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_3"><pose>-37 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_3"><pose>-37 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_3"><pose>-30 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_3"><pose>-30 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_4"><pose>-21 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_4"><pose>-21 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_4"><pose>-14 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_4"><pose>-14 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_5"><pose>-5 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_5"><pose>-5 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_5"><pose>2 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_5"><pose>2 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_6"><pose>11 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_6"><pose>11 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_6"><pose>18 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_6"><pose>18 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_7"><pose>27 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_7"><pose>27 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_7"><pose>34 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_7"><pose>34 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_8"><pose>43 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_8"><pose>43 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_8"><pose>50 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_8"><pose>50 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_9"><pose>59 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_9"><pose>59 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_9"><pose>66 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_9"><pose>66 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="bottom_tree_trunk_10"><pose>75 -72 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="bottom_tree_leaf_10"><pose>75 -72 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+        <visual name="lamp_post_10"><pose>82 -57 2.2 0 0 0</pose><geometry><cylinder><radius>0.13</radius><length>4.4</length></cylinder></geometry><material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.18 0.18 0.18 1</diffuse></material></visual>
+        <visual name="lamp_head_10"><pose>82 -57 4.7 0 0 0</pose><geometry><sphere><radius>0.45</radius></sphere></geometry><material><ambient>1.0 0.78 0.42 1</ambient><diffuse>1.0 0.78 0.42 1</diffuse><emissive>1.0 0.70 0.28 1</emissive></material></visual>
+
+        <visual name="right_tree_trunk_0"><pose>86 -38 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_0"><pose>86 -38 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+        <visual name="right_tree_trunk_1"><pose>86 -22 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_1"><pose>86 -22 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+        <visual name="right_tree_trunk_2"><pose>86 -6 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_2"><pose>86 -6 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+        <visual name="right_tree_trunk_3"><pose>86 10 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_3"><pose>86 10 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+        <visual name="right_tree_trunk_4"><pose>86 26 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_4"><pose>86 26 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+        <visual name="right_tree_trunk_5"><pose>86 42 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_5"><pose>86 42 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+        <visual name="right_tree_trunk_6"><pose>86 58 1.8 0 0 0</pose><geometry><cylinder><radius>0.35</radius><length>3.6</length></cylinder></geometry><material><ambient>0.25 0.13 0.07 1</ambient><diffuse>0.42 0.24 0.12 1</diffuse></material></visual>
+        <visual name="right_tree_leaf_6"><pose>86 58 4.2 0 0 0</pose><geometry><sphere><radius>2.4</radius></sphere></geometry><material><ambient>0.05 0.30 0.10 1</ambient><diffuse>0.08 0.48 0.16 1</diffuse></material></visual>
+
+      </link>
+    </model>
+
+    <light name="mbs_cool_light" type="point">
+      <pose>-58 73 50 0 0 0</pose>
+      <diffuse>0.75 0.90 1.0 1</diffuse>
+      <specular>0.75 0.90 1.0 1</specular>
+      <attenuation><range>110</range><constant>0.8</constant><linear>0.01</linear><quadratic>0.0008</quadratic></attenuation>
+    </light>
+
+    <light name="waterfront_warm_light" type="point">
+      <pose>20 -56 8 0 0 0</pose>
+      <diffuse>1 0.76 0.45 1</diffuse>
+      <specular>1 0.80 0.50 1</specular>
+      <attenuation><range>80</range><constant>0.9</constant><linear>0.015</linear><quadratic>0.001</quadratic></attenuation>
+    </light>
+
+    <model name="robotx_usv_boat_start">
+      <static>true</static>
+      <pose>-38 -48 0.45 0 0 0.35</pose>
+      <link name="hull">
+        <visual name="hull_body">
+          <geometry><box><size>8.0 2.8 0.8</size></box></geometry>
+          <material><ambient>0.90 0.90 0.86 1</ambient><diffuse>1.0 1.0 0.94 1</diffuse></material>
+        </visual>
+        <visual name="cabin">
+          <pose>-0.6 0 0.8 0 0 0</pose>
+          <geometry><box><size>2.8 1.7 1.2</size></box></geometry>
+          <material><ambient>0.12 0.28 0.36 1</ambient><diffuse>0.18 0.42 0.55 1</diffuse></material>
+        </visual>
+        <visual name="bow_marker">
+          <pose>4.2 0 0.15 0 0 0</pose>
+          <geometry><box><size>0.25 2.9 0.25</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse><emissive>0.4 0 0 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><box><size>8.0 2.8 0.8</size></box></geometry></collision>
+      </link>
+    </model>
+
+
+
+
+
+
+    <!-- ===================================================
+         MISSION TASK 1: SAFE PASSAGE  (compact ~40x35m)
+         BLUE flashing = entry | BLUE solid = exit
+         GREEN = port/left | RED = starboard/right | BLACK = hazard
+         10 course buoys: 3 green, 3 red, 2 black, 2 blue (docks excluded)
+    =================================================== -->
+    <model name="entry_blue">
+      <static>true</static>
+      <pose>-22 -30 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.4</radius><length>1.55</length></cylinder></geometry>
+          <material><ambient>0.00 0.21 0.70 1</ambient><diffuse>0.00 0.30 1.00 1</diffuse><emissive>0.00 0.20 1.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.26</radius></sphere></geometry>
+          <material><ambient>0.00 0.30 1.00 1</ambient><diffuse>0.00 0.30 1.00 1</diffuse><emissive>0.00 0.20 1.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.4</radius><length>1.55</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="entry_blue_light" type="point">
+      <pose>-22 -30 2.2 0 0 0</pose>
+      <diffuse>0.00 0.30 1.00 1</diffuse>
+      <specular>0.00 0.30 1.00 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="green_1">
+      <static>true</static>
+      <pose>-20 -20 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.00 0.66 0.08 1</ambient><diffuse>0.00 0.95 0.12 1</diffuse><emissive>0.00 0.90 0.05 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>0.00 0.95 0.12 1</ambient><diffuse>0.00 0.95 0.12 1</diffuse><emissive>0.00 0.90 0.05 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="green_1_light" type="point">
+      <pose>-20 -20 2.2 0 0 0</pose>
+      <diffuse>0.00 0.95 0.12 1</diffuse>
+      <specular>0.00 0.95 0.12 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="red_1">
+      <static>true</static>
+      <pose>-8 -22 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.70 0.03 0.01 1</ambient><diffuse>1.00 0.04 0.02 1</diffuse><emissive>0.90 0.00 0.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>1.00 0.04 0.02 1</ambient><diffuse>1.00 0.04 0.02 1</diffuse><emissive>0.90 0.00 0.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="red_1_light" type="point">
+      <pose>-8 -22 2.2 0 0 0</pose>
+      <diffuse>1.00 0.04 0.02 1</diffuse>
+      <specular>1.00 0.04 0.02 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="black_1a">
+      <static>true</static>
+      <pose>-26 -14 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.03 0.03 0.03 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse><emissive>0.00 0.00 0.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse><emissive>0.00 0.00 0.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="black_1a_light" type="point">
+      <pose>-26 -14 2.2 0 0 0</pose>
+      <diffuse>0.05 0.05 0.05 1</diffuse>
+      <specular>0.05 0.05 0.05 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="green_2">
+      <static>true</static>
+      <pose>-22 -8 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.00 0.66 0.08 1</ambient><diffuse>0.00 0.95 0.12 1</diffuse><emissive>0.00 0.90 0.05 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>0.00 0.95 0.12 1</ambient><diffuse>0.00 0.95 0.12 1</diffuse><emissive>0.00 0.90 0.05 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="green_2_light" type="point">
+      <pose>-22 -8 2.2 0 0 0</pose>
+      <diffuse>0.00 0.95 0.12 1</diffuse>
+      <specular>0.00 0.95 0.12 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="red_2">
+      <static>true</static>
+      <pose>-6 -10 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.70 0.03 0.01 1</ambient><diffuse>1.00 0.04 0.02 1</diffuse><emissive>0.90 0.00 0.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>1.00 0.04 0.02 1</ambient><diffuse>1.00 0.04 0.02 1</diffuse><emissive>0.90 0.00 0.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="red_2_light" type="point">
+      <pose>-6 -10 2.2 0 0 0</pose>
+      <diffuse>1.00 0.04 0.02 1</diffuse>
+      <specular>1.00 0.04 0.02 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="green_4">
+      <static>true</static>
+      <pose>-14 12 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.00 0.66 0.08 1</ambient><diffuse>0.00 0.95 0.12 1</diffuse><emissive>0.00 0.90 0.05 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>0.00 0.95 0.12 1</ambient><diffuse>0.00 0.95 0.12 1</diffuse><emissive>0.00 0.90 0.05 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="green_4_light" type="point">
+      <pose>-14 12 2.2 0 0 0</pose>
+      <diffuse>0.00 0.95 0.12 1</diffuse>
+      <specular>0.00 0.95 0.12 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="red_4">
+      <static>true</static>
+      <pose>2 8 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.70 0.03 0.01 1</ambient><diffuse>1.00 0.04 0.02 1</diffuse><emissive>0.90 0.00 0.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>1.00 0.04 0.02 1</ambient><diffuse>1.00 0.04 0.02 1</diffuse><emissive>0.90 0.00 0.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="red_4_light" type="point">
+      <pose>2 8 2.2 0 0 0</pose>
+      <diffuse>1.00 0.04 0.02 1</diffuse>
+      <specular>1.00 0.04 0.02 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="black_4a">
+      <static>true</static>
+      <pose>6 16 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry>
+          <material><ambient>0.03 0.03 0.03 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse><emissive>0.00 0.00 0.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.22</radius></sphere></geometry>
+          <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse><emissive>0.00 0.00 0.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.34</radius><length>1.35</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="black_4a_light" type="point">
+      <pose>6 16 2.2 0 0 0</pose>
+      <diffuse>0.05 0.05 0.05 1</diffuse>
+      <specular>0.05 0.05 0.05 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+    <model name="exit_blue">
+      <static>true</static>
+      <pose>0 18 0.65 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><cylinder><radius>0.4</radius><length>1.55</length></cylinder></geometry>
+          <material><ambient>0.00 0.21 0.70 1</ambient><diffuse>0.00 0.30 1.00 1</diffuse><emissive>0.00 0.20 1.00 1</emissive></material>
+        </visual>
+        <visual name="top_beacon">
+          <pose>0 0 0.82 0 0 0</pose>
+          <geometry><sphere><radius>0.26</radius></sphere></geometry>
+          <material><ambient>0.00 0.30 1.00 1</ambient><diffuse>0.00 0.30 1.00 1</diffuse><emissive>0.00 0.20 1.00 1</emissive></material>
+        </visual>
+        <collision name="collision"><geometry><cylinder><radius>0.4</radius><length>1.55</length></cylinder></geometry></collision>
+      </link>
+    </model>
+    <light name="exit_blue_light" type="point">
+      <pose>0 18 2.2 0 0 0</pose>
+      <diffuse>0.00 0.30 1.00 1</diffuse>
+      <specular>0.00 0.30 1.00 1</specular>
+      <attenuation><range>28</range><constant>0.78</constant><linear>0.03</linear><quadratic>0.0012</quadratic></attenuation>
+    </light>
+
+    <!-- Same MBS waterfront map as the two-thruster test. -->
+    <include>
+      <uri>model://usv_four_thruster</uri>
+      <name>usv_four_thruster</name>
+      <!-- Outside the green dock mouth (y=41), bow facing the course. -->
+      <pose>0 37 0.12 0 0 -1.57079632679</pose>
+    </include>
+
+  </world>
+</sdf>

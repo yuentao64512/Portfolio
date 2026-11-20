@@ -1,0 +1,34 @@
+__pycache__/
+*.py[cod]
+*.log
+*.jsonl
+*.BIN
+*.DAT
+*.bin
+*.pck
+*.zip
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+.pytest_cache/
+*.lock
+
+# Generated ROS/Gazebo artifacts
+build/
+install/
+log/
+lib/
+plugins/navigation_beacons/build/
+asv_wave_sim_ws/build/
+asv_wave_sim_ws/install/
+asv_wave_sim_ws/log/
+worlds/*.save
+
+# Timestamped working copies retained only on the 5060
+buoy-course-backup.*/
+robocommand_sim_backup_*/
+robocommand_sim_*_stage_*/
+ASV_Controls_Prototype_*/
+

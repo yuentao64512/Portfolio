@@ -1,0 +1,12 @@
+{
+  "processed_frames": 40,
+  "wall_seconds": 1.8702891979482956,
+  "mean_processing_ms": 35.89495195046766,
+  "pose_model": "/home/robotx/fall_action_project/yolo11n-pose.pt",
+  "max_people": 1,
+  "skeleton": "full",
+  "action_rate_hz": 8.0,
+  "source": "IMG_7565.MOV",
+  "log": "reports/codex_smoke_20261020.csv",
+  "output": "reports/codex_smoke_20261020.mp4"
+}

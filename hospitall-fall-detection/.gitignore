@@ -1,0 +1,17 @@
+.venv/
+data/
+runs/
+logs/
+__pycache__/
+*.py[cod]
+*.log
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+
+# Local generated engines and caches
+*.engine
+*.cache
+

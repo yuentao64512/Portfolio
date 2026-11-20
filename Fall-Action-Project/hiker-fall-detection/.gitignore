@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.inspect*/
+.env
+.env.*
+.DS_Store
+
+# Original/private recordings and downloaded dataset archives stay local.
+IMG_*.MOV
+data/UP_Fall/UP_Fall.zip
+data/UP_Fall/UP_Fall.tail
+

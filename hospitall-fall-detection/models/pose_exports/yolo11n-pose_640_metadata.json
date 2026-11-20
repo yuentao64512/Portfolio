@@ -1,0 +1,19 @@
+{
+  "created_utc": "2026-11-16T14:11:56.142536+00:00",
+  "source_weights": "/home/robotx/fall_action_project/yolo11n-pose.pt",
+  "source_sha256": "869e83fcdffdc7371fa4e34cd8e51c838cc729571d1635e5141e3075e9319dc0",
+  "imgsz": 640,
+  "opset": 17,
+  "dynamic": false,
+  "onnx": "/home/robotx/fall_action_project/models/pose_exports/yolo11n-pose_640.onnx",
+  "onnx_sha256": "79f967d5fc468a2e7751fa46444a404a58774e92b2e3b5fdbd3fbb7c01ce459b",
+  "engine": null,
+  "engine_note": "TensorRT engines are hardware/JetPack-specific; build the Jetson engine on the Orin Nano.",
+  "ultralytics": "8.4.123",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "host": "optiprime-5060",
+  "classes": {
+    "0": "person"
+  }
+}

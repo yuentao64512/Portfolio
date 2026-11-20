@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> CONNECTED
+    CONNECTED --> WAITING_GAZEBO : waiting for Gazebo odometry
+    WAITING_GAZEBO --> CHECKING_OUTPUT_MAP : checking direct lateral outputs
+    CHECKING_OUTPUT_MAP --> COMMANDING : FCU servo commands drive Gazebo outputs
+    COMMANDING --> STOPPING : sending neutral PWM and zero Gazebo thrust
+    STOPPING --> COMPLETE : interval ended and Gazebo thrust was zeroed
+    COMPLETE --> [*]

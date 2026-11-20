@@ -149,3 +149,7 @@ PYTHONNOUSERSITE=1 python src/run_live_camera.py \
 This is a research prototype and must not be treated as an emergency-response or medical device. Do not rely on it as the only fall-detection or rescue mechanism. Obtain consent, minimize retained footage, protect recordings, and follow applicable privacy and aviation rules.
 
 Python pickle files can execute code when loaded. Only use the included classifier or another model from a source you trust.
+
+## Hiker fall/action workspace
+
+The original 5060 hiker fall/action-detection workspace is preserved separately in [`hiker-fall-detection/`](hiker-fall-detection/). It includes its runnable Python pipeline, training scripts, compact models, reports, figures, processed pose data, and prediction evidence without overwriting this curated drone project.
