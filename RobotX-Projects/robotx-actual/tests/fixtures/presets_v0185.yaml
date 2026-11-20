@@ -1,0 +1,101 @@
+# The launcher's presets (v0.1.38; v0.1.42 WP9d: sim / lab / event / custom - the profile cut, one word per situation; scripts/launch.sh -> http://127.0.0.1:8094/): one starting point per situation; every field can be
+# changed on the page before LAUNCH. The fields (optiprimex/tools/launcher.py FIELDS):
+#   mode        sim (the Mac only: run_sim.sh) | real (three hosts: run_ocs.sh here, run_usv.sh on the NX, run_agx.sh on the AGX over ssh)
+#   judge       fake (ours) | rctest (RoboNation's test server on this Mac) | course (the RoboCommand at RC_HOST, network.lan.env)
+#   net         ts (tailnet) | lan (the pool / event switch) | manual (the addresses typed on the page)
+#   fcu         fake | uart | usb | eth                 (real mode; sim = the simulator's plant)
+#   usv_profile pool | lab | course                     (real mode: run_usv.sh --pool | --lab | --course; test mode follows the profile)
+#   cv          real | fake | off                       (real mode: the AGX's cv_publish | run_agx.sh --sim | nothing)
+#   perception  camera | geometric                      (sim mode: the camera path to the map | the fast geometric fake)
+#   world       pool | marina | boxes | por | empty     (sim, and the AGX's fake CV)
+#   usv_ui      true | false                            (sim: usv_ui on the simulated boat)
+#   heartbeat_hz, status_hz, map_hz                     (the OCS's heartbeat to RoboCommand; the boat's status and map rates)
+#   ui          v2 | v1                              (v0.1.43: the OCS page; v1 = the classic page frozen at /v1/)
+#   log         false | true                            (LOG=1: every MQTT message to SQLite)
+#   usv_window  mac | nx | off                         (v0.1.63, real mode: where the USV window serves the team LAN for a delegate)
+#   auto_mission false | true                           (v0.1.59: `clear for run ▶` first preselects the picked mission with --auto)
+#   uav         off | on                               (v0.1.65: the UAV adapter + the UAV window; every preset off - `declare uav` decides the declaration)
+#   free_run    off | on                               (v0.1.68, lab and custom only: the mission manager on a ghost plant, mode requests only to
+#                                                       the real FCU, the AGX's fake CV on the same world; never with judge course)
+sim:
+  title: sim
+  about: the Mac alone - the simulator (rendered camera, the camera path to the map), usv_ui on the simulated boat, our fake judge
+  mode: sim
+  judge: fake
+  net: ts
+  fcu: fake
+  usv_profile: pool
+  cv: real
+  perception: camera
+  world: pool
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  log: false
+  ui: v2
+  auto_mission: false
+  usv_window: mac
+  uav: "off"
+lab:
+  title: lab
+  about: the real Pixhawk on the bench (props off, ESC power off) with the lab profile, the AGX's real CV, our fake judge, the tailnet
+  mode: real
+  judge: fake
+  net: ts
+  fcu: uart
+  usv_profile: lab
+  cv: real
+  perception: camera
+  world: pool
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  log: true
+  ui: v2
+  auto_mission: false
+  usv_window: mac
+  uav: "off"
+  free_run: "off"
+event:
+  title: event (marina)
+  about: the event - the course profile, the real Pixhawk and CV, the event switch (lan), rc-test as the judge for the practice days (switch to course for the runs)
+  mode: real
+  judge: rctest
+  net: lan
+  fcu: uart
+  usv_profile: course
+  cv: real
+  perception: camera
+  world: marina
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  log: true
+  ui: v2
+  auto_mission: true
+  usv_window: nx
+  uav: "off"
+custom:
+  title: custom
+  about: a free starting point - the real hosts with the fake FCU on the NX and the fake CV on the AGX; change anything
+  mode: real
+  judge: fake
+  net: ts
+  fcu: fake
+  usv_profile: pool
+  cv: fake
+  perception: camera
+  world: pool
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  log: true                   # v0.1.83: logging on by default (Dmitrii)
+  ui: v2
+  auto_mission: false
+  usv_window: mac
+  uav: "off"
+  free_run: "off"

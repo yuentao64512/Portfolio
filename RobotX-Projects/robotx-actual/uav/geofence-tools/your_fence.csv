@@ -1,0 +1,9 @@
+# Punggol Digital site fence - from the hand-sketched 5-point layout.
+# Order matches the sketch: 1 (top-right) -> 2 (top-left) -> 3 (bottom-left)
+# -> 4 (bottom-right) -> 5 (= point 1 again, closing the polygon).
+# format: lat,lon
+1.412762,103.913321
+1.412289,103.913703
+1.412458,103.914127
+1.412891,103.913865
+1.412762,103.913321

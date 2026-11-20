@@ -1,0 +1,51 @@
+# Boat broker, POOL profile - mosquitto on the Orin NX. Rendered by scripts/run_usv.sh (@OCS_HOST@ -> the Mac's IP,
+# or the whole bridge block dropped when OCS_HOST is unset: usv_ui + mission manager + AGX work without the hub).
+listener @PORT@ 0.0.0.0
+protocol mqtt
+listener @WS@ 0.0.0.0
+protocol websockets
+#UAVLISTEN listener @UAV_PORT@ 0.0.0.0
+#UAVLISTEN protocol mqtt
+allow_anonymous true
+persistence true
+persistence_location @PERSIST@/
+max_queued_messages 10000
+sys_interval 2
+log_type error
+log_type warning
+log_type notice
+
+# ---- bridge to the OCS hub on the Mac (ARCHITECTURE 5.2 lines, decision 26: UAV traffic rides this link as relay/usv) ----
+#BRIDGE connection ocs
+#BRIDGE address @OCS_HOST@:@HUB_PORT@
+#BRIDGE cleansession false
+#BRIDGE notifications true
+#BRIDGE notification_topic $SYS/broker/connection/ocs/state
+#BRIDGE restart_timeout 1 5
+#BRIDGE keepalive_interval 5
+#BRIDGE try_private true
+#BRIDGE bridge_protocol_version mqttv311
+#BRIDGE topic team/optiprime/v1/status/usv/# out 0
+#BRIDGE topic team/optiprime/v1/telemetry/usv/# out 0
+#BRIDGE topic host/+ out 0 local/usv/ team/optiprime/v1/telemetry/usv/
+#BRIDGE topic team/optiprime/v1/ack/usv/# out 1
+#BRIDGE topic team/optiprime/v1/event/usv/# out 1
+#BRIDGE topic team/optiprime/v1/cmd/usv/# in 1
+#BRIDGE topic ocs/state in 0
+#BRIDGE topic team/optiprime/v1/event/uav/# in 1
+#BRIDGE topic status/uav out 0 team/optiprime/v1/ team/optiprime/v1/relay/usv/
+#BRIDGE topic event/uav/# out 1 team/optiprime/v1/ team/optiprime/v1/relay/usv/
+#BRIDGE topic ack/uav/# out 1 team/optiprime/v1/ team/optiprime/v1/relay/usv/
+#BRIDGE topic team/optiprime/v1/cmd/uav/# in 1
+#BRIDGE topic perception/# in 0 local/usv/uav/ uav/
+
+# v0.1.66 (WP16, D21): the DIRECT path - a second bridge to the mosquitto on the UAV Orin (UAV_BROKER_HOST:UAV_BROKER_PORT, network*.env);
+# rendered by run_usv.sh only with UAV_BROKER_HOST set and UAV_BUOY_PATH direct (else dropped); the same boat topic as the relay
+#UAVBRIDGE connection uav
+#UAVBRIDGE address @UAV_BROKER@
+#UAVBRIDGE cleansession true
+#UAVBRIDGE restart_timeout 1 5
+#UAVBRIDGE keepalive_interval 5
+#UAVBRIDGE try_private false
+#UAVBRIDGE bridge_protocol_version mqttv311
+#UAVBRIDGE topic perception/buoys in 0 local/usv/uav/ uav/

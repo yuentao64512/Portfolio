@@ -1,0 +1,2429 @@
+{
+"state": {
+"t": 1794372956.487402,
+"hub_up": true,
+"boat_up": true,
+"bridge": true,
+"ocs": {
+"r_state": "ENDED",
+"r": "R6",
+"declaration_seq": 1,
+"run_id": null,
+"stalled": false,
+"course_id": "EXTRA",
+"ready": {
+"USV1": false
+},
+"prepare_pending": [],
+"stall_s": 60.0,
+"declared_s": null,
+"waiting_s": null,
+"judge": "fake",
+"judge_connected": true,
+"bench_mode": true,
+"test_mode": true,
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+},
+"course_nic": false,
+"vehicles": {
+"USV1": {
+"state": "FAULT",
+"robot_state": "STATE_UNKNOWN",
+"current_task": "TASK_NONE",
+"task_name": null,
+"task_state": null,
+"hold_reason": null,
+"age_s": 0.4
+}
+},
+"uav": {
+"vehicle_id": "UAV1",
+"configured": true,
+"declare": false,
+"declared": false,
+"active": false,
+"report_on": false,
+"registration": "SGIT-53577",
+"pilot_callsign": "Calwin-U2332301",
+"declared_fence": null,
+"declared_ceiling_hae_m": null,
+"pilot_ready": false,
+"telemetry_age_s": null,
+"heartbeats_on": false,
+"flight": {
+"armed": null,
+"flight_phase": null
+},
+"course": {
+"boundary": [
+[
+1.2812274,
+103.854424
+],
+[
+1.2808457,
+103.8550331
+],
+[
+1.281759,
+103.8556058
+],
+[
+1.2821407,
+103.8549967
+]
+],
+"uav_transit_area": [
+[
+1.2808457,
+103.8550331
+],
+[
+1.2807502,
+103.8551853
+],
+[
+1.2810547,
+103.8553762
+],
+[
+1.2811501,
+103.855224
+]
+]
+},
+"last_refusal": null,
+"last_fence_change": null,
+"redeclared": 0,
+"course_fp": "53d9d2127076",
+"course_forward": null,
+"last_command": null,
+"reports": 0,
+"last_report": null,
+"scan_done": null
+},
+"usv_flow": {
+"mode": "auto",
+"vehicle_id": "USV1",
+"heartbeat": true,
+"heartbeats_on": false,
+"ready": true,
+"declared": false
+},
+"foreign_declaration": null,
+"heartbeats_sent": {
+"USV1": 166
+},
+"reports_sent": 5,
+"attempt": 1,
+"reporting": {
+"on": false,
+"heartbeats": false,
+"default_on": false,
+"hb": {
+"USV1": {
+"n": 166,
+"state": "STATE_AUTO",
+"seq": 64579,
+"age_s": 18.5,
+"stopped": false
+}
+},
+"last_report": {
+"kind": "safe_passage",
+"seq": 64482,
+"vehicle_id": "USV1",
+"t": 1794372884.8453481
+},
+"off": false
+},
+"msg_rate": 0,
+"rate_dropped": 0,
+"mission": {
+"task": "SCOUT",
+"auto": false,
+"started_run": null,
+"armed_run": null,
+"tier": null,
+"sim": true,
+"code": "scoutsim",
+"t4": null,
+"countdown": null,
+"countdown_s": 3.0
+},
+"judge_view": {
+"link": true,
+"name": "fake",
+"course": {
+"course_id": "EXTRA",
+"points": 4,
+"pinger_hz": 30000,
+"valid": true,
+"age_s": 200.7
+},
+"run_start": {
+"command_seq": 1,
+"origin": "judge",
+"run_id": 1001,
+"declaration_seq": 1,
+"ours": 1,
+"accepted": true,
+"age_s": 106.0
+},
+"pending_confirm": []
+},
+"internal": {},
+"t": "2026-11-11T04:55:55.830Z",
+"session": {
+"host_age_s": 0.8,
+"current": null,
+"last": null
+},
+"declaration_preview": {
+"vehicles": [
+"USV1"
+],
+"uav_declared": false,
+"uav_vid": "UAV1",
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+},
+"uav_refusal": null,
+"body": {
+"kind": "run_declaration",
+"declaration_seq": 2,
+"vehicle_ids": [
+"USV1"
+],
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+},
+"uav_geofence": [],
+"uav_geofence_max_altitude_hae_m": 30,
+"uav_pilot_callsign": "TBD"
+},
+"fields": {
+"vehicle_ids": [
+"USV1"
+],
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+},
+"uav_geofence": [],
+"uav_geofence_max_altitude_hae_m": 30.0,
+"uav_pilot_callsign": "TBD"
+},
+"text": "vehicle_ids: \"USV1\"\ntask1_tier: TIER_CORE\ntask2_tier: TIER_NONE\ntask3_tier: TIER_CORE\ntask4_tier: TIER_CORE\nuav_geofence_max_altitude_hae_m: 30.0\nuav_pilot_callsign: \"TBD\"\n",
+"bytes": 40
+},
+"declaration_sent": {
+"kind": "run_declaration",
+"declaration_seq": 1,
+"vehicle_ids": [
+"USV1"
+],
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+},
+"uav_geofence": [],
+"uav_geofence_max_altitude_hae_m": 30,
+"uav_pilot_callsign": "TBD"
+},
+"timed_out": [],
+"timed_out_total": 0,
+"ack_timeout_s": 5.0,
+"declaration_checks": {
+"policy": "warn",
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+},
+"source": "profile",
+"mandatory": [
+"T4"
+],
+"mandatory_hard": false,
+"rows": [],
+"blocking": []
+}
+},
+"ocs_age": 0.7,
+"status": {
+"state": "FAULT",
+"robot_state": "STATE_UNKNOWN",
+"current_task": "TASK_NONE",
+"task_name": null,
+"task_state": null,
+"mode": "HOLD",
+"armed": true,
+"kill": false,
+"estop": false,
+"lat": 1.2811607,
+"lon": 103.8549803,
+"hdg_deg": 342.84,
+"sog_mps": 0.0,
+"roll_deg": 0.0,
+"pitch_deg": 0.0,
+"yaw_rate_dps": 0.0,
+"altitude_hae_m": null,
+"flight_phase": null,
+"health": {
+"fcu_age_s": 0.07,
+"rc_ok": true,
+"rc_detail": "RC_CHANNELS 0.1 s, chancount 16; channels plausible (no SYS_STATUS rc bit)",
+"kill": false,
+"estop": false,
+"perception_age_s": 0.12,
+"bridge_up": true,
+"clock_ok": true,
+"loop_slow": false,
+"faults": [
+"EKF_BAD"
+]
+},
+"fault": "EKF_BAD",
+"hold_reason": null,
+"fcu_link": "fake",
+"rc6": {
+"policy": "latched",
+"raw": false,
+"holds": false
+},
+"fence": {
+"enabled": null,
+"enabled_from": null,
+"points_n": null,
+"source": null,
+"matches": null,
+"breach": null,
+"applied_t": null,
+"busy": null,
+"last": null
+},
+"run": {
+"run_id": null,
+"declaration_seq": 1,
+"course_id": "EXTRA",
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+}
+},
+"local": {
+"x_n": 15.64,
+"y_e": -3.27,
+"co_lat": 1.2810202,
+"co_lon": 103.8550097
+},
+"guard": {
+"chip": "clear",
+"mode": "CLEAR",
+"range_m": null,
+"age_s": null,
+"triggers": 0,
+"caution": null
+},
+"station_keep": "hold"
+},
+"status_age": 0.4,
+"local": {
+"state": "FAULT",
+"robot_state": "STATE_UNKNOWN",
+"current_task": "TASK_NONE",
+"task_name": null,
+"task_state": null,
+"mode": "HOLD",
+"armed": true,
+"kill": false,
+"estop": false,
+"lat": 1.2811607,
+"lon": 103.8549803,
+"hdg_deg": 342.84,
+"sog_mps": 0.0,
+"roll_deg": 0.0,
+"pitch_deg": 0.0,
+"yaw_rate_dps": 0.0,
+"altitude_hae_m": null,
+"flight_phase": null,
+"health": {
+"fcu_age_s": 0.05,
+"rc_ok": true,
+"rc_detail": "RC_CHANNELS 0.1 s, chancount 16; channels plausible (no SYS_STATUS rc bit)",
+"kill": false,
+"estop": false,
+"perception_age_s": 0.12,
+"bridge_up": true,
+"clock_ok": true,
+"loop_slow": false,
+"faults": [
+"EKF_BAD"
+]
+},
+"fault": "EKF_BAD",
+"hold_reason": null,
+"fcu_link": "fake",
+"rc6": {
+"policy": "latched",
+"raw": false,
+"holds": false
+},
+"fence": {
+"enabled": null,
+"enabled_from": null,
+"points_n": null,
+"source": null,
+"matches": null,
+"breach": null,
+"applied_t": null,
+"busy": null,
+"last": null
+},
+"run": {
+"run_id": null,
+"declaration_seq": 1,
+"course_id": "EXTRA",
+"tiers": {
+"T1": "TIER_CORE",
+"T2": "TIER_NONE",
+"T3": "TIER_CORE",
+"T4": "TIER_CORE"
+}
+},
+"local": {
+"x_n": 15.64,
+"y_e": -3.27,
+"co_lat": 1.2810202,
+"co_lon": 103.8550097
+},
+"guard": {
+"chip": "clear",
+"mode": "CLEAR",
+"range_m": null,
+"age_s": null,
+"triggers": 0,
+"caution": null
+},
+"station_keep": "hold",
+"ui_active": false,
+"profile": "usv_bench_share.yaml",
+"lab": false,
+"link_loss_action": "continue",
+"fcu": {
+"t_mono": 756598.739971125,
+"t_utc": "2026-11-11T04:55:56.202Z",
+"seen_heartbeat": true,
+"vehicle_type": 11,
+"autopilot": 3,
+"lat": 1.2811607,
+"lon": 103.8549803,
+"alt_m": 0.0,
+"hdg_deg": 342.84,
+"sog_mps": 0.0,
+"cog_deg": null,
+"vx_n": 0.0,
+"vy_e": 0.0,
+"roll_deg": 0.0,
+"pitch_deg": 0.0,
+"yaw_deg": 342.8490756827543,
+"yaw_rate_dps": 1.073840914577757e-18,
+"mode": 4,
+"mode_name": "HOLD",
+"armed": true,
+"system_status": 4,
+"ekf_flags": 1,
+"ekf_pos_ok": false,
+"gps_fix": 3,
+"sats": 14,
+"hdop": 1.2,
+"batt_v": 16.2,
+"batt_pct": 80,
+"rc": {
+"1": 1500,
+"2": 1500,
+"3": 1500,
+"4": 1500,
+"5": 1000,
+"6": 1000,
+"7": 1500,
+"8": 1500,
+"9": 1000,
+"10": 1500,
+"11": 1500,
+"12": 1500,
+"13": 1500,
+"14": 1500,
+"15": 1500,
+"16": 1500
+},
+"rc_chancount": 16,
+"rc_last_plausible": true,
+"rc_rx_present": false,
+"rc_rx_healthy": null,
+"rc_ok": true,
+"rc_detail": "RC_CHANNELS 0.1 s, chancount 16; channels plausible (no SYS_STATUS rc bit)",
+"servo": [
+1500,
+1500,
+1500,
+1500,
+1500,
+1500,
+1500,
+1500
+],
+"kill": false,
+"estop": false,
+"ages": {
+"HEARTBEAT": 0.708,
+"GPS_RAW_INT": 0.053,
+"SYS_STATUS": 0.708,
+"EKF_STATUS_REPORT": 0.053,
+"COMMAND_ACK": 2.162,
+"GLOBAL_POSITION_INT": 0.053,
+"ATTITUDE": 0.053,
+"PARAM_VALUE": 199.253,
+"RC_CHANNELS": 0.102,
+"SERVO_OUTPUT_RAW": 0.102,
+"NAMED_VALUE_INT": 0.225,
+"STATUSTEXT": 23.261
+},
+"params_ok": true,
+"firmware_hash": null,
+"lamp": null,
+"fence_sys_present": false,
+"fence_sys_enabled": null,
+"fence_sys_healthy": null,
+"fence_breach_status": null,
+"fence_breach_count": null,
+"fence_breach_type": null
+},
+"tuning": {
+"knobs": [
+{
+"key": "line_v",
+"sections": [
+"t3"
+],
+"value": 0.5,
+"default": 0.5,
+"lo": 0.1,
+"hi": 1.0,
+"unit": "m/s",
+"tip": "T3 TO_LINE: the speed along the path to the standoff line",
+"changed": false,
+"profile": 0.5
+},
+{
+"key": "sway_v",
+"sections": [
+"t3"
+],
+"value": 0.25,
+"default": 0.25,
+"lo": 0.05,
+"hi": 0.6,
+"unit": "m/s",
+"tip": "T3 SWAY_TO_ABEAM and m0t3 (TEST_SWAY): the sway speed along the dock line (mode 20)",
+"changed": false,
+"profile": 0.25
+},
+{
+"key": "enter_v",
+"sections": [
+"t3"
+],
+"value": 0.15,
+"default": 0.15,
+"lo": 0.05,
+"hi": 0.4,
+"unit": "m/s",
+"tip": "T3 ENTER: the surge into the bay (tapered with the distance)",
+"changed": false,
+"profile": 0.15
+},
+{
+"key": "standoff_m",
+"sections": [
+"t3"
+],
+"value": 5.695,
+"default": 5.695,
+"lo": 2.0,
+"hi": 10.0,
+"unit": "m",
+"tip": "T3 / m0t3: the standoff line's distance off the dock face (v0.1.56: unset = finger_m + hull_len_m/2 + clear_m + standoff_margin_m; a value set here is the override)",
+"changed": false,
+"profile": 5.695
+},
+{
+"key": "stop_m",
+"sections": [
+"t3"
+],
+"value": 1.5,
+"default": 1.5,
+"lo": 0.5,
+"hi": 3.0,
+"unit": "m",
+"tip": "T3 ENTER: stop this far off the dock face",
+"changed": false,
+"profile": 1.5
+},
+{
+"key": "lead_step_m",
+"sections": [
+"t1"
+],
+"value": 12.0,
+"default": 12.0,
+"lo": 3.0,
+"hi": 25.0,
+"unit": "m",
+"tip": "T1 SEARCH_ENTRY: one lead step toward a far sighting when no entry is in view",
+"changed": false,
+"profile": 12.0
+},
+{
+"key": "look_s",
+"sections": [
+"t1"
+],
+"value": 8.0,
+"default": 8.0,
+"lo": 2.0,
+"hi": 30.0,
+"unit": "s",
+"tip": "T1 LOOK: the longest the boat faces an undecided sighting",
+"changed": false,
+"profile": 8.0
+},
+{
+"key": "transit_v",
+"sections": [
+"t1"
+],
+"value": 0.6,
+"default": 0.6,
+"lo": 0.2,
+"hi": 1.5,
+"unit": "m/s",
+"tip": "T1 TRANSIT / EXIT: the speed through the gates",
+"changed": false,
+"profile": 0.6
+},
+{
+"key": "circle_v",
+"sections": [
+"t1"
+],
+"value": 0.5,
+"default": 0.5,
+"lo": 0.2,
+"hi": 1.2,
+"unit": "m/s",
+"tip": "T1 CIRCLE_ENTRY / EXIT: the speed round the blue buoy",
+"changed": false,
+"profile": 0.5
+},
+{
+"key": "la_m",
+"sections": [
+"t1"
+],
+"value": 2.0,
+"default": 2.0,
+"lo": 0.5,
+"hi": 6.0,
+"unit": "m",
+"tip": "the carrot (LOS) lookahead of FollowPath / Orbit in T1 (T3's TO_LINE keeps 1.5 m)",
+"changed": false,
+"profile": 2.0
+},
+{
+"key": "scan_rate_dps",
+"sections": [
+"t1",
+"t3"
+],
+"value": 20.0,
+"default": 20.0,
+"lo": 5.0,
+"hi": 45.0,
+"unit": "deg/s",
+"tip": "the yaw rate of the scans: T1 SEARCH_ENTRY / LOOK / SCAN, T3 FIND_DOCK",
+"changed": false,
+"profile": 20.0
+}
+],
+"read_only": [
+{
+"name": "PWM limits",
+"what": "SERVO1..4_MIN / MAX / TRIM",
+"note": "FCU parameters - apply_params.py only (ADR-9: TUNE never touches the FCU)"
+},
+{
+"name": "stern factors",
+"what": "the frame's sway mix on the FCU \u00b7 the companion's mode-20 copy: gains.sway_f_pos 1.05 / sway_f_neg 0.877",
+"note": "FCU parameters - apply_params.py only (ADR-9: TUNE never touches the FCU)"
+}
+],
+"states": [
+"MANUAL",
+"AUTO_HOLD"
+]
+},
+"cmd": {
+"t": "2026-11-11T04:55:56.256Z",
+"mode": "HOLD",
+"behaviour": null,
+"stage": null,
+"frame": null,
+"target": null,
+"hdg_goal_deg": null,
+"max_speed_mps": 1.0
+}
+},
+"local_age": 0.2,
+"stats": {
+"declarations": 1,
+"declarations_refused": 0,
+"run_starts": 1,
+"heartbeats": {
+"USV1": 166
+},
+"last_state": {
+"USV1": "STATE_AUTO"
+},
+"last_task": {
+"USV1": "TASK_SAFE_PASSAGE"
+},
+"states_seen": {
+"USV1": [
+"STATE_AUTO"
+]
+},
+"tasks_seen": {
+"USV1": [
+"TASK_NONE",
+"TASK_SAFE_PASSAGE"
+]
+},
+"reports": [
+{
+"vehicle": "USV1",
+"kind": "safe_passage",
+"report_seq": 64445,
+"t": 1794372867.139501
+},
+{
+"vehicle": "USV1",
+"kind": "safe_passage",
+"report_seq": 64450,
+"t": 1794372869.1458812
+},
+{
+"vehicle": "USV1",
+"kind": "safe_passage",
+"report_seq": 64457,
+"t": 1794372872.4458141
+},
+{
+"vehicle": "USV1",
+"kind": "safe_passage",
+"report_seq": 64462,
+"t": 1794372874.545818
+},
+{
+"vehicle": "USV1",
+"kind": "safe_passage",
+"report_seq": 64482,
+"t": 1794372884.845672
+}
+],
+"incident_acks": 0,
+"readiness": 0,
+"confirms": 0,
+"rate_violations": 0,
+"max_rate": 3,
+"commands": 1
+},
+"perception": {
+"ok": true,
+"pose_age_s": 0.08,
+"rate_hz": 5.0,
+"n_published": 873,
+"camera": "zed2i_left",
+"detector": "fake_perception",
+"source": "sim",
+"world": "world_pool",
+"host": "Dmitrii-M3",
+"t": "2026-11-11T04:55:56.135Z"
+},
+"perception_age": 0.4,
+"perception_by": {
+"fake_perception": 0.4
+},
+"map": {
+"source": "mission_manager",
+"age": 0.4,
+"kinds": {
+"buoy": 11
+},
+"gates": 2,
+"n": 11,
+"fcu_holder": null
+},
+"sys": {
+"hub:clients/connected": "13",
+"hub:load/messages/received/1min": "982.18",
+"hub:load/messages/sent/1min": "3590.66",
+"hub:uptime": "207 seconds",
+"boat:clients/connected": "13",
+"boat:load/messages/received/1min": "1677.84",
+"boat:load/messages/sent/1min": "6825.13",
+"boat:uptime": "206 seconds"
+},
+"log": [
+{
+"t": 1794372756.150101,
+"kind": "bridge",
+"text": "boat bridge up",
+"sev": ""
+},
+{
+"t": 1794372756.629565,
+"kind": "bridge",
+"text": "fake_robocommand on hub: up",
+"sev": ""
+},
+{
+"t": 1794372756.879277,
+"kind": "bridge",
+"text": "usv_ui on boat: up",
+"sev": ""
+},
+{
+"t": 1794372756.968312,
+"kind": "event",
+"text": "vehicle: BOOT -> MANUAL (FCU link up)",
+"sev": ""
+},
+{
+"t": 1794372758.149388,
+"kind": "bridge",
+"text": "tui on hub: up",
+"sev": ""
+},
+{
+"t": 1794372758.27694,
+"kind": "bridge",
+"text": "logger-hub on hub: up",
+"sev": ""
+},
+{
+"t": 1794372804.0707278,
+"kind": "ui",
+"text": "web> station_keep loiter",
+"sev": ""
+},
+{
+"t": 1794372804.118057,
+"kind": "ui",
+"text": "web> enable_auto",
+"sev": ""
+},
+{
+"t": 1794372804.123759,
+"kind": "cmd",
+"text": "cmd ENABLE_AUTO   [bench]",
+"sev": ""
+},
+{
+"t": 1794372804.123966,
+"kind": "intent",
+"text": "intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372804.168778,
+"kind": "event",
+"text": "vehicle: MANUAL -> AUTO_HOLD (ENABLE_AUTO)",
+"sev": "warn"
+},
+{
+"t": 1794372804.169334,
+"kind": "ack",
+"text": "ack ACCEPTED ENABLE_AUTO -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372804.169416,
+"kind": "ack",
+"text": "ack DONE ENABLE_AUTO -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372804.169774,
+"kind": "ui",
+"text": "web  intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372804.169775,
+"kind": "ui",
+"text": "web  ack ACCEPTED  state=AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372804.169775,
+"kind": "ui",
+"text": "web  ack DONE      state=AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372806.225791,
+"kind": "ui",
+"text": "web> mission scoutsim",
+"sev": ""
+},
+{
+"t": 1794372806.231096,
+"kind": "ui",
+"text": "web  intent accepted mission SCOUT sim=True",
+"sev": "ok"
+},
+{
+"t": 1794372806.2312162,
+"kind": "intent",
+"text": "intent accepted: mission SCOUT sim=True",
+"sev": "ok"
+},
+{
+"t": 1794372818.018755,
+"kind": "ui",
+"text": "web> uav ready on",
+"sev": ""
+},
+{
+"t": 1794372818.066537,
+"kind": "ui",
+"text": "web> usv ready on",
+"sev": ""
+},
+{
+"t": 1794372847.808295,
+"kind": "ui",
+"text": "web> declare",
+"sev": ""
+},
+{
+"t": 1794372847.813604,
+"kind": "cmd",
+"text": "cmd PREPARE  {\"declaration_seq\":1,\"tiers\":{\"T1\":\"TIER_CORE\",\"T2\":\"TIER_NONE\",\"T3... [bench]",
+"sev": ""
+},
+{
+"t": 1794372847.8137112,
+"kind": "intent",
+"text": "intent accepted: PREPARE sent; R3 when every vehicle acks",
+"sev": "ok"
+},
+{
+"t": 1794372847.813846,
+"kind": "ui",
+"text": "web  intent accepted PREPARE sent; R3 when every vehicle acks",
+"sev": "ok"
+},
+{
+"t": 1794372847.868287,
+"kind": "ack",
+"text": "ack ACCEPTED PREPARE -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372847.8686552,
+"kind": "ack",
+"text": "ack DONE PREPARE -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372849.876665,
+"kind": "cmd",
+"text": "cmd START_RUN  {\"run_id\":1001} [bench]",
+"sev": ""
+},
+{
+"t": 1794372849.876717,
+"kind": "alert",
+"text": "ALERT mission_ready {\"task\":\"SCOUT\",\"why\":\"RunStart verified\",\"action\":\"start_task to c...",
+"sev": ""
+},
+{
+"t": 1794372849.969259,
+"kind": "ack",
+"text": "ack ACCEPTED START_RUN -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372849.969344,
+"kind": "ack",
+"text": "ack DONE START_RUN -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372867.058313,
+"kind": "ui",
+"text": "web> start_task scoutsim",
+"sev": ""
+},
+{
+"t": 1794372867.064034,
+"kind": "cmd",
+"text": "cmd START_TASK SCOUT {\"sim\":true} [bench]",
+"sev": ""
+},
+{
+"t": 1794372867.064127,
+"kind": "intent",
+"text": "intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372867.0881972,
+"kind": "event",
+"text": "vehicle: AUTO_HOLD -> AUTO_TASK (START_TASK)",
+"sev": "warn"
+},
+{
+"t": 1794372867.104785,
+"kind": "ack",
+"text": "ack ACCEPTED START_TASK SCOUT -> AUTO_TASK",
+"sev": "ok"
+},
+{
+"t": 1794372867.104928,
+"kind": "ui",
+"text": "web  intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372867.1049302,
+"kind": "ui",
+"text": "web  ack ACCEPTED  state=AUTO_TASK",
+"sev": "ok"
+},
+{
+"t": 1794372867.1049302,
+"kind": "ui",
+"text": "web  ack DONE      state=AUTO_TASK",
+"sev": "ok"
+},
+{
+"t": 1794372867.10505,
+"kind": "ack",
+"text": "ack DONE START_TASK SCOUT -> AUTO_TASK",
+"sev": "ok"
+},
+{
+"t": 1794372867.1319308,
+"kind": "event",
+"text": "task SCOUT: WAIT_START -> ADVANCE (started: forward until the first lock)",
+"sev": "ok"
+},
+{
+"t": 1794372867.13847,
+"kind": "event",
+"text": "event safe_passage {\"entry\":null,\"exit\":null,\"buoys\":[{\"id\":1,\"colour\":\"red\",\"state\":\"...",
+"sev": ""
+},
+{
+"t": 1794372867.139478,
+"kind": "judge",
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372867.2439418,
+"kind": "event",
+"text": "task SCOUT: ADVANCE -> PICK (the first lock: a usable buoy in the map)",
+"sev": ""
+},
+{
+"t": 1794372867.3873641,
+"kind": "event",
+"text": "task SCOUT: PICK -> APPROACH (the nearest unvisited buoy)",
+"sev": ""
+},
+{
+"t": 1794372869.145047,
+"kind": "event",
+"text": "event safe_passage {\"entry\":null,\"exit\":null,\"buoys\":[{\"id\":1,\"colour\":\"red\",\"state\":\"...",
+"sev": ""
+},
+{
+"t": 1794372869.145948,
+"kind": "judge",
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372872.445018,
+"kind": "event",
+"text": "event safe_passage {\"entry\":null,\"exit\":null,\"buoys\":[{\"id\":1,\"colour\":\"red\",\"state\":\"...",
+"sev": ""
+},
+{
+"t": 1794372872.445927,
+"kind": "judge",
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372874.544776,
+"kind": "event",
+"text": "event safe_passage {\"entry\":null,\"exit\":null,\"buoys\":[{\"id\":1,\"colour\":\"red\",\"state\":\"...",
+"sev": ""
+},
+{
+"t": 1794372874.545778,
+"kind": "judge",
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372883.444682,
+"kind": "event",
+"text": "task SCOUT: APPROACH -> LOG (at the stand-off point)",
+"sev": ""
+},
+{
+"t": 1794372884.8448262,
+"kind": "event",
+"text": "event safe_passage {\"entry\":null,\"exit\":null,\"buoys\":[{\"id\":1,\"colour\":\"red\",\"state\":\"...",
+"sev": ""
+},
+{
+"t": 1794372884.8456461,
+"kind": "judge",
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372887.545877,
+"kind": "event",
+"text": "scout: B1 logged 1.2811282 103.8549665 \u00b7 red \u00b7 638 obs \u00b7 camera",
+"sev": ""
+},
+{
+"t": 1794372887.546144,
+"kind": "event",
+"text": "task SCOUT: LOG -> PICK (the buoy logged)",
+"sev": ""
+},
+{
+"t": 1794372887.753809,
+"kind": "event",
+"text": "task SCOUT: PICK -> APPROACH (the nearest unvisited buoy)",
+"sev": ""
+},
+{
+"t": 1794372897.799668,
+"kind": "event",
+"text": "task SCOUT: APPROACH -> LOG (at the stand-off point)",
+"sev": ""
+},
+{
+"t": 1794372902.0003068,
+"kind": "event",
+"text": "scout: B2 logged 1.2811273 103.8549446 \u00b7 unknown \u00b7 91 obs \u00b7 camera",
+"sev": "bad"
+},
+{
+"t": 1794372902.0007622,
+"kind": "event",
+"text": "task SCOUT: LOG -> PICK (the buoy logged)",
+"sev": ""
+},
+{
+"t": 1794372902.22528,
+"kind": "event",
+"text": "task SCOUT: PICK -> APPROACH (the nearest unvisited buoy)",
+"sev": ""
+},
+{
+"t": 1794372932.85872,
+"kind": "event",
+"text": "task SCOUT: APPROACH -> LOG (at the stand-off point)",
+"sev": ""
+},
+{
+"t": 1794372934.5731041,
+"kind": "ui",
+"text": "web> hold",
+"sev": "warn"
+},
+{
+"t": 1794372934.578381,
+"kind": "cmd",
+"text": "cmd HOLD   [bench]",
+"sev": "warn"
+},
+{
+"t": 1794372934.578717,
+"kind": "intent",
+"text": "intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372934.656776,
+"kind": "event",
+"text": "vehicle: AUTO_TASK -> AUTO_SAFE_HOLD (HOLD)",
+"sev": "warn"
+},
+{
+"t": 1794372934.6570601,
+"kind": "ack",
+"text": "ack ACCEPTED HOLD -> AUTO_SAFE_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372934.657158,
+"kind": "ack",
+"text": "ack DONE HOLD -> AUTO_SAFE_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372934.657279,
+"kind": "ui",
+"text": "web  intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372934.65728,
+"kind": "ui",
+"text": "web  ack ACCEPTED  state=AUTO_SAFE_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372934.657281,
+"kind": "ui",
+"text": "web  ack DONE      state=AUTO_SAFE_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372937.776248,
+"kind": "ui",
+"text": "web> end_run",
+"sev": ""
+},
+{
+"t": 1794372937.781617,
+"kind": "cmd",
+"text": "cmd STOP_RUN   [bench]",
+"sev": ""
+},
+{
+"t": 1794372937.781714,
+"kind": "ui",
+"text": "web  intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372937.7819579,
+"kind": "intent",
+"text": "intent accepted",
+"sev": "ok"
+},
+{
+"t": 1794372937.856862,
+"kind": "event",
+"text": "task SCOUT: LOG -> ABORTED (STOP_RUN)",
+"sev": ""
+},
+{
+"t": 1794372937.8572109,
+"kind": "event",
+"text": "vehicle: AUTO_SAFE_HOLD -> AUTO_HOLD (ABORT_TASK)",
+"sev": "warn"
+},
+{
+"t": 1794372937.857722,
+"kind": "ack",
+"text": "ack ACCEPTED STOP_RUN -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372937.8583272,
+"kind": "ack",
+"text": "ack DONE STOP_RUN -> AUTO_HOLD",
+"sev": "warn"
+},
+{
+"t": 1794372951.380527,
+"kind": "ui",
+"text": "web> ekf off",
+"sev": ""
+},
+{
+"t": 1794372951.380644,
+"kind": "ui",
+"text": "web plant <- {\"set\": {\"ekf_ok\": false}}",
+"sev": ""
+},
+{
+"t": 1794372954.9572322,
+"kind": "event",
+"text": "vehicle: AUTO_HOLD -> FAULT (EKF_BAD)",
+"sev": "bad"
+}
+],
+"judge_log": [
+{
+"t": 1794372867.13948,
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372869.145949,
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372872.4459279,
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372874.545779,
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+},
+{
+"t": 1794372884.8456478,
+"text": "judge <- safe_passage {\"entry_position\":null,\"exit_position\":null,\"buoys\":[{\"id\":1,\"colou...",
+"sev": ""
+}
+],
+"points": [
+{
+"name": "A",
+"x_n": 10.0,
+"y_e": 0.0,
+"lat": 1.28111,
+"lon": 103.8550097,
+"utc": "2026-11-08T20:26:56Z",
+"from": "ocs-boat"
+},
+{
+"name": "B",
+"x_n": 10.0,
+"y_e": 0.99,
+"lat": 1.28111,
+"lon": 103.8550186,
+"utc": "2026-11-08T20:26:58Z",
+"from": "ocs-boat"
+},
+{
+"name": "C",
+"x_n": 22.0,
+"y_e": 0.99,
+"lat": 1.2812178,
+"lon": 103.8550186,
+"utc": "2026-11-08T20:27:00Z",
+"from": "ocs-boat"
+},
+{
+"name": "HOME",
+"x_n": 0.0,
+"y_e": 0.0,
+"lat": 1.2810202,
+"lon": 103.8550097,
+"utc": "2026-11-08T20:26:54Z",
+"from": "ocs-boat"
+}
+],
+"ui_active": false,
+"cv_hint": {
+"text": "CV: fake_perception (no model: world-file stand-in)",
+"model": "fake_perception (no model: world-file stand-in)",
+"classes": null,
+"detector": "fake_perception",
+"observer_detector": null,
+"source": "fake_perception",
+"age_s": 0.4,
+"stale": false,
+"by_task": {},
+"sources": [
+{
+"name": "fake_perception",
+"age_s": 0.4
+}
+]
+},
+"flavour": {
+"preset": "?",
+"judge": "fake",
+"net": "?",
+"fcu": "fake",
+"profile": "?",
+"cv": "?",
+"uav": false,
+"free_run": false,
+"text": "? \u00b7 judge fake \u00b7 net ? \u00b7 FCU fake \u00b7 ? \u00b7 CV ?",
+"auto_mission": false
+},
+"warnings": [
+{
+"age": 0.1,
+"text": "vehicle FAULT EKF_BAD: clear it, then confirm_safe",
+"style": "bad"
+}
+],
+"nodes": {
+"hub": [
+{
+"node": "fake_robocommand",
+"up": true,
+"age": 1.4,
+"body": {
+"node": "fake_robocommand",
+"broker": "127.0.0.1:1883",
+"host": "Dmitrii-M3",
+"pid": 96693,
+"up": true,
+"t": "2026-11-11T04:55:55.059Z",
+"t_unix": 1794372955.06
+}
+},
+{
+"node": "logger-hub",
+"up": true,
+"age": 1.8,
+"body": {
+"node": "logger-hub",
+"broker": "127.0.0.1:1883",
+"host": "Dmitrii-M3",
+"pid": 97597,
+"up": true,
+"t": "2026-11-11T04:55:54.691Z",
+"t_unix": 1794372954.69
+}
+},
+{
+"node": "ocs_app",
+"up": true,
+"age": 0.9,
+"body": {
+"node": "ocs_app",
+"broker": "127.0.0.1:1883",
+"host": "Dmitrii-M3",
+"pid": 96847,
+"vehicle_id": "OCS",
+"up": true,
+"t": "2026-11-11T04:55:55.563Z",
+"t_unix": 1794372955.56
+}
+},
+{
+"node": "tui",
+"up": true,
+"age": 0.4,
+"body": {
+"node": "tui",
+"broker": "127.0.0.1:1883",
+"host": "Dmitrii-M3",
+"pid": 97746,
+"up": true,
+"t": "2026-11-11T04:55:56.109Z",
+"t_unix": 1794372956.11
+}
+},
+{
+"node": "uav_adapter",
+"up": false,
+"age": 1430.6,
+"body": {
+"node": "uav_adapter",
+"broker": "127.0.0.1:1883",
+"host": "Dmitrii-M3",
+"pid": 93791,
+"vehicle_id": "UAV1",
+"up": true,
+"t": "2026-11-11T04:32:05.863Z",
+"t_unix": 1794371525.86
+}
+},
+{
+"node": "uav_cv",
+"up": false,
+"age": 200.3,
+"body": {
+"up": true,
+"t": "2026-11-09T02:57:37Z",
+"source": "fake_uav"
+}
+}
+],
+"boat": [
+{
+"node": "cv_publish",
+"up": false,
+"age": 200.3,
+"body": {
+"node": "cv_publish",
+"up": false,
+"t": "2026-11-11T01:39:26.074Z"
+}
+},
+{
+"node": "fake_cannon_pi",
+"up": true,
+"age": 2.0,
+"body": {
+"node": "fake_cannon_pi",
+"broker": "127.0.0.1:1884",
+"host": "Dmitrii-M3",
+"pid": 96605,
+"up": true,
+"t": "2026-11-11T04:55:54.509Z",
+"t_unix": 1794372954.51
+}
+},
+{
+"node": "fake_dock",
+"up": true,
+"age": 0.5,
+"body": {
+"node": "fake_dock",
+"broker": "127.0.0.1:1884",
+"host": "Dmitrii-M3",
+"pid": 96518,
+"up": true,
+"t": "2026-11-11T04:55:56.007Z",
+"t_unix": 1794372956.01
+}
+},
+{
+"node": "fake_perception",
+"up": true,
+"age": 1.0,
+"body": {
+"node": "fake_perception",
+"broker": "127.0.0.1:1884",
+"host": "Dmitrii-M3",
+"pid": 96430,
+"up": true,
+"t": "2026-11-11T04:55:55.479Z",
+"t_unix": 1794372955.48
+}
+},
+{
+"node": "logger-boat",
+"up": true,
+"age": 0.1,
+"body": {
+"node": "logger-boat",
+"broker": "127.0.0.1:1884",
+"host": "Dmitrii-M3",
+"pid": 97325,
+"up": true,
+"t": "2026-11-11T04:55:56.391Z",
+"t_unix": 1794372956.39
+}
+},
+{
+"node": "mission_manager",
+"up": true,
+"age": 0.4,
+"body": {
+"node": "mission_manager",
+"broker": "127.0.0.1:1884",
+"host": "Dmitrii-M3",
+"pid": 96320,
+"vehicle_id": "USV1",
+"up": true,
+"t": "2026-11-11T04:55:56.066Z",
+"t_unix": 1794372956.07
+}
+},
+{
+"node": "usv_ui",
+"up": true,
+"age": 0.6,
+"body": {
+"node": "usv_ui",
+"broker": "127.0.0.1:1884",
+"host": "Dmitrii-M3",
+"pid": 97711,
+"up": true,
+"t": "2026-11-11T04:55:55.861Z",
+"t_unix": 1794372955.862,
+"fcu_link": "fake",
+"fcu_conn": "udpin:127.0.0.1:14550",
+"log": null,
+"active": false,
+"cv_on": false
+}
+}
+]
+},
+"verdicts": {
+"DECLARE": {
+"action": "DECLARE",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "DECLARE"
+},
+"ENABLE_AUTO": {
+"action": "ENABLE_AUTO",
+"ok": false,
+"why": "ENABLE_AUTO is accepted in MANUAL only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "ENABLE_AUTO"
+},
+"DISABLE_AUTO": {
+"action": "DISABLE_AUTO",
+"ok": false,
+"why": "DISABLE_AUTO is accepted in AUTO_HOLD only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "DISABLE_AUTO"
+},
+"START_TASK": {
+"action": "START_TASK",
+"ok": false,
+"why": "START_TASK is accepted in AUTO_HOLD only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "START_TASK"
+},
+"SELECT_TARGET": {
+"action": "SELECT_TARGET",
+"ok": false,
+"why": "SELECT_TARGET needs BOX_INSPECT before ALIGN (vehicle FAULT, task -, state -)",
+"hint": "start_task m0t4 [--target-colour red] (the vehicle picks GREEN by itself)",
+"sent_as": "SELECT_TARGET"
+},
+"SAVE_POINT": {
+"action": "SAVE_POINT",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "SAVE_POINT"
+},
+"DELETE_POINT": {
+"action": "DELETE_POINT",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "DELETE_POINT"
+},
+"HOME": {
+"action": "HOME",
+"ok": false,
+"why": "HOME acts in AUTO only (vehicle FAULT)",
+"hint": "enable_auto first",
+"sent_as": "HOME"
+},
+"FCU_MODE": {
+"action": "FCU_MODE",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "FCU_MODE"
+},
+"FCU_ARM": {
+"action": "FCU_ARM",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "FCU_ARM"
+},
+"FENCE_APPLY": {
+"action": "FENCE_APPLY",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "FENCE_APPLY"
+},
+"FENCE_ENABLE": {
+"action": "FENCE_ENABLE",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "FENCE_ENABLE"
+},
+"STATION_KEEP": {
+"action": "STATION_KEEP",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "SET_STATION_KEEP"
+},
+"RC6": {
+"action": "RC6",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "SET_RC6"
+},
+"REPORT": {
+"action": "REPORT",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "REPORT"
+},
+"USV_READY": {
+"action": "USV_READY",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "USV_READY"
+},
+"DECLARE_UAV": {
+"action": "DECLARE_UAV",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "DECLARE_UAV"
+},
+"UAV": {
+"action": "UAV",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "UAV"
+},
+"CLEAR_MAP": {
+"action": "CLEAR_MAP",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "CLEAR_MAP"
+},
+"TUNE": {
+"action": "TUNE",
+"ok": false,
+"why": "SET_TUNING is accepted in MANUAL/AUTO_HOLD only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "SET_TUNING"
+},
+"HOLD": {
+"action": "HOLD",
+"ok": false,
+"why": "HOLD is accepted in AUTO_HOLD/AUTO_TASK only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "HOLD"
+},
+"RESUME": {
+"action": "RESUME",
+"ok": false,
+"why": "RESUME is accepted in AUTO_SAFE_HOLD only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "RESUME"
+},
+"SKIP": {
+"action": "SKIP",
+"ok": false,
+"why": "SKIP is accepted in AUTO_TASK only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "SKIP"
+},
+"SESSION": {
+"action": "SESSION",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "SESSION"
+},
+"ABORT_TASK": {
+"action": "ABORT_TASK",
+"ok": false,
+"why": "ABORT_TASK is accepted in AUTO_TASK/AUTO_SAFE_HOLD only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "ABORT_TASK"
+},
+"CONFIRM_SAFE": {
+"action": "CONFIRM_SAFE",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "CONFIRM_SAFE"
+},
+"END_RUN": {
+"action": "END_RUN",
+"ok": false,
+"why": "END_RUN needs R3-R5 (now R6): nothing to end",
+"hint": "declare first",
+"sent_as": "STOP_RUN"
+},
+"RESET_RUN": {
+"action": "RESET_RUN",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "RESET"
+},
+"STEP": {
+"action": "STEP",
+"ok": false,
+"why": "STEP needs a running m0t0 / m0t1 (vehicle FAULT, task -)",
+"hint": "start_task m0t0 first",
+"sent_as": "STEP"
+},
+"GOTO": {
+"action": "GOTO",
+"ok": false,
+"why": "START_TASK is accepted in AUTO_HOLD only, vehicle is in FAULT",
+"hint": "clear the input, then confirm_safe, then enable_auto",
+"sent_as": "START_TASK"
+},
+"INJECT": {
+"action": "INJECT",
+"ok": true,
+"why": "",
+"hint": "",
+"sent_as": "INJECT"
+}
+},
+"next": "clear the input, then confirm_safe",
+"flow_stage": 7,
+"stage_meaning": "",
+"system": {
+"refused": {
+"ocs": "",
+"rctest": "",
+"nx": "",
+"agx": "",
+"fcu": "the FCU is armed: disarm first (ArduPilot refuses a reboot while armed anyway)",
+"nx_reboot": "",
+"agx_reboot": "",
+"simworld": "",
+"cam": "",
+"observer": "",
+"rec": "",
+"simreset": "",
+"stopall": "",
+"resetall": "",
+"stop_bench": "",
+"stop_simcv": "",
+"stop_nx": "",
+"stop_agx": "",
+"stop_ocs": ""
+},
+"jobs": []
+},
+"results": [
+{
+"t": 1794372804.0707269,
+"line": "station_keep loiter",
+"lines": [
+"unknown command station_keep (the page sends op-tui's words: abort arm armed clear_map confirm_safe declare del_point disable_auto disarm ekf enable_auto end_run estop fcu fcu_mode fence goto hold home inject kill manual mission next rc6 rc6_policy ready report reset resume save_point select_target session skip start_task state step stop_reset teleport tune)"
+],
+"ok": false
+},
+{
+"t": 1794372804.1180549,
+"line": "enable_auto",
+"lines": [
+"intent accepted",
+"  ack ACCEPTED  state=AUTO_HOLD",
+"  ack DONE      state=AUTO_HOLD"
+],
+"ok": true
+},
+{
+"t": 1794372806.22579,
+"line": "mission scoutsim",
+"lines": [
+"intent accepted mission SCOUT sim=True"
+],
+"ok": true
+},
+{
+"t": 1794372818.018752,
+"line": "uav ready on",
+"lines": [
+"unknown command uav (the page sends op-tui's words: abort arm armed clear_map confirm_safe declare del_point disable_auto disarm ekf enable_auto end_run estop fcu fcu_mode fence goto hold home inject kill manual mission next rc6 rc6_policy ready report reset resume save_point select_target session skip start_task state step stop_reset teleport tune)"
+],
+"ok": false
+},
+{
+"t": 1794372818.066535,
+"line": "usv ready on",
+"lines": [
+"unknown command usv (the page sends op-tui's words: abort arm armed clear_map confirm_safe declare del_point disable_auto disarm ekf enable_auto end_run estop fcu fcu_mode fence goto hold home inject kill manual mission next rc6 rc6_policy ready report reset resume save_point select_target session skip start_task state step stop_reset teleport tune)"
+],
+"ok": false
+},
+{
+"t": 1794372847.808293,
+"line": "declare",
+"lines": [
+"intent accepted PREPARE sent; R3 when every vehicle acks"
+],
+"ok": true
+},
+{
+"t": 1794372867.058311,
+"line": "start_task scoutsim",
+"lines": [
+"intent accepted",
+"  ack ACCEPTED  state=AUTO_TASK",
+"  ack DONE      state=AUTO_TASK"
+],
+"ok": true
+},
+{
+"t": 1794372934.573102,
+"line": "hold",
+"lines": [
+"intent accepted",
+"  ack ACCEPTED  state=AUTO_SAFE_HOLD",
+"  ack DONE      state=AUTO_SAFE_HOLD"
+],
+"ok": true
+},
+{
+"t": 1794372937.776246,
+"line": "end_run",
+"lines": [
+"intent accepted"
+],
+"ok": true
+},
+{
+"t": 1794372951.380524,
+"line": "ekf off",
+"lines": [
+"plant <- {\"set\": {\"ekf_ok\": false}} (the fake FCU on this machine, udp 14560)"
+],
+"ok": true
+}
+],
+"judge": {
+"broker": "127.0.0.1:1883",
+"connected": true,
+"wires": {
+"json": 174,
+"protobuf": 0
+},
+"course": {
+"id": "EXTRA",
+"ago_s": 200.0
+},
+"declaration": {
+"seq": 269,
+"ago_s": 109.0,
+"vehicles": [
+"USV1"
+]
+},
+"run_start": {
+"seq": 1,
+"run_id": 1001,
+"ago_s": 107.0
+},
+"answer": "declaration 269: no RunStart for 109 s",
+"answer_style": "bad",
+"heartbeat_age": {
+"USV1": 19.2
+},
+"reports": [
+{
+"vehicle": "USV1",
+"kind": "safe_passage",
+"ago_s": 72.0
+}
+],
+"feed": [
+{
+"t": 1794372756.134839,
+"dir": "from",
+"text": "RxCourse EXTRA: 4 corners, transit 4, pinger 30000 Hz  [json]",
+"sev": ""
+},
+{
+"t": 1794372847.869872,
+"dir": "to",
+"text": "RunDeclaration seq 269: USV1  T1:core T2:none T3:core T4:core",
+"sev": ""
+},
+{
+"t": 1794372849.875618,
+"dir": "from",
+"text": "#1 RunStart declaration 1 run 1001",
+"sev": ""
+},
+{
+"t": 1794372867.139513,
+"dir": "to",
+"text": "USV1 #64445 SafePassageReport: entry - exit -, 6 buoys flashing_red=2 unknown=4",
+"sev": "bad"
+},
+{
+"t": 1794372867.9404118,
+"dir": "to",
+"text": "USV1 current_task TASK_NONE -> TASK_SAFE_PASSAGE",
+"sev": ""
+},
+{
+"t": 1794372869.145864,
+"dir": "to",
+"text": "USV1 #64450 SafePassageReport: entry - exit -, 8 buoys flashing_red=2 unknown=6",
+"sev": "bad"
+},
+{
+"t": 1794372872.4460921,
+"dir": "to",
+"text": "USV1 #64457 SafePassageReport: entry - exit -, 9 buoys flashing_red=2 unknown=7",
+"sev": "bad"
+},
+{
+"t": 1794372874.545815,
+"dir": "to",
+"text": "USV1 #64462 SafePassageReport: entry - exit -, 10 buoys flashing_red=2 unknown=8",
+"sev": "bad"
+},
+{
+"t": 1794372884.845686,
+"dir": "to",
+"text": "USV1 #64482 SafePassageReport: entry - exit -, 11 buoys flashing_red=3 unknown=8",
+"sev": "bad"
+}
+]
+},
+"control": {
+"judged_ready": false,
+"r": "R6",
+"test_mode": true,
+"rearm": false,
+"word": "NOT READY",
+"why": "fault EKF_BAD",
+"hint": "clear the cause, then confirm_safe"
+},
+"timeline": {
+"events": [
+{
+"t": 1794372849.201151,
+"kind": "declared",
+"text": "Run Declaration \u00b7 declaration 1 \u00b7 vehicles USV1",
+"style": ""
+},
+{
+"t": 1794372849.2011552,
+"kind": "held",
+"text": "Run Held \u00b7 every declared vehicle in AUTO, waiting for RunStart (a UAV run: Garuda clears the flight)",
+"style": "warn",
+"seq": 1
+},
+{
+"t": 1794372851.218417,
+"kind": "started",
+"text": "Run Started \u00b7 run_id=1001",
+"style": "ok"
+},
+{
+"t": 1794372938.448541,
+"kind": "ended",
+"text": "Run Ended \u00b7 end_run by the operator",
+"style": ""
+}
+],
+"ended": true,
+"run_id": 1001,
+"declaration": 1
+},
+"clearance": {
+"checks": [
+{
+"id": "hub",
+"label": "hub broker (this Mac)",
+"ok": true,
+"detail": "",
+"fix": "scripts/run_ocs.sh",
+"hard": true
+},
+{
+"id": "boat",
+"label": "boat answers (status)",
+"ok": true,
+"detail": "status 0.4 s",
+"fix": "NX: scripts/run_usv.sh; the bridge (NETWORK tab)",
+"hard": true
+},
+{
+"id": "judge",
+"label": "judge connected",
+"ok": true,
+"detail": "fake",
+"fix": "run_ocs.sh --judge \u2026; rc-test: scripts/run_rctest.sh",
+"hard": true
+},
+{
+"id": "course",
+"label": "course received + valid",
+"ok": true,
+"detail": "EXTRA",
+"fix": "the judge publishes it (judge page: Course, as judge)",
+"hard": true
+},
+{
+"id": "vehicle",
+"label": "vehicle ready (no kill / fault)",
+"ok": false,
+"detail": "FAULT",
+"fix": "KILLED / FAULT: clear the input, then confirm_safe; OFFLINE: the boat stack",
+"hard": true
+},
+{
+"id": "armed",
+"label": "FCU armed (by you)",
+"ok": true,
+"detail": "armed",
+"fix": "arm from the transmitter / `arm` in usv_ui - never software",
+"hard": true
+},
+{
+"id": "rcmode",
+"label": "FCU not in MANUAL, RC6 low",
+"ok": true,
+"detail": "mode HOLD \u00b7 RC6 1000",
+"fix": "the FCU is in MANUAL (RC6 override or the transmitter's mode switch): put it in HOLD, then enable_auto (v0.1.29.3, pool F6)",
+"hard": true
+},
+{
+"id": "handover",
+"label": "usv_ui handed over",
+"ok": true,
+"detail": "mission manager",
+"fix": "type `handover` in usv_ui on the NX",
+"hard": true
+},
+{
+"id": "fcu",
+"label": "FCU link",
+"ok": null,
+"detail": "fake",
+"fix": "real = the Pixhawk; fake = the bench plant (sim missions only)",
+"hard": false
+},
+{
+"id": "perception",
+"label": "perception alive",
+"ok": true,
+"detail": "0.4 s",
+"fix": "AGX: scripts/run_agx.sh (or --sim)",
+"hard": false
+},
+{
+"id": "mission",
+"label": "mission preselected",
+"ok": true,
+"detail": "scoutsim",
+"fix": "pick it in MISSION (MAIN)",
+"hard": false
+},
+{
+"id": "declaration",
+"label": "declaration (tiers, mission)",
+"ok": true,
+"hard": false,
+"detail": "T1:core T2:none T3:core T4:core \u00b7 policy warn",
+"fix": "the RunDeclaration checks (handbook 3.4.10 / 3.4.16): every task a tier, the mission's task declared with its tier"
+}
+],
+"next": "declare",
+"why": "",
+"blocked": [
+"vehicle ready (no kill / fault)"
+],
+"clear": false
+},
+"mission_declaration": {
+"m1t2": {
+"block": false,
+"text": "m1t2 needs T1 TIER_ADVANCED, the declaration says T1 TIER_CORE (handbook 3.4.16: the intended tier must be correct): pick `mission m1t1`, or set declaration.tiers in the OCS profile (profiles/<pool|bench|course>/ocs_*.yaml), restart run_ocs.sh (end_run first if declared), then declare - T1: TIER_ADVANCED"
+}
+},
+"clearing": false,
+"hosts": {
+"agx": {
+"simulated": true,
+"host": "agx",
+"hostname": "Dmitrii-M3",
+"cpu_pct": null,
+"cpu_load1": 13.09,
+"ncpu": 14,
+"gpu_pct": null,
+"temp_c": null,
+"throttling": null,
+"throttle_src": null,
+"disk_free_gb": 62.2,
+"uptime_s": 1903070.0,
+"t": "2026-11-11T04:55:55.689Z",
+"t_unix": 1794372955.69,
+"age_s": 0.8
+},
+"nx": {
+"simulated": true,
+"host": "nx",
+"hostname": "Dmitrii-M3",
+"cpu_pct": null,
+"cpu_load1": 13.09,
+"ncpu": 14,
+"gpu_pct": null,
+"temp_c": null,
+"throttling": null,
+"throttle_src": null,
+"disk_free_gb": 62.2,
+"uptime_s": 1903070.0,
+"t": "2026-11-11T04:55:55.689Z",
+"t_unix": 1794372955.69,
+"age_s": 0.8
+}
+},
+"host_thresholds": {
+"warn_c": 85.0,
+"alarm_c": 95.0,
+"disk_min_gb": 5.0,
+"stale_s": 10.0
+},
+"uav": {
+"state": "none",
+"why": "no UAV adapter on the hub (the launcher's UAV field, or --uav)"
+},
+"uav_window": {
+"state": "none",
+"why": "no UAV window (launcher UAV: on, or scripts/run_uav_window.sh)"
+},
+"alarms": {
+"active": [
+{
+"key": "vehicle FAULT EKF_BAD",
+"level": "ALARM",
+"first_t": 1794372956.439887,
+"acked": false,
+"acked_t": null,
+"escalated": false,
+"text": "vehicle FAULT EKF_BAD: clear it, then confirm_safe",
+"last_t": 1794372956.491698,
+"age_s": 0.1
+}
+],
+"n_alarm": 1,
+"n_warning": 0,
+"n_caution": 0,
+"unacked": 1,
+"history_n": 0,
+"recent": []
+},
+"prefs": {},
+"launch": null,
+"cannon": {
+"age_s": 0.04,
+"ok": true,
+"hmac_ok": true,
+"last_t": "2026-11-11T04:55:56.347232+00:00",
+"packet_age_s": 0.06,
+"window_id": null,
+"target_on": false,
+"n_rx": 990,
+"n_bad": 0,
+"status": "NO_AIM",
+"key": "test",
+"event": "SAFE_NO_TARGET",
+"reason": null,
+"mode": null,
+"pump": "OFF",
+"ready": false,
+"state": "ok",
+"why": ""
+},
+"usv_window": {
+"where": "this host",
+"url": "http://127.0.0.1:8098/",
+"host": "Dmitrii-M3",
+"ocs": "page",
+"commander": null,
+"sessions": [],
+"pin": true,
+"age_s": 1.0,
+"state": "up"
+},
+"bar": {
+"word": "NOT READY",
+"why": "fault EKF_BAD",
+"hint": "clear the cause, then confirm_safe",
+"override": false,
+"holder": "mission manager",
+"v": "FAULT",
+"mode": "HOLD",
+"armed": true,
+"kill": false,
+"estop": false,
+"stale": false,
+"r": "R6",
+"run_id": null,
+"declaration_seq": 1,
+"alarms": 1,
+"warnings": 0,
+"unacked": 1,
+"flavour": "? \u00b7 judge fake \u00b7 net ? \u00b7 FCU fake \u00b7 ? \u00b7 CV ?",
+"theme": null
+},
+"session": {
+"t": 1794372956.491734,
+"current": null,
+"last": null,
+"catalogue": [
+{
+"name": "buoys",
+"group": "dry",
+"title": "dry buoys",
+"what": "the buoy observer on the real buoys (students' model or cvt-v2-l) + the camera stream",
+"shows": "the feed with boxes, the map filling: n buoys \u00b7 colours \u00b7 ranges \u00b7 found per band \u00b7 age",
+"opts": {
+"model": [
+"students",
+"cvt-v2-l"
+]
+},
+"course_ok": false
+},
+{
+"name": "dockface",
+"group": "dry",
+"title": "dry dockface",
+"what": "the docking observer on the dock box face; the range against the tape distances",
+"shows": "faces \u00b7 range vs the tape \u00b7 normal",
+"opts": {
+"tape": [
+""
+]
+},
+"course_ok": false
+},
+{
+"name": "windows",
+"group": "dry",
+"title": "dry windows",
+"what": "cvt-v2-l + the cannon's aim on the face: the target windows and their light",
+"shows": "upper / lower found \u00b7 lit colour \u00b7 stable lock (the cannon gate's rule)",
+"opts": {},
+"course_ok": false
+},
+{
+"name": "uavmap",
+"group": "dry",
+"title": "dry uavmap",
+"what": "the UAV's buoy path (their broker, or JSON over UDP to the adapter) into the boat's map",
+"shows": "items \u00b7 scan state \u00b7 age \u00b7 merged (0 expected when the footage is elsewhere); fit to UAV items",
+"opts": {
+"path": [
+"broker",
+"udp"
+]
+},
+"course_ok": false
+},
+{
+"name": "cannon",
+"group": "dry",
+"title": "dry cannon",
+"what": "the observer --cannon red on the lit window + the cannon sender + the Pi's status",
+"shows": "target range / bearing / elevation \u00b7 packets \u00b7 the Pi's event \u00b7 LOCK",
+"opts": {
+"aim10": [
+"no",
+"yes"
+],
+"confirm": [
+""
+]
+},
+"course_ok": false
+},
+{
+"name": "collect",
+"group": "wet",
+"title": "wet collect (m0t7)",
+"what": "record on the water: the ZED (agx_record), the camera frames, the track; DROP POINT = save_point <label>_NN at the boat; the boat stays in MANUAL under the transmitter; no declaration",
+"shows": "the track, the points dropped, the recording",
+"opts": {
+"label": [
+""
+]
+},
+"course_ok": true
+}
+]
+},
+"mission_metrics": {
+"task": "SCOUT"
+}
+},
+"fast": {
+"t": 1794372956.493155,
+"src": "local",
+"age": 0.24,
+"status_age": 0.44,
+"bridge": true,
+"v": {
+"state": "FAULT",
+"mode": "HOLD",
+"armed": true,
+"kill": false,
+"estop": false,
+"hdg_deg": 342.84,
+"sog_mps": 0.0,
+"roll_deg": 0.0,
+"pitch_deg": 0.0,
+"yaw_rate_dps": 0.0,
+"task_name": null,
+"task_state": null,
+"rc6": {
+"policy": "latched",
+"raw": false,
+"holds": false
+},
+"fcu_age_s": 0.05
+}
+},
+"alarms": {
+"active": [
+{
+"key": "vehicle FAULT EKF_BAD",
+"level": "ALARM",
+"first_t": 1794372956.439887,
+"acked": false,
+"acked_t": null,
+"escalated": false,
+"text": "vehicle FAULT EKF_BAD: clear it, then confirm_safe",
+"last_t": 1794372956.491698,
+"age_s": 0.1
+}
+],
+"history": []
+}
+}

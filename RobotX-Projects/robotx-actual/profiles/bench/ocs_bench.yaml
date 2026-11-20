@@ -1,0 +1,63 @@
+# OCS application, laptop bench profile: team client on the hub (1882), fake RoboCommand on the same broker.
+vehicle_id: OCS
+vehicle: usv            # topic token used only for the Config helpers; the OCS addresses vehicles explicitly
+node: ocs_app
+log_dir: ./logs
+
+mqtt:
+  host: 127.0.0.1
+  port: 1882
+  client_id: ocs-app
+
+ocs:
+  team_id: SGIT
+  vehicles:               # vehicle_id -> topic token (the profile's vehicles; the declaration list is per run)
+    USV1: usv
+    UAV1: uav              # v0.1.64: declared only with `declare uav on`; v0.1.78.20: UAV1 (was SGIT-53577)
+  # v0.1.64 (WP14, D1/D6): the UAV - in `vehicles` always, DECLARED only with `declare uav on` (off by default; m1t2 needs it). With
+  # the adapter not running it is silent: no heartbeat, no command, USV-only declarations. Dmitrii may change the values at the venue.
+  uav:
+    vehicle_id: UAV1               # v0.1.78.20 (Dmitrii 2026-11-10): RoboCommand's vehicle id - its page showed "UAV1 · drone SGIT-53577" (2026-11-05)
+    registration: SGIT-53577       # the heartbeat's uav_registration (Garuda's drone id) - v0.1.78.14: the venue page said "AA53577 - no
+                                   # match"; v0.1.78.20: confirmed by RoboNation's page of 2026-11-05 ("UAV1 SGIT-53577: flying - cleared")
+    pilot_callsign: Calwin-U2332301
+    topic: uav
+    telemetry_stale_s: 5           # his invariant 3: no heartbeat from telemetry older than this
+    stale_stop_s: 5
+    declare_default: false
+  judge: fake             # fake | none  (protobuf client plugs in here when the groundstation repo is wired)
+  judge_host: 127.0.0.1
+  judge_port: 1882
+  judge_network: bench    # bench | course ; bench mode is refused when this says course
+  course_nic: false
+  bench_mode: true        # relaxes run-state guards for intents and enables injectors (decision 23)
+  test_mode: true           # v0.1.37 (WP10d): run-free tasks (m0t*, goto, home, m0t4) without a run
+  stall_s: 60             # R4 without RunStart -> alert, redeclare (ADR-8)
+  autostart_countdown_s: 3     # v0.1.43 (§7d.4): the page's 3-2-1 after RunStart before a --auto mission starts (0 = at once)
+  heartbeat_hz: 2
+  stale_stop_s: 10        # decision 4
+  ack_timeout_s: 5        # v0.1.43 (OCS_V2_SPEC §6): a cmd with no ack in this many seconds is TIMED OUT (a WARNING on the page)
+  msg_rate_cap: 5         # handbook: <= 5 msg/s per system
+  report_min_period_s: 1.0
+  declaration:
+    tiers: {T1: TIER_CORE, T2: TIER_NONE, T3: TIER_CORE, T4: TIER_CORE}
+    policy: warn            # v0.1.41 (WP9c) RunDeclaration checks: refuse | warn (rows shown and appended to the intent's reason, never refused); absent = warn
+    uav_geofence: []
+    uav_geofence_max_altitude_hae_m: 30
+    uav_pilot_callsign: TBD
+
+# v0.1.33 (ROADMAP WP10b): the course drawn before RoboCommand publishes one - RoboNation's Course Alpha (rc_test/test_server.py),
+# Marina Bay: 30.1 x 25.0 m, long side 032 deg, centre 1.2810202 N 103.8550097 E. The OCS page's MAP draws it dashed, labelled
+# *default*; the received course replaces it (solid). Display only: the run lifecycle still waits for the judge's course.
+course:
+  default:
+    course_id: ALPHA (default)
+    boundary: [[1.2809652, 103.8548424], [1.2808457, 103.8550331], [1.2810752, 103.8551770], [1.2811947, 103.8549863]]
+# v0.1.43 (OCS_V2_SPEC §11): the host-health beat's thresholds (NX / AGX thermal zones, telemetry/usv/host/<host>) - the page
+# warns at warn_c (amber) and alarms at alarm_c (red); to be checked against the modules' specs, tuned later
+host:
+  warn_c: 85
+  alarm_c: 95
+# the geofence (lat, lon corners), edited on the MAP tab (drag a corner, click an edge to add, shift-click to delete, save) - the
+# OCS page rewrites this one line; drawn dashed. The UAV's declared polygon later (WP14); for the boat a display today.
+geofence: []

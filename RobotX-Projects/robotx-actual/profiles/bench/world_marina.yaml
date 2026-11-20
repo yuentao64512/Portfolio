@@ -1,0 +1,53 @@
+# Marina Bay, open water (v0.1.33, ROADMAP WP10b; CV_TRAIN's request): RoboNation's Course Alpha (30.1 x 25.0 m, long side 032 deg)
+# around its centre - no pool walls (walls: false: the camera sees water to the horizon and the sky). The objects are a Task 1 field
+# laid along the course's long axis (entry, three gates GREEN to port / RED to starboard travelling 032, two obstacles, the exit),
+# three dock bays and three box faces at the far end, facing back down the course (212 deg). For the renderer and its dataset
+# export first; fake_perception reads it like any world (x_n north, y_e east from the origin).
+name: world_marina
+origin: {lat: 1.2810202, lon: 103.8550097}          # Course Alpha's centre
+start: {x_n: -10.39, y_e: -7.91, hdg_deg: 32.0}
+teleports:
+  - {name: before gate 1, x_n: -5.72, y_e: -4.99, hdg: 32.0}
+  - {name: facing the dock, x_n: 1.11, y_e: 9.54, hdg: 32.0}
+walls: false
+course: course_alpha                            # v0.1.46.1: the fake judge's course (RxCourse) - RoboNation Course Alpha; rc-test / RoboCommand's own course overrides it
+course_id: COURSE-ALPHA
+bounds:                                    # Course Alpha's corners in this frame (drawn on the maps; not walls)
+  - [-6.12, -18.62]
+  - [-19.43, 2.60]
+  - [6.12, 18.62]
+  - [19.43, -2.60]
+
+camera:
+  name: zed2i_left
+  intrinsics: zed2i_hd2k          # the field of view from optiprimex/sim/zed.py (50.9 deg, v0.1.34; was 72)
+  min_range_m: 0.5
+  max_range_m: 25.0
+  hz: 5
+  noise_range_abc: [0.02, 0.0, 0.0015]
+  noise_bearing_deg: 0.25
+  p_drop_max: 0.7
+  p_miscolour_max: 0.5
+  conf: 0.85
+
+lights: {period_s: 2.0, on_s: 1.0}
+
+objects:
+  # v0.1.36: the flashing buoys have a dark body (`body: black`) and the colour in their light - the camera then sees the light's
+  # colour when it is on and black when it is off (the flash), as the handbook's states (flashing / solid / OFF) imply
+  - {id: 1, kind: buoy, colour: blue, light: flash, body: black, role: entry, x_n: -6.89, y_e: -7.84}
+  - {id: 2, kind: buoy, colour: green, light: flash, body: black, gate: 1, x_n: -2.97, y_e: -4.68}
+  - {id: 3, kind: buoy, colour: red, light: flash, body: black, gate: 1, x_n: -4.24, y_e: -2.65}
+  - {id: 4, kind: buoy, colour: green, light: flash, body: black, gate: 2, x_n: 1.17, y_e: -1.87}
+  - {id: 5, kind: buoy, colour: red, light: flash, body: black, gate: 2, x_n: -0.11, y_e: 0.17}
+  - {id: 6, kind: buoy, colour: green, light: flash, body: black, gate: 3, x_n: 5.51, y_e: 0.61}
+  - {id: 7, kind: buoy, colour: red, light: flash, body: black, gate: 3, x_n: 4.24, y_e: 2.65}
+  - {id: 8, kind: buoy, colour: black, light: off, role: obstacle, x_n: -0.0, y_e: -4.72}
+  - {id: 9, kind: buoy, colour: black, light: off, role: obstacle, x_n: 1.17, y_e: 2.85}
+  - {id: 10, kind: buoy, colour: blue, light: steady, role: exit, x_n: 9.28, y_e: 4.03}
+  - {id: 21, kind: dock, colour: red, bay: 1, face_hdg_deg: 212.0, x_n: 8.9, y_e: 10.28}
+  - {id: 22, kind: dock, colour: green, bay: 2, face_hdg_deg: 212.0, x_n: 7.05, y_e: 13.25}
+  - {id: 23, kind: dock, colour: red, bay: 3, face_hdg_deg: 212.0, x_n: 5.2, y_e: 16.22}
+  - {id: 101, kind: box, colour: red, light: steady, face_hdg_deg: 212.0, width_m: 2.0, x_n: 16.22, y_e: -0.48}
+  - {id: 102, kind: box, colour: green, light: steady, face_hdg_deg: 212.0, width_m: 2.0, x_n: 14.63, y_e: 2.07}
+  - {id: 103, kind: box, colour: blue, light: steady, face_hdg_deg: 212.0, width_m: 2.0, x_n: 13.04, y_e: 4.61}

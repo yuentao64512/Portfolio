@@ -1,0 +1,571 @@
+{
+"t": 1794377377.5707462,
+"age": 0.32,
+"source": "mission_manager",
+"map": {
+"t": "2026-11-11T06:09:37.228Z",
+"co": {
+"lat": 1.2810202,
+"lon": 103.8550097
+},
+"boat": {
+"x_n": 9.42,
+"y_e": -4.66,
+"hdg_deg": 85.4,
+"trail": [
+[
+9.07,
+-3.22
+],
+[
+9.08,
+-3.28
+],
+[
+9.12,
+-3.49
+],
+[
+9.14,
+-3.72
+],
+[
+9.17,
+-3.98
+],
+[
+9.23,
+-4.33
+],
+[
+9.26,
+-4.56
+],
+[
+9.32,
+-4.9
+],
+[
+9.34,
+-5.07
+],
+[
+9.36,
+-5.19
+],
+[
+9.37,
+-5.25
+],
+[
+9.38,
+-5.3
+],
+[
+9.38,
+-5.33
+],
+[
+9.4,
+-5.34
+],
+[
+9.4,
+-5.35
+],
+[
+9.4,
+-5.36
+],
+[
+9.4,
+-5.36
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.4,
+-5.38
+],
+[
+9.41,
+-5.31
+],
+[
+9.41,
+-5.14
+],
+[
+9.41,
+-4.92
+],
+[
+9.42,
+-4.66
+]
+]
+},
+"course_boundary_local": [],
+"entities": [
+{
+"id": 1,
+"kind": "buoy",
+"colour": "red",
+"x_n": 11.98,
+"y_e": -4.76,
+"sigma_m": 0.05,
+"n_obs": 217,
+"age_s": 6.3,
+"state": "tracked",
+"source": "usv",
+"light": "flash",
+"colour_now": "black"
+},
+{
+"id": 2,
+"kind": "buoy",
+"colour": "green",
+"x_n": 18.99,
+"y_e": -5.53,
+"sigma_m": 0.2,
+"n_obs": 175,
+"age_s": 7.9,
+"state": "tracked",
+"source": "usv",
+"light": "flash",
+"colour_now": "green"
+},
+{
+"id": 3,
+"kind": "buoy",
+"colour": "red",
+"x_n": 18.93,
+"y_e": -3.12,
+"sigma_m": 0.25,
+"n_obs": 176,
+"age_s": 6.3,
+"state": "tracked",
+"source": "usv",
+"light": "flash",
+"colour_now": "red"
+},
+{
+"id": 4,
+"kind": "buoy",
+"colour": "black",
+"x_n": 22.33,
+"y_e": -1.23,
+"sigma_m": 0.39,
+"n_obs": 120,
+"age_s": 5.9,
+"state": "tracked",
+"source": "usv",
+"light": "off",
+"colour_now": "black"
+},
+{
+"id": 5,
+"kind": "buoy",
+"colour": "green",
+"x_n": 12.02,
+"y_e": -7.16,
+"sigma_m": 0.08,
+"n_obs": 114,
+"age_s": 11.2,
+"state": "tracked",
+"source": "usv",
+"light": "flash",
+"colour_now": "green"
+},
+{
+"id": 6,
+"kind": "buoy",
+"colour": "black",
+"x_n": 15.56,
+"y_e": -9.36,
+"sigma_m": 0.17,
+"n_obs": 149,
+"age_s": 11.0,
+"state": "tracked",
+"source": "usv",
+"light": "off",
+"colour_now": "black"
+},
+{
+"id": 8,
+"kind": "buoy",
+"colour": "red",
+"x_n": 26.21,
+"y_e": -4.47,
+"sigma_m": 0.56,
+"n_obs": 89,
+"age_s": 7.3,
+"state": "tracked",
+"source": "usv",
+"light": "flash",
+"colour_now": "green"
+},
+{
+"id": 9,
+"kind": "buoy",
+"colour": "green",
+"x_n": 26.05,
+"y_e": -6.86,
+"sigma_m": 0.53,
+"n_obs": 83,
+"age_s": 8.3,
+"state": "tracked",
+"source": "usv",
+"light": "flash",
+"colour_now": "black"
+},
+{
+"id": 10,
+"kind": "buoy",
+"colour": "blue",
+"x_n": 32.3,
+"y_e": -5.16,
+"sigma_m": 0.98,
+"n_obs": 18,
+"age_s": 8.7,
+"state": "tracked",
+"source": "usv",
+"light": "steady",
+"colour_now": "blue"
+}
+],
+"gates": [
+{
+"red": 1,
+"green": 5,
+"mid_n": 12.0,
+"mid_e": -5.96,
+"through_hdg_deg": 1.0,
+"width_m": 2.4,
+"passed": false
+},
+{
+"red": 3,
+"green": 2,
+"mid_n": 18.96,
+"mid_e": -4.33,
+"through_hdg_deg": 1.3,
+"width_m": 2.41,
+"passed": false
+},
+{
+"red": 8,
+"green": 9,
+"mid_n": 26.13,
+"mid_e": -5.67,
+"through_hdg_deg": 356.1,
+"width_m": 2.4,
+"passed": false
+}
+],
+"dock": null,
+"path": [
+[
+9.4,
+-5.36
+],
+[
+9.22,
+-5.4
+],
+[
+9.09,
+-5.03
+],
+[
+8.97,
+-4.65
+],
+[
+9.13,
+-4.24
+],
+[
+9.3,
+-3.82
+],
+[
+9.47,
+-3.4
+],
+[
+9.78,
+-3.09
+],
+[
+10.09,
+-2.78
+],
+[
+10.41,
+-2.47
+],
+[
+10.72,
+-2.15
+],
+[
+11.12,
+-2.1
+],
+[
+11.52,
+-2.05
+],
+[
+11.92,
+-2.0
+],
+[
+12.32,
+-1.95
+],
+[
+12.72,
+-1.9
+],
+[
+13.15,
+-2.12
+],
+[
+13.58,
+-2.33
+],
+[
+14.0,
+-2.55
+],
+[
+14.43,
+-2.76
+],
+[
+14.86,
+-2.98
+],
+[
+15.29,
+-3.19
+],
+[
+15.72,
+-3.4
+],
+[
+16.08,
+-3.36
+]
+],
+"carrot": [
+10.09,
+-2.78
+],
+"task_state": "APPROACH",
+"task": "SCOUT",
+"markers": {
+"entry": null,
+"exit": 10
+},
+"rays": [],
+"n_triangulated": 0,
+"uav": {
+"colour_source": "camera",
+"frozen": false,
+"scan": {},
+"age_s": null,
+"assoc_m": 1.0,
+"stats": {
+"published": 0,
+"linked": 0,
+"uav_only": 0,
+"merged": 0,
+"messages": 0,
+"dropped": 0
+},
+"assoc_rate": null,
+"n_uav_only": 0,
+"feeds": {},
+"n_linked": 0
+},
+"provisional_gates": [],
+"n_ingested": 1317,
+"n_young": 0,
+"min_obs": 3,
+"ingest_age_s": 5.9,
+"points": {
+"HOME": [
+0.0,
+0.0
+],
+"A": [
+10.0,
+0.0
+],
+"B": [
+10.0,
+0.99
+],
+"C": [
+22.0,
+0.99
+]
+},
+"points_ll": {
+"HOME": {
+"lat": 1.2810202,
+"lon": 103.8550097,
+"hdg": 0.0,
+"utc": "2026-11-08T20:26:54Z",
+"from": "ocs-boat"
+},
+"A": {
+"lat": 1.28111,
+"lon": 103.8550097,
+"hdg": 0.0,
+"utc": "2026-11-08T20:26:56Z",
+"from": "ocs-boat"
+},
+"B": {
+"lat": 1.28111,
+"lon": 103.8550186,
+"hdg": 0.0,
+"utc": "2026-11-08T20:26:58Z",
+"from": "ocs-boat"
+},
+"C": {
+"lat": 1.2812178,
+"lon": 103.8550186,
+"hdg": 0.0,
+"utc": "2026-11-08T20:27:00Z",
+"from": "ocs-boat"
+}
+},
+"scout": {
+"logged": 2,
+"visited": 2,
+"coverage_pct": 5,
+"target": 3,
+"visited_ids": [
+1,
+5
+]
+},
+"dock_view": null
+}
+}

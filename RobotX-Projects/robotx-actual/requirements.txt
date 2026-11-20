@@ -1,0 +1,9 @@
+# Pinned to what the bench suite was proven with (Python 3.10). `make venv` installs these plus the package itself (-e .).
+paho-mqtt==2.1.0
+pymavlink==2.4.50
+PyYAML==6.0.3
+jsonschema==4.26.0
+pytest==9.1.1
+pytest-timeout==2.4.0
+pytest-xdist==3.6.1     # make test / make live run on several processes (v0.1.39.3)
+protobuf==7.35.0          # the RoboCommand wire (OCS on the Mac only; the vendored optiprimex/ocs/rc_pb needs this runtime)

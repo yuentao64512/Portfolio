@@ -1,0 +1,21 @@
+# Only the UAV software folders go in the repo - everything else in RobotX
+# (docs, spreadsheets, CAD, backups, zips, RoboNation's robocommand clone) stays local.
+/*
+!/.gitignore
+!/drone-heartbeat-gui/
+!/camera-capture-gui/
+!/lawnmower-mission/
+!/geofence-tools/
+
+# Generated at run time
+__pycache__/
+*.pyc
+*.log
+*.tmp
+robocommand_state.json
+last_run_declaration.json
+declaration_config.json
+uav_fence_config.json
+recordings/
+captures/
+*.mp4

@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "optiprimex"
+version = "0.1.94.3"
+description = "OptiPrime RobotX 2026 companion-side software (global_v3): USV mission manager, OCS app, bench simulators"
+requires-python = ">=3.10"
+license = { text = "Proprietary - OptiPrime / SIT RobotX 2026 team" }
+dependencies = [
+    "paho-mqtt>=2.0,<3",
+    "pymavlink>=2.4.40",
+    "PyYAML>=6",
+    "jsonschema>=4.17",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.4", "pytest-timeout>=2.1", "pytest-xdist>=3.5"]
+rc = ["protobuf==7.35.0"]     # the real RoboCommand wire (OCS / rc-tui on the Mac); the boat does not need it
+
+[project.scripts]
+# one code base, two profiles (bench / final): every node is a console script that takes --config
+op-mission-manager = "optiprimex.usv.mission_manager:main"
+op-ocs-app         = "optiprimex.ocs.ocs_app:main"
+boat-web           = "optiprimex.tools.boat_web:main"      # v0.1.45: the boat window (8098)
+op-fake-fcu        = "optiprimex.sim.fake_fcu:main"
+op-fake-robocommand = "optiprimex.sim.fake_robocommand:main"
+op-fake-perception = "optiprimex.sim.fake_perception:main"
+op-fake-dock       = "optiprimex.sim.fake_dock:main"
+rc-tui             = "optiprimex.tools.rc_tui:main"
+judge-web          = "optiprimex.tools.judge_web:main"
+mode-log           = "optiprimex.tools.mode_log:main"
+frame-compare      = "optiprimex.tools.frame_compare:main"
+ocs-web            = "optiprimex.tools.ocs_web:main"
+op-logger          = "optiprimex.companion.logger:main"
+vcmd               = "optiprimex.tools.vcmd:main"
+ocs_cli            = "optiprimex.tools.ocs_cli:main"
+op-tui             = "optiprimex.tools.bench_tui:main"
+op-scenario        = "optiprimex.tools.scenario:main"
+op-uav-adapter     = "optiprimex.uav.adapter:main"      # v0.1.64 (WP14): the UAV team's §5 wire <-> the team bus
+
+[tool.setuptools.packages.find]
+include = ["optiprimex*"]
+
+[tool.setuptools.package-data]
+"optiprimex.schemas" = ["*.json"]
+"optiprimex.tools" = ["map.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 180
+addopts = "-q"

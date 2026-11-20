@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USV1 boat window</title>
+<!-- boat_web.html (v0.1.45, WP10f phases 1-2; v0.1.49, WP10k-b: docs/UI_QOL_2026-11-07.md §E items 17-23): the persistent header, the
+     wireframe at BlueBoat proportions (top projection 1.19 x 0.76 m, 1 m = 400 units; ids thr-mp thr-ms thr-sf thr-sa cam lamp ant box
+     cannon; setState(json) changes only fills, strokes, opacities and text) with boxed callouts placed by boat_web.place_callouts, the
+     radar / compass / speed dials, the whitelist buttons and the five tabs with live content. Every value comes from /state.json
+     (boat_web.py computes, this page only paints); what does not exist is drawn hatched, never as a zero.
+     v0.1.52: the top plate (VEHICLE / FCU MODE / ARM big colour-coded blocks + the HOLDER / LOG / CV boxes), the SIMULATION banner,
+     EVENTS + usv_ui's CONSOLE + the replies at the top of OVERVIEW, the light map, the wireframe's short callouts with the detail in the
+     tooltip and the click panel (#wfd). Plate fills are theme tokens only (--ok / --alarm / --warn | --action / --panel2 / --accBg). -->
+<link rel="stylesheet" href="/themes.css">
+<style>
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.35 -apple-system,'IBM Plex Sans',system-ui,sans-serif}
+a{color:var(--acc)}
+.mono,.chip,.row,.ev,.v{font-family:ui-monospace,'IBM Plex Mono',Menlo,monospace}
+#obar{display:flex;gap:10px;align-items:center;padding:4px 16px;border-bottom:1px solid var(--line2);background:var(--panel);font-size:12px;color:var(--muted)}
+#obar b{color:var(--text)}
+.hdr{background:var(--panel2);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 16px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:4px;border:1px solid var(--line);background:var(--chipBg);color:var(--chipText);font-size:11.5px;white-space:nowrap}
+.chip.cur{border-color:var(--acc);color:var(--accText);background:var(--accBg)}
+.chip.warn{border-color:var(--warn);background:var(--warnBg);color:var(--warnText)}
+.chip.alarm{border-color:var(--alarm);background:var(--alarmBg);color:var(--alarmText);font-weight:600}
+.chip.unk,.u{border-style:dashed;color:var(--dim);background:repeating-linear-gradient(45deg,transparent 0 4px,var(--line2) 4px 6px);background:repeating-linear-gradient(45deg,transparent 0 4px,color-mix(in srgb,var(--line2) 45%,transparent) 4px 6px)}
+.u{display:inline-block;padding:0 6px;border:1px dashed var(--line);border-radius:3px;font-size:11px}
+.w{color:var(--warnText);background:var(--warnBg);border:1px solid var(--warn);border-radius:3px;padding:0 6px}
+.a{color:var(--alarmText);background:var(--alarmBg);border:1px solid var(--alarm);border-radius:3px;padding:0 6px;font-weight:600}
+.tabs{display:flex;gap:2px;padding:8px 16px 0;align-items:center;flex-wrap:wrap}
+.kpis{display:inline-grid;grid-template-columns:repeat(4,96px);gap:8px;margin-right:14px}.kpi .l{font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.kpi .v{font:700 30px ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;line-height:1.05;white-space:nowrap}.kpi .u{font-size:12px;color:var(--muted);margin-left:2px}.kpi .v.np{font-size:11px;font-weight:400;line-height:32px;color:var(--dim)}
+.btn{font-weight:600}.btn.cur{background:var(--actionPale);border:2px solid var(--actionLine);font-weight:700}   /* v0.1.50 */
+.btn.act{background:var(--action);border:2px solid var(--actionLine);color:var(--actionText);font-weight:800}
+.btn.arm{border:2px solid var(--alarm);color:var(--alarm);font-weight:800}.btn.disarm{border:2px solid var(--actionLine);font-weight:800}
+.btn{appearance:none;border:1px solid var(--btnLine);background:var(--btnBg);color:var(--text);border-radius:4px;padding:5px 12px;font:600 12px -apple-system,system-ui,sans-serif;cursor:pointer;min-height:30px}
+.btn:hover{background:var(--panel2)}.btn.ghost{background:transparent;color:var(--muted)}
+.btn.cur{border-color:var(--acc);color:var(--accText);background:var(--accBg)}
+.btn.sm{padding:3px 8px;min-height:24px;font-size:11.5px}
+#n6csafe[disabled]{opacity:.45;cursor:not-allowed}                                       /* v0.1.78.9 */
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;padding:12px 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:0;min-width:0}
+/* item 17: titles in the .h style (11 px caps, muted, letter-spaced, 8 px under), values mono 12.5 px on --text, labels muted, never one weight for both */
+.h{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:8px}
+.h span+span{font-weight:400;text-transform:none;letter-spacing:0;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;text-align:right}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:3px 0;border-bottom:1px solid var(--line2);font-size:12.5px}
+.row:last-child{border-bottom:0}.k{color:var(--muted);font-weight:400;font-family:-apple-system,system-ui,sans-serif;font-size:12px}.v{text-align:right;color:var(--text);font-weight:500;font-size:12.5px}
+.bar{height:10px;background:var(--chipBg);border:1px solid var(--line);border-radius:3px;position:relative;overflow:hidden}
+.bar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--dim)}
+.bar .f{position:absolute;top:0;bottom:0;background:var(--acc);opacity:.85}.bar .f.warning{background:var(--warn)}
+.bar.unknown{background:repeating-linear-gradient(45deg,transparent 0 4px,var(--line2) 4px 6px);border-style:dashed}.bar.unavailable{border-style:dashed;opacity:.5}
+.ev{display:grid;grid-template-columns:62px 1fr;gap:8px;font-size:11.5px;padding:3px 0;border-bottom:1px solid var(--line2);color:var(--chipText)}.ev .t{color:var(--dim)}
+.svgbg{background:var(--mapBg);border-radius:4px;border:1px solid var(--line2);width:100%;height:auto;display:block}
+.reply{font-size:12px;min-height:16px;font-family:ui-monospace,Menlo,monospace;margin-top:6px}.ok{color:var(--ok)}
+.dials{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:12px;grid-column:span 2}
+.dtext{margin-top:6px}
+/* v0.1.51 (WP10k-c item 28, ref_04): the rose + set / act numbers + the ROT scale; fixed sizes (no jump), numerals on --text over --panel */
+.svgbg.dial{background:var(--panel)}
+.rose{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;align-items:center}
+.setact{display:flex;flex-direction:column;gap:1px}.setact .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em}
+.setact .num{font:600 17px/26px ui-monospace,'IBM Plex Mono',Menlo,monospace;font-variant-numeric:tabular-nums;color:var(--text);height:26px;white-space:nowrap;overflow:hidden}
+.setact .num .u{display:block;font-size:9px;line-height:12px;padding:0 2px;white-space:normal;font-weight:400}
+#rot{margin-top:6px}
+.btns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+input.arg,input.tv{background:var(--btnBg);color:var(--text);border:1px solid var(--btnLine);border-radius:4px;padding:4px 6px;font:12px ui-monospace,Menlo,monospace}
+input.tv{width:70px}
+table.t{border-collapse:collapse;width:100%;font-size:12px}table.t td,table.t th{border-bottom:1px solid var(--line2);padding:3px 6px;text-align:left}
+table.t th{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase}table.t td.n{font-family:ui-monospace,Menlo,monospace;text-align:right}
+.tail{font:11.5px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--chipText);max-height:260px;overflow:auto}
+canvas.plot{width:100%;height:150px;display:block;background:var(--mapBg);border:1px solid var(--line2);border-radius:4px}
+.stale{opacity:.45}
+[hidden]{display:none!important}
+/* v0.1.52: the top plate - fixed sizes (no jump); fills from the theme tokens, text >= 4.5:1 on its fill (tests/test_v0152_wa.py) */
+:root,:root[data-theme="dark"],:root[data-theme="hc-dark"],:root[data-theme="fun"]{--tpY:var(--warn);--tpYText:var(--bg)}
+:root[data-theme="light"],:root[data-theme="hc-light"]{--tpY:var(--action);--tpYText:var(--actionText)}
+#hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;width:100%}
+#plate{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;width:100%}#plate .kpis{grid-template-columns:repeat(4,92px);margin-right:0;align-self:center}
+.pb{box-sizing:border-box;height:58px;border:2px solid var(--line);border-radius:6px;padding:3px 10px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;background:var(--panel);color:var(--text);flex:0 0 auto}
+.pb .l{font-size:10px;letter-spacing:.1em;font-weight:700;text-transform:uppercase;white-space:nowrap}
+.pb .x{font:800 22px/1.1 ui-monospace,'IBM Plex Mono',Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb .s{font:500 10.5px/1.25 ui-monospace,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plate .pb{cursor:pointer}#plate .pb:hover{outline:2px solid var(--acc);outline-offset:1px}   /* v0.1.62: the boxes are buttons */
+#plmenu{position:fixed;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px;min-width:190px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+#plmenu[hidden]{display:none}#plmenu .h{font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:0 2px 2px}
+#plmenu button{text-align:left;font:600 12.5px ui-monospace,Menlo,monospace;padding:5px 8px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--text);cursor:pointer}
+#plmenu button.cur{border-color:var(--acc)}#plmenu button.pm-armed{background:var(--alarm);border-color:var(--alarm);color:var(--panel)}
+#ctlbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:4px 16px;font:12px ui-monospace,Menlo,monospace;border-bottom:1px solid var(--line2);min-height:34px}
+#ctlbar .ctln input,#ctl-pin{font:12px ui-monospace,Menlo,monospace;width:120px}#ctl-me b{padding:2px 8px;border-radius:4px}
+#ctl-me b.cmd{background:var(--ok);color:var(--panel)}#ctl-me b.view{background:var(--tpY);color:var(--tpYText)}
+.pb.big{width:196px}.pb.mid{width:176px}.pb.arm{width:156px}.pb.tg{width:122px}.pb.tg.hold{width:158px}.pb.tg .x{font-size:15px}.pb.tg.hold .x{font-size:14px}
+.pb.auto{background:var(--ok);border-color:var(--ok);color:var(--panel)}
+.pb.hold{background:var(--warn);border-color:var(--warn);color:var(--panel)}   /* v0.1.81 (WP37, Dmitrii 2026-11-11): HOLD YELLOW (standby, not autonomous; was green v0.1.78.10); LOITER green */
+.pb.alarm,.pb.armed{background:var(--alarm);border-color:var(--alarm);color:var(--panel)}
+.pb.manual{background:var(--tpY);border-color:var(--tpY);color:var(--tpYText)}
+.pb.disarmed,.pb.off{background:var(--panel2);border-color:var(--line);color:var(--muted)}.pb.disarmed .x,.pb.off .x{color:var(--text)}
+.pb.neutral{background:var(--panel);border-color:var(--text);color:var(--text)}
+.pb.on{background:var(--accBg);border-color:var(--acc);color:var(--accText)}
+.pb.unk{border-style:dashed;color:var(--muted);background:repeating-linear-gradient(45deg,transparent 0 4px,color-mix(in srgb,var(--line2) 45%,transparent) 4px 6px)}
+.pb.stale{opacity:.6;border-style:dashed}.pb .s b{font-weight:800}
+#sim{display:flex;gap:10px;align-items:center;height:28px;box-sizing:border-box;padding:0 16px;background:var(--accBg);color:var(--accText);border-bottom:2px solid var(--acc);font-size:13px;font-weight:600}
+#sim b{letter-spacing:.14em;font-weight:800}
+/* v0.1.52: EVENTS / CONSOLE - level colours, bold keywords, mono timestamps, zebra rows; fixed heights */
+.evl{height:228px;overflow:auto;border:1px solid var(--line2);border-radius:4px}
+.evr{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;padding:3px 8px 3px 6px;font-size:12.5px;line-height:1.35;border-left:3px solid var(--line);color:var(--text)}
+.evr:nth-child(even){background:var(--panel2)}.evr .t{font:11.5px/1.5 ui-monospace,Menlo,monospace;color:var(--muted);text-align:right}
+.evr.alarm{border-left-color:var(--alarm)}.evr.alarm .m{color:var(--alarmText);font-weight:600}.evr.warn{border-left-color:var(--warn)}.evr.warn .m{color:var(--warnText)}
+.evr.ok{border-left-color:var(--ok)}.evr .m b{font-weight:800}.evr .m{overflow-wrap:anywhere}
+.evr.con .m{font-family:ui-monospace,Menlo,monospace;font-size:12px}.evr.cmd .m{color:var(--accText);font-weight:600}
+.evr.rep{background:var(--accBg)}.evr.rep .t{color:var(--accText)}
+.evl.stale{opacity:.55}
+canvas#lmap{width:100%;height:300px;display:block;background:var(--mapBg);border:1px solid var(--line2);border-radius:4px}
+/* v0.1.52: the wireframe is clickable - the callout boxes and the elements; the detail panel has a fixed height */
+#wf .co-g,#wf [data-el]{cursor:pointer}
+#wfd{height:96px;box-sizing:border-box;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:6px 10px;background:var(--panel2);overflow:hidden;font-size:12px}
+#wfd .wt{display:flex;gap:8px;align-items:center;font-weight:700;margin-bottom:3px}#wfd .wl{font:11.5px/1.4 ui-monospace,Menlo,monospace;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* v0.1.54: ■ STOP & RESET (two clicks within 4 s) and the camera card (a fixed 300 px picture: no jump; the boxes an SVG over it) */
+.btn.sr{background:var(--alarmPale);border:2px solid var(--alarm);color:var(--alarmText);font-weight:800;letter-spacing:.04em;min-width:178px}
+.btn.sr.armed{background:var(--alarm);color:var(--panel)}.btn.sr:disabled{opacity:.6;cursor:wait}
+.camw{position:relative;height:300px;box-sizing:border-box;background:var(--mapBg);border:1px solid var(--line2);border-radius:4px;overflow:hidden}
+#cam-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+#cam-ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.camoff{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim);font:12px ui-monospace,Menlo,monospace;text-align:center;padding:0 20px}
+.camb{display:flex;gap:12px;align-items:center;margin-top:5px;font:11.5px ui-monospace,Menlo,monospace;color:var(--muted);height:18px;white-space:nowrap;overflow:hidden}
+.camb label{display:inline-flex;gap:4px;align-items:center;color:var(--text)}
+@media(max-width:1100px){.grid>.card,.grid>div{grid-column:span 12!important}.dials{grid-template-columns:1fr}}
+</style></head><body>
+<div id="obar" title="the OCS page's global bar (its /state.json bar, OCS_V2_SPEC §3), read by this server"><span>OCS</span><b id="ob-w">?</b><span id="ob-y"></span></div>
+<div id="sim" hidden title="SIMULATION: usv_ui holds the fake FCU (the kinematic plant) or the camera is the simulator's - no real vehicle is commanded from this window"><b>SIMULATION</b><span id="sim-t"></span></div>
+<div class="hdr" id="hdr"><div id="hrow"><span class="mono" style="font-weight:600;letter-spacing:.08em">USV1 · OPTIPRIME · BOAT</span><span id="hchips"></span>
+ <span style="flex:1 1 auto"></span><span class="k mono" id="clock" style="font-size:11px">connecting…</span></div>
+ <div id="plmenu" hidden role="menu" title="v0.1.62: pick, then click it again within 4 s to send (Esc / a click outside closes)"></div>
+ <div id="plate" title="the top plate (v0.1.52): vehicle state, FCU mode, ARM, who holds the FCU, usv_ui's log and cv - colour = AUTO green, MANUAL yellow, ARMED / KILLED red, DISARMED grey, hatched = not published · v0.1.62: click a box for its commands (two clicks within 4 s send one; the cards below stay)">
+  <div class="pb big unk" id="pl-vehicle" title="VEHICLE: the mission manager's state (status/usv) - AUTO_* green, MANUAL yellow, KILLED / FAULT red"><span class="l">VEHICLE</span><span class="x">unknown</span><span class="s"></span></div>
+  <div class="pb mid unk" id="pl-mode" title="FCU MODE (usv_ui's FCU block, else status/usv): AUTO / GUIDED / mode 20 under the mission manager green, HOLD green (the start mode), MANUAL yellow"><span class="l">FCU MODE</span><span class="x">unknown</span><span class="s"></span></div>
+  <div class="pb arm unk" id="pl-arm" title="ARM: ARMED red, DISARMED grey (the FCU's HEARTBEAT); kill / E-stop below"><span class="l">ARM</span><span class="x">unknown</span><span class="s"></span></div>
+  <div class="pb tg hold unk" id="pl-holder" title="FCU HOLDER: handover = the mission manager may hold the FCU, takeover = usv_ui commands it (the words card below)"><span class="l">FCU HOLDER</span><span class="x">unknown</span><span class="s"></span></div>
+  <div class="pb tg unk" id="pl-log" title="LOG: usv_ui's tlog / CSV log on / off (log on / log off below)"><span class="l">LOG</span><span class="x">unknown</span><span class="s"></span></div>
+  <div class="pb tg unk" id="pl-cv" title="CV FOLD: usv_ui folds the AGX's perception into its map (cv on / cv off below)"><span class="l">CV FOLD</span><span class="x">unknown</span><span class="s"></span></div>
+  <span style="flex:1 1 auto"></span><span class="kpis" id="bkpi" title="the big numerals (UI_QOL item 24): SOG · heading · FCU heartbeat age · alarms"></span></div></div>
+<!-- v0.1.63 (Dmitrii 2026-11-07): the window on the team LAN - one commander (take over at once), a PIN for other computers -->
+<div id="ctlbar" title="v0.1.63: everyone connected watches; only the commander's buttons send. take control = at once (the other page becomes a viewer). From another computer the window's PIN is asked once"><span id="ctl-me">…</span>
+ <label class="ctln">name <input id="ctl-name" maxlength="24" title="your name, shown to the others (kept in this browser)"></label>
+ <input id="ctl-pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" title="the window's PIN (commands from another computer)" hidden>
+ <button class="btn" type="button" id="ctl-take" title="take control now - the current commander becomes a viewer">take control</button>
+ <button class="btn ghost" type="button" id="ctl-rel" title="give control back (nobody commands until someone takes it or sends)" hidden>release</button>
+ <span id="ctl-who" class="dim"></span></div>
+<div class="tabs" id="tabs">
+ <button class="btn cur" type="button" data-tab="OVERVIEW" title="OVERVIEW: the wireframe with its callouts, the radar, compass and speed dials, the whitelist buttons, actuators, health, events">OVERVIEW</button>
+ <button class="btn ghost" type="button" data-tab="CONTROL" title="CONTROL: reference → controller → τ → allocation vs SERVO_OUTPUT_RAW → response (2 Hz), and the TUNING card">CONTROL</button>
+ <button class="btn ghost" type="button" data-tab="ACTUATION" title="ACTUATION: the four thrusters one by one and the channel map">ACTUATION</button>
+ <button class="btn ghost" type="button" data-tab="TELEMETRY" title="TELEMETRY: 60 s plots of SOG, heading, the four PWM and the HB age at 2 Hz; pause">TELEMETRY</button>
+ <button class="btn ghost" type="button" data-tab="NAV" title="NAV &amp; SENSORS: GNSS, EKF flags, attitude, heading sources, update rates">NAV &amp; SENSORS</button>
+ <button class="btn ghost" type="button" data-tab="DIAG" title="DIAGNOSTICS: MAVLink rates, MQTT, the whitelist command history, usv_ui's console tail, host health">DIAGNOSTICS</button>
+ <span style="flex:1 1 auto"></span>
+ <button class="btn sr" type="button" id="b-sr" title="■ STOP & RESET (v0.1.54): the OCS's macro stop_reset - abort the task, disable_auto, FCU HOLD, DISARM, reset the run (OCS R2, vehicles RESET); reporting stays as it is (v0.1.59); each step's result comes back below. Click, then click again within 4 s to confirm">■ STOP &amp; RESET</button>
+ <span class="k mono" style="font-size:11px;margin-left:10px">theme</span>
+ <select id="theme" title="the palette of this page (boat.theme; the same five as the OCS page)"><option value="dark">dark</option><option value="light">light</option><option value="hc-dark">HC dark</option><option value="hc-light">HC light</option><option value="fun">fun</option></select>
+ <a href="http://127.0.0.1:8096/" style="font-size:11.5px;margin-left:10px" title="the OCS page">← OCS page</a>
+</div>
+
+<section id="t-OVERVIEW" class="grid">
+ <div class="card" style="grid-column:span 6;padding:10px">
+  <div class="h"><span>Vehicle · five systems</span><span>SERVO_OUTPUT_RAW = FCU output · no actuator feedback by design</span></div>
+  <svg id="wf" viewBox="0 0 900 600" role="img" class="svgbg" aria-label="BlueBoat top view (1.19 x 0.76 m): four thrusters, the water cannon, camera, status lamp, antenna and the electronics box, each with a boxed live callout">
+   <defs>
+    <marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--accText)"/></marker>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--mapBg)"/><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--dim)" stroke-width="2"/></pattern>
+   </defs>
+   <rect width="900" height="600" style="fill:var(--mapBg)"/>
+   <g id="hullg" transform="translate(336 70) scale(0.75) translate(-328 -112)">
+   <g style="stroke:var(--grid)" stroke-width="1"><path d="M328 40V700M408 40V700M488 40V700M568 40V700M648 40V700M328 112H632M328 192H632M328 272H632M328 352H632M328 432H632M328 512H632M328 592H632"/></g>
+   <g fill="none" style="stroke:var(--acc)" stroke-width="1.6" opacity=".95">
+    <path d="M328 210 Q328 138 364 112 Q400 138 400 210 V572 Q400 588 364 588 Q328 588 328 572 Z"/>
+    <path d="M560 210 Q560 138 596 112 Q632 138 632 210 V572 Q632 588 596 588 Q560 588 560 572 Z"/>
+    <rect x="400" y="200" width="160" height="30" rx="3" opacity=".8"/>
+    <rect x="400" y="486" width="160" height="30" rx="3" opacity=".8"/>
+    <rect x="412" y="240" width="136" height="236" rx="8" opacity=".5"/>
+    <path d="M400 150 H560" opacity=".5"/>
+   </g>
+   <g font-family="ui-monospace, monospace" font-size="10.5">
+    <!-- 1 THRUSTERS where the channel map puts them (M1 PORT ch1, M2 STERN ch2, M3 STBD ch3, M4 BOW ch4; --thr-map overrides) -->
+    <rect id="thr-mp" x="348" y="572" width="32" height="40" rx="5" stroke-width="1.6" data-el="thr-mp"><title>M-P thruster: click for the detail (ACTUATION)</title></rect>
+    <line id="thr-mp-af" x1="364" y1="656" x2="364" y2="622" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <line id="thr-mp-ab" x1="364" y1="622" x2="364" y2="656" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <rect id="thr-ms" x="580" y="572" width="32" height="40" rx="5" stroke-width="1.6" data-el="thr-ms"><title>M-S thruster: click for the detail (ACTUATION)</title></rect>
+    <line id="thr-ms-af" x1="596" y1="656" x2="596" y2="622" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <line id="thr-ms-ab" x1="596" y1="622" x2="596" y2="656" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <rect id="thr-sf" x="452" y="203" width="56" height="24" rx="5" stroke-width="1.6" data-el="thr-sf"><title>SW-F thruster: click for the detail (ACTUATION)</title></rect>
+    <line id="thr-sf-af" x1="512" y1="190" x2="548" y2="190" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <line id="thr-sf-ab" x1="448" y1="190" x2="412" y2="190" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <rect id="thr-sa" x="452" y="489" width="56" height="24" rx="5" stroke-width="1.6" data-el="thr-sa"><title>SW-A thruster: click for the detail (ACTUATION)</title></rect>
+    <line id="thr-sa-af" x1="512" y1="530" x2="548" y2="530" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <line id="thr-sa-ab" x1="448" y1="530" x2="412" y2="530" style="stroke:var(--accText)" stroke-width="2" marker-end="url(#ah2)" opacity="0"/>
+    <!-- WATER CANNON (forward beam) -->
+    <rect id="cannon" x="472" y="132" width="16" height="38" rx="3" stroke-width="1.3" data-el="cannon"><title>water cannon: click for the detail</title></rect>
+    <!-- 2 CAMERA (51 deg HFOV) -->
+    <rect id="cam" x="466" y="260" width="28" height="16" rx="3" stroke-width="1.4" data-el="cam"><title>camera / CV: click for the detail (NAV &amp; SENSORS)</title></rect>
+    <path id="cam-fov" d="M480 260 L428 152 M480 260 L532 152" style="stroke:var(--acc)" stroke-width=".9" stroke-dasharray="3 3" opacity="0"/>
+    <!-- 3 LAMP (expected only) -->
+    <circle cx="480" cy="306" r="14" fill="none" style="stroke:var(--acc)" stroke-width="1.4"/>
+    <circle id="lamp" cx="480" cy="306" r="8" data-el="lamp"><title>status lamp (expected colour): click for the detail</title></circle>
+    <!-- 4 ANTENNA -->
+    <g id="ant" data-el="ant"><title>link and QoS (bridge, status age): click for the detail (DIAGNOSTICS)</title>
+     <line x1="480" y1="356" x2="480" y2="334" style="stroke:var(--acc)" stroke-width="1.4"/><circle cx="480" cy="356" r="4" style="fill:var(--acc)"/>
+     <path id="ant-1" d="M470 340 Q480 332 490 340" fill="none" stroke-width="1.6"/>
+     <path id="ant-2" d="M464 345 Q480 331 496 345" fill="none" stroke-width="1.6"/>
+     <path id="ant-3" d="M458 350 Q480 330 502 350" fill="none" stroke-width="1.6"/>
+    </g>
+    <!-- 5 ELECTRONICS BOX -->
+    <rect id="box" x="426" y="372" width="108" height="58" rx="4" stroke-width="1.4" data-el="box"><title>electronics (NX, AGX, FCU): click for the detail (DIAGNOSTICS host health)</title></rect>
+    <text x="432" y="388" style="fill:var(--muted)">NX</text><text x="432" y="404" style="fill:var(--muted)">AGX</text><text x="432" y="420" style="fill:var(--muted)">FCU</text>
+    <text id="box-nx" x="462" y="388">?</text><text id="box-agx" x="462" y="404">?</text><text id="box-fcu" x="462" y="420">?</text>
+   </g>
+   </g>
+   <text x="336" y="40" font-family="ui-monospace, monospace" font-size="11" style="fill:var(--dim)">bow ↑ · BlueBoat 1.19 × 0.76 m · grid 0.2 m</text>
+   <g id="co" font-family="ui-monospace, Menlo, monospace" font-size="14"></g>
+   <text x="8" y="592" font-family="ui-monospace, monospace" font-size="11" style="fill:var(--dim)">outline idle · filled active · amber degraded · red fault · dashed n/a · hatched unknown · click = detail</text>
+  </svg>
+  <div id="wfd" title="the clicked element's detail (live); the button opens the tab that holds the rest"><div class="wt"><span id="wfd-n">click an element</span><span id="wfd-s"></span><span style="flex:1 1 auto"></span>
+   <button class="btn sm" type="button" id="wfd-go" title="open the tab that holds this element's detail" hidden>open</button><button class="btn sm ghost" type="button" id="wfd-x" title="close the detail" hidden>×</button></div>
+   <div id="wfd-b"><div class="wl k">thrusters → ACTUATION · link / QoS → DIAGNOSTICS · camera / CV → NAV &amp; SENSORS · electronics → DIAGNOSTICS host health · lamp, cannon: here</div></div></div>
+  <div class="card fcuc" style="padding:8px 10px;margin-top:8px">
+   <div class="h"><span>FCU · MODE · ARM <span class="k">(v0.1.50: sent through usv_ui, whoever holds the FCU; the last command wins)</span></span><span id="fcu-now">mode ? · ?</span></div>
+   <div class="btns" id="fcu-modes"></div>
+   <div class="btns" style="margin-top:6px">
+    <button class="btn arm" type="button" id="fcu-arm" title="ARM the FCU (MAV_CMD_COMPONENT_ARM_DISARM through usv_ui; its pre-arm checks decide). Click, then click again within 4 s to confirm">ARM</button>
+    <button class="btn disarm" type="button" id="fcu-disarm" title="DISARM the FCU at once (through usv_ui; the mission manager keeps the FCU if it holds it)">DISARM</button>
+    <span class="k" title="v0.1.81 (WP37): the autonomous station keep - HOLD = motors neutral (drifting), LOITER = a real position hold; AUTO_HOLD and every holding stage; the safe hold stays HOLD">STATION KEEP</span><button class="btn sm" type="button" id="sk-hold" title="station_keep hold (through the OCS page): AUTO_HOLD and every holding stage = FCU HOLD (motors neutral, drifting) - the default until the water drift check" onclick="skSend('hold')">HOLD</button><button class="btn sm" type="button" id="sk-loiter" title="station_keep loiter (through the OCS page): AUTO_HOLD and every holding stage = FCU LOITER (a real position hold); the safe hold stays HOLD" onclick="skSend('loiter')">LOITER</button>
+    <span class="k" id="guard-now" style="margin-left:auto" title="v0.1.80 (WP36): the ZED proximity guard - clear · SLOW (capped) · STOP / BRAKE / BACKOFF · lost (capped + CAUTION) · off">GUARD ?</span>
+    <span class="k" id="rc6-now">RC6 ?</span>
+    <select id="rc6-pol" title="the RC6 override's rule (through the OCS page): latched = a later page command wins over a high RC6, the next flip takes the boat back; hold = while RC6 is high, no autonomy"><option value="latched">RC6 latched (last wins)</option><option value="hold">RC6 hold</option></select>
+   </div>
+   <div class="k" id="fence-now" style="margin-top:4px" title="v0.1.53: the FCU geofence as the mission manager reports it (status/usv fence): on / off from the FCU, the points it holds, read back identical, breach - applied / switched from the OCS map's FCU fence box">fence ?</div>
+  </div>
+  <div class="card" style="padding:8px 10px;background:var(--panel2);margin-top:8px">
+   <div class="h"><span>usv_ui's own words · local/usv/ui/cmd</span><span id="holder">held by ?</span></div>
+   <div class="btns" id="wbtns">
+    <button class="btn sm" type="button" id="b-handover" data-word="handover" title="handover: usv_ui stops its tui/active beat - the mission manager may take the FCU (usv_ui's own word, as typed on the boat console; it answers below)">handover</button>
+    <button class="btn sm" type="button" id="b-takeover" data-word="takeover" title="takeover: usv_ui commands the FCU again - the mission manager drops to MANUAL (usv_ui's own word, as typed on the boat console; it answers below)">takeover</button>
+    <button class="btn sm" type="button" id="b-stop" data-word="stop" title="stop: usv_ui's stop - neutral, any running console action ends (takes the FCU back if handed over)">stop</button>
+    <button class="btn sm" type="button" id="b-log-on" data-word="log" data-args="on" title="log on: usv_ui starts its tlog / CSV log (logs/usv_ui)">log on</button>
+    <button class="btn sm" type="button" id="b-log-off" data-word="log" data-args="off" title="log off: usv_ui closes its log">log off</button>
+    <button class="btn sm" type="button" id="b-cv-on" data-word="cv" data-args="on" title="cv on: usv_ui folds the AGX's perception into its own map">cv on</button>
+    <button class="btn sm" type="button" id="b-cv-off" data-word="cv" data-args="off" title="cv off: usv_ui stops folding perception">cv off</button>
+    <button class="btn sm" type="button" id="b-points" data-word="points" title="points: usv_ui lists its saved points (the reply below)">points</button>
+   </div>
+   <div class="btns" style="margin-top:6px">
+    <input class="arg" id="b-arg" placeholder="text for note / name for save" title="the text of note, or the point name of save" style="flex:1 1 180px">
+    <button class="btn sm" type="button" id="b-note" data-word="note" data-args="@" title="note TEXT: a line in usv_ui's console and its log (the text field)">note</button>
+    <button class="btn sm" type="button" id="b-save" data-word="save" data-args="@" title="save NAME: the boat's own fix as a point in points.json (the text field = the name; a 3D fix needed)">save</button>
+   </div>
+   <div class="k" style="font-size:11px;margin-top:4px">no bursts, E-stop, thrusters or cannon from this page (decision 25; mode / arm: the FCU card above, v0.1.50) · each word is answered by usv_ui</div>
+   <div id="reply" class="reply"></div>
+  </div>
+ </div>
+ <div style="grid-column:span 6;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0;align-content:start">
+  <div class="card" style="padding:8px 10px"><div class="h"><span>Events · boat</span><span>newest first</span></div><div class="evl" id="p-ev"></div></div>
+  <div class="card" style="padding:8px 10px"><div class="h"><span>Console · usv_ui</span><span id="p-con-h">newest first</span></div><div class="evl" id="p-con"></div></div>
+  <div class="card" id="camc" style="grid-column:span 2;padding:8px 10px" title="the camera (v0.1.54): snapshot.jpg from the camera address of --cam-status every ~150 ms while this tab is visible (never a held stream); the boxes = perception/frame_dets (the observer's pixel detections) drawn over it - they may be a frame apart from the picture: their age is shown">
+   <div class="h"><span>Camera · CV boxes</span><span id="cam-h">-</span></div>
+   <div class="camw" id="camw"><img id="cam-img" alt="" hidden><svg id="cam-ov" viewBox="0 0 1104 621" preserveAspectRatio="xMidYMid meet" data-n="0" data-state="none"></svg><div class="camoff" id="cam-off">no camera address</div></div>
+   <div class="camb"><label title="draw the observer's boxes over the picture (this browser remembers it)"><input type="checkbox" id="cam-box" checked> boxes</label><span id="cam-dt">-</span></div></div>
+  <div class="dials">
+   <div class="card"><div class="h"><span>Radar</span><span>heading-up · 5 · 10 · 25 · 40 m</span></div>
+    <svg id="radar" viewBox="-1.12 -1.12 2.24 2.24" class="svgbg" role="img" aria-label="heading-up PPI of the perception map"></svg><div class="dtext" id="radar-t"></div></div>
+   <div class="card"><div class="h"><span>Compass</span><span>north up · ROT</span></div>
+    <div class="rose"><svg id="compass" viewBox="-1.12 -1.12 2.24 2.24" class="svgbg dial" role="img" aria-label="compass rose: hull, heading (solid), COG (open), commanded yaw (dashed)"></svg>
+     <div class="setact" title="set = the commanded yaw (NAV_CONTROLLER_OUTPUT while the FCU's own controller steers; hatched = not published) · act = the heading">
+      <div class="k">set</div><div class="num" id="c-set"></div><div class="k">act</div><div class="num" id="c-act"></div></div></div>
+    <svg id="rot" viewBox="0 0 200 46" class="svgbg dial" role="img" aria-label="rate of turn scale, deg/s, -30 to +30, from ATTITUDE.yawspeed"></svg>
+    <div class="dtext" id="compass-t"></div></div>
+   <div class="card"><div class="h"><span>Speed</span><span>SOG 0 – 2 m/s</span></div>
+    <svg id="speed" viewBox="-1.12 -1.12 2.24 2.24" class="svgbg dial" role="img" aria-label="speed dial: SOG and the commanded surge tick"></svg><div class="dtext" id="speed-t"></div></div>
+  </div>
+  <div class="card" style="padding:8px 10px"><div class="h"><span>Light map</span><span id="lmap-h">north up · auto-fit</span></div>
+   <canvas id="lmap" title="the light map: north-up plan of the map digests (the mission manager's and usv_ui's) - the boat (BlueBoat glyph, heading), its track, buoys by colour, CO (home), saved points, the course edge; auto-fit, no tiles"></canvas><div class="dtext" id="lmap-t"></div></div>
+  <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+   <div class="card"><div class="h"><span>Health</span><span>usv_ui block · status/usv health{}</span></div><div id="p-health" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px"></div><div id="p-alarms"></div></div>
+   <div class="card"><div class="h"><span>Auxiliary equipment</span></div><div id="p-aux"></div></div></div>
+  <div class="card" style="grid-column:span 2"><div class="h"><span>Actuators · FCU output (PWM)</span><span>1100–1900 · neutral 1500 · no RPM (T200 / Basic ESC)</span></div>
+   <div id="p-act" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px"></div>
+   <div class="k mono" style="font-size:11px;margin-top:6px">applied = SERVO_OUTPUT_RAW (the FCU's output) · commanded (our mode-20 frame) is not published · offline at 10 Hz: frame-compare · mode-log</div></div>
+ </div>
+</section>
+
+<section id="t-CONTROL" class="grid" hidden>
+ <div class="card" style="grid-column:span 4"><div class="h"><span>The chain</span><span>reference → controller → τ → allocation → response</span></div><div id="c-chain"></div></div>
+ <div class="card" style="grid-column:span 4"><div class="h"><span>Allocation · FCU output</span><span>SERVO_OUTPUT_RAW normalised (pwm − 1500) / 400</span></div><div id="c-alloc"></div></div>
+ <div class="card" style="grid-column:span 4"><div class="h"><span>Response</span><span>2 Hz · this stage</span></div><div id="c-resp"></div></div>
+ <div class="card" style="grid-column:span 12"><div class="h"><span>Tuning · the mission manager's runtime knobs</span><span id="tu-state">via the OCS (TUNE → cmd/usv/run SET_TUNING) · MANUAL / AUTO_HOLD only</span></div>
+  <table class="t" id="tu-tab"><thead><tr><th>knob</th><th>sets</th><th>live</th><th>default</th><th>range</th><th>new value</th><th></th><th>what</th></tr></thead><tbody></tbody></table>
+  <div class="btns" style="margin-top:8px"><button class="btn sm" type="button" id="tu-save" title="save: the mission manager writes a copy of its profile with the live values to logs/launch/&lt;stamp&gt;/usv_tuned.yaml on the boat (never the profile itself) and answers with the diff; MM_CONFIG_OVERRIDE loads it">save a profile copy</button>
+   <span class="k" style="font-size:11.5px">the next task start reads a new value; a running task keeps its own · never an FCU parameter</span></div>
+  <div id="tu-reply" class="reply"></div>
+  <div id="tu-ro" style="margin-top:8px"></div>
+ </div>
+</section>
+<section id="t-ACTUATION" class="grid" hidden>
+ <div id="a-thr" style="grid-column:span 12;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px"></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>Channel map</span><span>usv_ui MOTOR_NAMES · --thr-map overrides</span></div><div id="a-map"></div></div>
+</section>
+<section id="t-TELEMETRY" class="grid" hidden>
+ <div class="card" style="grid-column:span 12;flex-direction:row;align-items:center;gap:12px;padding:8px 14px">
+  <button class="btn sm" type="button" id="tl-pause" title="pause: freeze the plots where they are (the data keeps coming); press again for live">pause</button>
+  <span class="k" id="tl-info">60 s window · 2 Hz (usv_ui's FCU block) · the 10 Hz view is offline: mode-log, frame-compare</span></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>SOG</span><span>m/s · VFR_HUD</span></div><canvas class="plot" id="pl-sog"></canvas></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>Heading</span><span>deg · VFR_HUD</span></div><canvas class="plot" id="pl-hdg"></canvas></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>PWM · the four outputs</span><span>µs · SERVO_OUTPUT_RAW</span></div><canvas class="plot" id="pl-pwm"></canvas></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>FCU heartbeat age</span><span>s · limit 2 s</span></div><canvas class="plot" id="pl-hb"></canvas></div>
+</section>
+<section id="t-NAV" class="grid" hidden>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>GNSS</span><span>GLOBAL_POSITION_INT · GPS_RAW_INT</span></div><div id="n-gnss"></div></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>EKF</span><span>EKF_STATUS_REPORT flags</span></div><div id="n-ekf"></div></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>Attitude · heading sources</span><span>ATTITUDE · VFR_HUD · COG</span></div><div id="n-att"></div></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>Update rates</span><span>rate · last</span></div><div id="n-rates"></div></div>
+</section>
+<section id="t-DIAG" class="grid" hidden>
+ <div class="card" style="grid-column:span 4"><div class="h"><span>MAVLink</span><span>rate · last (usv_ui)</span></div><div id="d-mav"></div></div>
+ <div class="card" style="grid-column:span 4"><div class="h"><span>MQTT · the boat broker</span><span>stream · age</span></div><div id="d-mqtt"></div></div>
+ <div class="card" style="grid-column:span 4"><div class="h"><span>Host health</span><span>local/usv/host/+</span></div><div id="d-hosts"></div></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>Command history</span><span>the whitelist words and their replies</span></div><div id="d-cmds"></div></div>
+ <div class="card" style="grid-column:span 6"><div class="h"><span>usv_ui's console</span><span id="d-tail-age">read-only tail</span></div><div class="tail" id="d-tail"></div></div>
+</section>
+<script>
+// v0.1.63: every request carries this browser's session (an id kept here) and name - the window's commander lock (window_control.py)
+const WIN=(()=>{let id=null,name=null;try{id=localStorage.getItem('win.sid');name=localStorage.getItem('win.name')}catch(e){}
+  if(!id){id=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');try{localStorage.setItem('win.sid',id)}catch(e){}}
+  return {sid:id,name:name||'operator'}})();
+{const _f=window.fetch.bind(window);window.fetch=(u,o)=>{if(typeof u==='string'&&u.startsWith('/')){o=Object.assign({},o||{});
+  o.headers=Object.assign({},o.headers||{},{'X-Window-Session':WIN.sid,'X-Window-Name':WIN.name})}return _f(u,o)}}
+const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SVGNS='http://www.w3.org/2000/svg';
+// ---- theme (boat.theme, default dark) ----
+let TH=null;try{TH=localStorage.getItem('boat.theme')}catch(e){}
+const QS=new URLSearchParams(location.search), QT=QS.get('theme');          // ?theme=NAME: this view only (screenshots), not persisted
+document.documentElement.dataset.theme=QT||TH||'dark';$('theme').value=document.documentElement.dataset.theme;
+$('theme').onchange=()=>{document.documentElement.dataset.theme=$('theme').value;try{localStorage.setItem('boat.theme',$('theme').value)}catch(e){};last&&draw(last);
+  fetch('/prefs',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({theme:$('theme').value})}).catch(()=>{})};
+// v0.1.49: follow the shared theme (every page, UI_QOL item 6); ?theme= keeps a screenshot's own
+async function followPrefs(){if(QT)return;try{const t=((await (await fetch('/prefs',{cache:'no-store'})).json()).prefs||{}).theme;
+  if(t&&t!==document.documentElement.dataset.theme){document.documentElement.dataset.theme=t;try{localStorage.setItem('boat.theme',t)}catch(e){}
+    if(document.activeElement!==$('theme'))$('theme').value=t;last&&draw(last)}}catch(e){}}
+followPrefs();setInterval(followPrefs,2000);
+const tv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';
+// ---- tabs (?tab=NAME opens one: screenshots) ----
+function showTab(name){for(const x of document.querySelectorAll('#tabs [data-tab]')){x.className='btn '+(x.dataset.tab===name?'cur':'ghost');$('t-'+x.dataset.tab).hidden=x.dataset.tab!==name}}
+for(const b of document.querySelectorAll('#tabs [data-tab]'))b.onclick=()=>{showTab(b.dataset.tab);last&&draw(last)};
+if(QS.get('tab'))showTab(QS.get('tab'));
+let PICK0=QS.get('pick');                                                   // v0.1.52: ?pick=ID opens a detail (screenshots)
+// ---- the wireframe contract: setState(wf) changes only fills, strokes, opacities and text ----
+const ST={available:['var(--acc)',f=>0.05,'var(--acc)','0'],active:['var(--acc)',f=>0.25+0.6*f,'var(--acc)','0'],warning:['var(--warn)',f=>0.25+0.6*f,'var(--warn)','0'],
+  fault:['var(--alarm)',f=>0.35,'var(--alarm)','0'],unavailable:['var(--dim)',f=>0.3,'var(--dim)','4 3'],unknown:['url(#hatch)',f=>1,'var(--dim)','2 2']};
+const TXT={available:'var(--muted)',active:'var(--accText)',warning:'var(--warnText)',fault:'var(--alarmText)',unavailable:'var(--dim)',unknown:'var(--dim)',expected:'var(--text)',read:'var(--text)'};
+function paint(el,state,frac){if(!el)return;const s=ST[state]||ST.unknown;el.style.fill=s[0];el.setAttribute('fill-opacity',s[1](frac||0).toFixed(3));
+  el.style.stroke=s[2];el.setAttribute('stroke-dasharray',s[3]);el.dataset.state=state}
+function text(id,t,state){const el=$(id);if(!el)return;el.textContent=t??'';if(state)el.style.fill=TXT[state]||'var(--text)'}
+function setState(wf){
+  for(const id of ['thr-mp','thr-ms','thr-sf','thr-sa']){const o=wf[id];if(!o)continue;paint($(id),o.state,o.frac);
+    $(id+'-af').setAttribute('opacity',o.dir>0?(0.35+0.6*o.frac).toFixed(2):'0');$(id+'-ab').setAttribute('opacity',o.dir<0?(0.35+0.6*o.frac).toFixed(2):'0')}
+  const c=wf.cam;if(c){paint($('cam'),c.state,c.state==='active'?0.7:0.3);$('cam-fov').setAttribute('opacity',c.state==='active'?'0.7':c.state==='warning'?'0.3':'0')}
+  const l=wf.lamp;if(l){const el=$('lamp');if((l.state==='expected'||l.state==='read')&&l.hex){el.style.fill=l.hex;el.setAttribute('fill-opacity','0.95');el.style.stroke='none';el.setAttribute('stroke-dasharray','0');el.dataset.state=l.state;el.dataset.colour=l.colour}
+    else{paint(el,'unknown',0);el.dataset.colour=''}}
+  const a=wf.ant;if(a){const col=a.state==='fault'?'var(--alarm)':a.state==='warning'?'var(--warn)':a.state==='unknown'?'var(--dim)':'var(--acc)';
+    const op={good:[1,.8,.6],weak:[1,.5,.1],lost:[1,.1,.1],unknown:[.3,.3,.3]}[a.q]||[.3,.3,.3];
+    [1,2,3].forEach(i=>{const p=$('ant-'+i);p.style.stroke=col;p.setAttribute('opacity',op[i-1]);p.setAttribute('stroke-dasharray',a.state==='unknown'?'2 2':'0')});
+    $('ant').dataset.state=a.state}
+  const b=wf.box;if(b){paint($('box'),b.state,b.state==='available'?0.1:0.25);if(b.state==='available')$('box').setAttribute('fill-opacity','0.08');
+    text('box-nx',b.nx,b.hot==='temp'?b.state:'available');text('box-agx',b.agx,b.hot==='temp'?b.state:'available');text('box-fcu',b.fcu,b.hot==='fcu'?'fault':'available')}
+  const k=wf.cannon;if(k){paint($('cannon'),k.state,k.state==='active'?0.6:0.05)}
+}
+window.setState=setState;
+// ---- the callouts (boxes placed by boat_web.place_callouts: stable slots, built once, then only their text changes) ----
+let COSIG='',CO={},PICK=PICK0||null;
+const mk=(tag,at)=>{const e=document.createElementNS(SVGNS,tag);for(const k in at)e.setAttribute(k,at[k]);return e};
+function callouts(list){
+  const sig=list.map(b=>b.id+':'+b.y+':'+b.h).join('|'),g=$('co');
+  if(sig!==COSIG){COSIG=sig;g.textContent='';
+    for(const b of list){const grp=mk('g',{id:'co-'+b.id,'data-x':b.x,'data-y':b.y,'data-w':b.w,'data-h':b.h,class:'co-g',role:'button'});
+      grp.append(mk('title',{}),mk('line',{x1:b.ax,y1:b.ay,x2:b.lx,y2:b.ly,'stroke-width':1,class:'lead'}),
+        mk('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:4,'stroke-width':1.2,class:'cobox'}),mk('text',{x:b.x+6,y:b.y+19,class:'cot'}));
+      for(let i=0;i<(b.h-12)/17-1;i++)grp.append(mk('text',{x:b.x+6,y:b.y+19+17*(i+1),class:'col'}));
+      grp.addEventListener('click',()=>pick(b.id));g.append(grp)}}
+  CO={};for(const b of list){CO[b.id]=b;const grp=$('co-'+b.id);if(!grp)continue;const st=b.state;
+    // v0.1.52: neutral outline idle, accent fill active, amber degraded, red wrong, dashed n/a / unknown; the picked one thicker
+    const P={active:['var(--accBg)','var(--acc)'],warning:['var(--warnBg)','var(--warn)'],fault:['var(--alarmBg)','var(--alarm)'],expected:['var(--panel)','var(--acc)'],read:['var(--panel)','var(--acc)']}[st]||['var(--panel)','var(--line)'];
+    grp.querySelector('rect').style.cssText=`fill:${P[0]};fill-opacity:.96;stroke:${P[1]};stroke-width:${PICK===b.id?2.6:1.2}`+(st==='unknown'||st==='unavailable'?';stroke-dasharray:3 3':'');
+    grp.querySelector('line').style.stroke=P[1]==='var(--line)'?'var(--line)':P[1];
+    grp.querySelector('title').textContent=[b.name||b.title].concat(b.detail||[]).join('\n')+'\n(click: the detail'+(b.tab?' · '+b.tab:'')+')';
+    const t=grp.querySelector('.cot');t.textContent=b.title;t.style.fill='var(--text)';t.style.fontWeight='700';
+    grp.querySelectorAll('.col').forEach((e,i)=>{e.textContent=b.lines[i]??'';e.style.fill=i===0?(TXT[st]||'var(--text)'):'var(--text)';e.style.fontWeight='600'});
+    let fit=true;try{grp.querySelectorAll('text').forEach(e=>{if(e.getComputedTextLength()>b.w-8)fit=false})}catch(e){}grp.dataset.fit=fit?'1':'0'}   // a self-check: no text out of its box
+}
+// ---- values ----
+function val(v){if(Array.isArray(v))return v.map(val).join(' · ');if(v&&typeof v==='object'){if('u' in v)return `<span class="u" title="unknown / not published - never drawn as a zero">${esc(v.u)}</span>`;
+  if('w' in v)return `<span class="w">${esc(v.w)}</span>`;if('a' in v)return `<span class="a">${esc(v.a)}</span>`}return esc(v)}
+const rows=rs=>(rs||[]).map(([k,v])=>`<div class="row"><span class="k">${esc(k)}</span><span class="v">${val(v)}</span></div>`).join('');
+const lines=ls=>(ls||[]).map(x=>`<div class="row"><span class="v" style="text-align:left">${val(x)}</span></div>`).join('');
+const hhmmss=t=>new Date(t*1000).toTimeString().slice(0,8);
+function bar(o){const l=o.dir<0?50-50*o.frac:50,w=50*o.frac;return `<div class="bar ${o.state}" data-id="${o.id}"><span class="mid"></span><span class="f ${o.state}" style="left:${l.toFixed(1)}%;width:${w.toFixed(1)}%"></span></div>`}
+function bars(act){return act.map(o=>`<div><div class="row" style="border:0;padding:0 0 4px"><span class="k">${esc(o.name)} <span style="font-size:10.5px">ch ${o.ch??'—'}</span></span><span class="v">${o.pwm==null?val({u:o.state}):o.pwm}</span></div>`+
+   bar(o)+`<div class="k mono" style="font-size:10.5px;padding-top:3px">${esc(o.label)}</div></div>`).join('')}
+// ---- the dials (only the needles / marks move with the values) ----
+function polar(deg,r){const a=deg*Math.PI/180;return [r*Math.sin(a),-r*Math.cos(a)]}
+const pl=pts=>pts.map(p=>p[0].toFixed(3)+','+p[1].toFixed(3)).join(' ');
+function radar(R){const e=$('radar');let h=`<circle r="1" style="fill:none;stroke:var(--line)" stroke-width=".012"/>`;
+  for(const g of R.rings)h+=`<circle r="${g.u}" style="fill:none;stroke:var(--line2)" stroke-width=".008"/><text x="${(g.u*0.71+0.01).toFixed(3)}" y="${(-g.u*0.71).toFixed(3)}" font-size=".075" style="fill:var(--dim)">${g.m} m</text>`;
+  h+=`<line x1="0" y1="0" x2="0" y2="-1.06" style="stroke:var(--muted)" stroke-width=".01" stroke-dasharray=".03 .02"/><text x=".02" y="-1.03" font-size=".07" style="fill:var(--muted)">bow</text>`;
+  const op=R.state==='stale'?' class="stale"':'';h+=`<g${op}>`;
+  for(const s of R.edge)h+=`<polyline points="${pl(s)}" style="fill:none;stroke:var(--muted)" stroke-width=".012" stroke-dasharray=".04 .03"/>`;
+  for(const r of R.rays)h+=`<polyline points="${pl(r.pts)}" style="fill:none;stroke:${r.hex}" stroke-width=".01" stroke-dasharray=".02 .02" opacity=".8"/>`;
+  if(R.dock)h+=`<polyline points="${pl(R.dock.pts)}" style="fill:none;stroke:var(--text)" stroke-width=".03"/>`;
+  for(const i of R.items){const sh=i.kind==='buoy'?`<circle cx="${i.x}" cy="${i.y}" r=".04" style="fill:${i.hex};stroke:var(--text)" stroke-width=".006"><title>${esc(i.label)}</title></circle>`:
+    `<rect x="${i.x-.035}" y="${i.y-.035}" width=".07" height=".07" style="fill:${i.hex};stroke:var(--text)" stroke-width=".006"><title>${esc(i.label)}</title></rect>`;h+=sh}
+  h+=`</g><path d="M0 -.06 L.04 .05 L0 .03 L-.04 .05 Z" style="fill:var(--acc)"/>`;e.innerHTML=h;e.dataset.items=R.items.length;e.dataset.state=R.state;$('radar-t').innerHTML=lines(R.text)}
+const HU='<pattern id="hatch-u" patternUnits="userSpaceOnUse" width=".05" height=".05" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2=".05" style="stroke:var(--dim)" stroke-width=".018"/></pattern>';
+const NUM=v=>v&&typeof v==='object'?val(v):esc(v??'');
+// v0.1.51 (item 28): the rose - 10° ticks, 8 labels, the hull glyph (rotated by HDG), HDG solid, COG open, the commanded yaw dashed
+function compass(C){let h=`<defs>${HU}</defs><circle r="1" style="fill:none;stroke:var(--line)" stroke-width=".012"/><circle r=".62" style="fill:none;stroke:var(--line2)" stroke-width=".008"/>`;
+  for(let d=0;d<360;d+=10){const [a,b]=polar(d,1),[c,e]=polar(d,d%90===0?0.86:d%30===0?0.9:0.95);h+=`<line x1="${a.toFixed(3)}" y1="${b.toFixed(3)}" x2="${c.toFixed(3)}" y2="${e.toFixed(3)}" style="stroke:var(--muted)" stroke-width="${d%30?'.008':'.014'}"/>`}
+  [['N',0],['NE',45],['E',90],['SE',135],['S',180],['SW',225],['W',270],['NW',315]].forEach(([t,d])=>{const [x,y]=polar(d,.75);
+    h+=`<text x="${x.toFixed(3)}" y="${(y+.035).toFixed(3)}" font-size="${t.length>1?'.085':'.12'}" font-weight="${t.length>1?400:700}" text-anchor="middle" style="fill:var(--text)">${t}</text>`});
+  if(C.des!=null){const [x,y]=polar(C.des,.98);h+=`<circle cx="${x}" cy="${y}" r=".05" style="fill:none;stroke:var(--text)" stroke-width=".015"><title>target bearing</title></circle>`}
+  if(C.hdg!=null)h+=`<g transform="rotate(${C.hdg})" data-v="hull"><rect x="-.1" y="-.3" width=".2" height=".52" rx=".1" style="fill:var(--line2);stroke:var(--line)" stroke-width=".01"/></g>`;
+  if(C.cmd!=null)h+=`<g transform="rotate(${C.cmd})" data-v="cmd"><line x1="0" y1="0" x2="0" y2="-.9" style="stroke:var(--text)" stroke-width=".02" stroke-dasharray=".07 .05"/><title>commanded yaw ${C.cmd.toFixed(0)}°</title></g>`;
+  else h+=`<g data-v="cmd-unknown"></g>`;                    // no dashed vector: the SET number beside the rose is hatched "not published"
+  if(C.cog!=null)h+=`<g transform="rotate(${C.cog})" data-v="cog"><line x1="0" y1="0" x2="0" y2="-.8" style="stroke:var(--text)" stroke-width=".012"/><path d="M0 -.98 L.06 -.8 L-.06 -.8 Z" style="fill:var(--panel);stroke:var(--text)" stroke-width=".016"/><title>COG ${C.cog.toFixed(0)}°</title></g>`;
+  if(C.hdg!=null)h+=`<g transform="rotate(${C.hdg})" data-v="hdg"><line x1="0" y1="0" x2="0" y2="-.78" style="stroke:var(--acc)" stroke-width=".03"/><path d="M0 -.96 L.065 -.76 L-.065 -.76 Z" style="fill:var(--acc)"/><circle r=".04" style="fill:var(--acc)"/><title>heading ${C.hdg.toFixed(0)}°</title></g>`;
+  else h+=`<text y=".04" font-size=".1" text-anchor="middle" style="fill:var(--dim)">no heading</text>`;
+  $('compass').innerHTML=h;$('compass').dataset.hdg=C.hdg??'';$('compass').dataset.cmd=C.cmd??'';
+  $('c-set').innerHTML=NUM(C.set);$('c-act').innerHTML=NUM(C.act);rot(C.rot,C.rot_max||30);$('compass-t').innerHTML=lines(C.text)}
+// the ROT scale: -max .. +max °/s (port left, starboard right), ticks every 5, the pointer under it; unknown = hatched, never 0
+function rot(r,M){const X=v=>100+85*Math.max(-1,Math.min(1,v/M));let h=`<defs><pattern id="hatch-r" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" style="stroke:var(--dim)" stroke-width="1.5"/></pattern></defs>`;
+  h+=`<text x="4" y="10" font-size="9" style="fill:var(--muted)">ROT °/s · port ← → stbd</text>`;
+  h+=`<text x="196" y="11" font-size="12" font-weight="600" text-anchor="end" style="fill:var(--text);font-variant-numeric:tabular-nums">${r==null?'':(r>0?'+':'')+r.toFixed(1)}</text>`;
+  h+=`<line x1="15" y1="25" x2="185" y2="25" style="stroke:var(--line)" stroke-width="1"/>`;
+  for(let v=-M;v<=M+1e-9;v+=5){const x=X(v),big=v%15===0;h+=`<line x1="${x}" y1="25" x2="${x}" y2="${big?32:29}" style="stroke:var(--muted)" stroke-width="${v===0?1.6:1}"/>`;
+    if(big)h+=`<text x="${x}" y="42" font-size="8" text-anchor="middle" style="fill:var(--muted)">${v}</text>`}
+  if(r!=null){const x=X(r);h+=`<path d="M${x.toFixed(1)} 24 l5 -9 l-10 0 z" style="fill:${Math.abs(r)>M?'var(--warn)':'var(--acc)'}" data-v="rot"/>`}
+  else h+=`<rect x="40" y="13" width="120" height="11" rx="2" style="fill:url(#hatch-r);stroke:var(--dim)" stroke-dasharray="3 2"/><text x="100" y="21.5" font-size="8" text-anchor="middle" style="fill:var(--dim)" data-v="rot-unknown">not published</text>`;
+  $('rot').innerHTML=h;$('rot').dataset.rot=r??''}
+// the speed dial: SOG needle + the commanded surge tick (v0.1.55: mm/state cmd - GUIDED speed or τ surge; hatched when nothing commands)
+function speed(S){const A=v=>-120+240*Math.min(1,Math.max(0,v/S.max));let h=`<defs>${HU}</defs>`;
+  const [x0,y0]=polar(-120,1),[x1,y1]=polar(120,1);h+=`<path d="M${x0} ${y0} A1 1 0 1 1 ${x1} ${y1}" style="fill:none;stroke:var(--line)" stroke-width=".02"/>`;
+  for(let v=0;v<=S.max+1e-9;v+=0.25){const big=Math.abs(v*2-Math.round(v*2))<1e-6,[a,b]=polar(A(v),1),[c,d]=polar(A(v),big?.86:.93),[tx,ty]=polar(A(v),.72);
+    h+=`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" style="stroke:var(--muted)" stroke-width="${big?'.015':'.008'}"/>`;if(big)h+=`<text x="${tx}" y="${ty+.03}" font-size=".09" text-anchor="middle" style="fill:var(--text)">${v.toFixed(1)}</text>`}
+  if(S.cmd_surge!=null){const [a,b]=polar(A(S.cmd_surge),1.08),[c,d]=polar(A(S.cmd_surge),.84);h+=`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" style="stroke:var(--text)" stroke-width=".04" data-v="surge"><title>${esc(S.cmd_label||'commanded surge')}</title></line>`}
+  else h+=`<g data-v="surge-unknown"><rect x="-.55" y=".64" width="1.1" height=".18" rx=".03" style="fill:url(#hatch-u);stroke:var(--dim)" stroke-width=".008" stroke-dasharray=".03 .03"/><text y=".77" font-size=".09" text-anchor="middle" style="fill:var(--dim)">cmd surge: none</text></g>`;
+  if(S.sog!=null)h+=`<g transform="rotate(${A(S.sog)})"><path d="M0 -.9 L.04 0 L-.04 0 Z" style="fill:var(--acc)"/></g><circle r=".05" style="fill:var(--acc)"/><text y=".4" font-size=".2" font-weight="600" text-anchor="middle" style="fill:var(--text);font-variant-numeric:tabular-nums">${S.sog.toFixed(2)}</text>`;
+  else h+=`<text y=".3" font-size=".1" text-anchor="middle" style="fill:var(--dim)">no SOG</text>`;
+  h+=`<text y=".55" font-size=".09" text-anchor="middle" style="fill:var(--muted)">SOG m/s</text>`;$('speed').innerHTML=h;$('speed').dataset.sog=S.sog??'';$('speed-t').innerHTML=lines(S.text)}
+// ---- plotter (TELEMETRY: <= 100 lines, no library) ----
+function plot(cv,t,ss,o){                                    // ss = [{name, y:[...], dash:[...], acc:bool}], o = {min, max, limit, unit, wrap}
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth||600,H=cv.clientHeight||150;cv.width=W*dpr;cv.height=H*dpr;
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const L=44,R=8,T=8,B=18,pw=W-L-R,ph=H-T-B;let lo=o.min,hi=o.max;
+  const all=ss.flatMap(s=>s.y.filter(v=>v!=null));
+  if(lo==null)lo=all.length?Math.min(...all):0;if(hi==null)hi=all.length?Math.max(...all):1;
+  if(o.limit!=null)hi=Math.max(hi,o.limit*1.2);if(hi-lo<1e-9){hi+=0.5;lo-=0.5}
+  const X=s=>L+pw*(1+s/60),Y=v=>T+ph*(1-(v-lo)/(hi-lo));
+  g.font='10px ui-monospace,Menlo,monospace';g.strokeStyle=tv('--line2');g.fillStyle=tv('--dim');g.lineWidth=1;
+  for(let s=-60;s<=0;s+=10){g.beginPath();g.moveTo(X(s),T);g.lineTo(X(s),T+ph);g.stroke();g.fillText(s+' s',X(s)-12,H-4)}
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;g.beginPath();g.moveTo(L,Y(v));g.lineTo(L+pw,Y(v));g.stroke();g.fillText(v.toFixed(Math.abs(hi-lo)<5?2:0),2,Y(v)+3)}
+  if(o.limit!=null){g.strokeStyle=tv('--warn');g.setLineDash([4,3]);g.beginPath();g.moveTo(L,Y(o.limit));g.lineTo(L+pw,Y(o.limit));g.stroke();g.setLineDash([]);
+    g.fillStyle=tv('--warnText');g.fillText('limit '+o.limit+(o.unit||''),L+4,Y(o.limit)-3)}
+  let n=0,lx=L+6;
+  for(const s of ss){g.strokeStyle=s.acc?tv('--acc'):tv('--text');g.lineWidth=s.acc?1.8:1.2;g.setLineDash(s.dash||[]);g.beginPath();let pen=false;
+    let pv=null;for(let i=0;i<t.length;i++){const v=s.y[i];if(v==null||t[i]<-60){pen=false;continue}const x=X(t[i]),y=Y(Math.min(hi,Math.max(lo,v)));
+      if(pen&&o.wrap&&Math.abs(v-pv)>o.wrap/2)pen=false;pv=v;if(pen)g.lineTo(x,y);else{g.moveTo(x,y);pen=true}n++}
+    g.stroke();if(ss.length>1){g.beginPath();g.moveTo(lx,T+8);g.lineTo(lx+16,T+8);g.stroke();g.setLineDash([]);g.fillStyle=tv('--muted');g.fillText(s.name,lx+20,T+11);lx+=g.measureText(s.name).width+34}}
+  g.setLineDash([]);if(!n){g.fillStyle=tv('--dim');g.fillText('no samples in the last 60 s (unknown, not 0)',L+10,T+ph/2)}
+  cv.dataset.points=n;return n}
+// ---- end plotter ----
+let PAUSED=false;
+$('tl-pause').onclick=()=>{PAUSED=!PAUSED;$('tl-pause').textContent=PAUSED?'live':'pause';$('tl-pause').className='btn sm'+(PAUSED?' cur':'');$('tl-info').textContent=PAUSED?'PAUSED - the plots are frozen; press live to follow again':'60 s window · 2 Hz (usv_ui\'s FCU block) · the 10 Hz view is offline: mode-log, frame-compare'};
+function telemetry(T){if(PAUSED||$('t-TELEMETRY').hidden)return;const s=T.series;
+  plot($('pl-sog'),T.t,[{name:'SOG',y:s.sog,acc:true}],{min:0});
+  plot($('pl-hdg'),T.t,[{name:'heading',y:s.hdg,acc:true}],{min:0,max:360,wrap:360});
+  plot($('pl-pwm'),T.t,[{name:'M-P',y:s['pwm_M-P'],acc:true},{name:'M-S',y:s['pwm_M-S'],dash:[6,3]},{name:'SW-F',y:s['pwm_SW-F'],dash:[2,2]},{name:'SW-A',y:s['pwm_SW-A'],dash:[8,2,2,2]}],{min:1100,max:1900});
+  plot($('pl-hb'),T.t,[{name:'HB age',y:s.hb,acc:true}],{min:0,limit:2,unit:' s'})}
+// ---- the TUNING card ----
+let TUSIG='';
+function tuning(C){const tv_=C.tuning,b=$('tu-tab').tBodies[0];const sig=tv_.knobs.map(k=>k.key).join(',');
+  if(sig!==TUSIG){TUSIG=sig;b.innerHTML=tv_.knobs.map(k=>`<tr data-key="${k.key}"><td class="mono">${esc(k.key)}</td><td class="mono">${esc(k.sections.join('/'))}</td><td class="n live"></td><td class="n">${k.default} ${esc(k.unit)}</td><td class="n">${k.lo} – ${k.hi}</td>`+
+    `<td><input class="tv" type="number" step="any" min="${k.lo}" max="${k.hi}" title="${esc(k.key)}: ${esc(k.tip)} (${k.lo} – ${k.hi} ${esc(k.unit)})"></td>`+
+    `<td><button class="btn sm" type="button" data-tune="${k.key}" title="apply ${esc(k.key)}: TUNE ${esc(k.key)} VALUE via the OCS (MANUAL / AUTO_HOLD only) - ${esc(k.tip)}">apply</button></td><td class="k">${esc(k.tip)}</td></tr>`).join('');
+    for(const btn of b.querySelectorAll('[data-tune]'))btn.onclick=()=>{const tr=btn.closest('tr');tune({key:btn.dataset.tune,value:tr.querySelector('input').value})}}
+  for(const k of tv_.knobs){const tr=b.querySelector(`tr[data-key="${k.key}"]`);if(!tr)continue;const c=tr.querySelector('.live');
+    c.innerHTML=k.value==null?val({u:'no mission manager state'}):esc(k.value)+(k.changed?' <span class="w">changed</span>':'');tr.querySelector('input').placeholder=k.value??''}
+  $('tu-state').innerHTML=C.tuning_ok?`vehicle ${esc(C.tuning_state)}: a knob may change now · via the OCS (TUNE → SET_TUNING)`:
+    val({w:`vehicle ${C.tuning_state||'?'}: TUNE is refused outside MANUAL / AUTO_HOLD`});
+  $('tu-ro').innerHTML=rows(tv_.read_only.map(r=>[r.name,[r.what,{u:r.note}]]))}
+async function tune(req){$('tu-reply').textContent='> tune '+(req.save?'save':req.key+' '+req.value)+' …';
+  try{const r=await (await fetch('/tune',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify(req)})).json();
+    $('tu-reply').innerHTML=`&gt; ${esc(r.line||'tune')} : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`+(r.lines&&r.lines.length?`<div class="tail" style="margin-top:4px">${esc(r.lines.join('\n'))}</div>`:'')}
+  catch(e){$('tu-reply').innerHTML='<span class="a">boat_web not reachable</span>'}tick()}
+$('tu-save').onclick=()=>tune({save:true});
+// ---- the tabs' panels ----
+function draw(S){
+  // v0.1.52: the "V · held by" and "mode · armed · kill · estop" chips are the top plate's blocks now (still in /state.json hdr)
+  $('hchips').innerHTML=S.hdr.filter((c,i)=>i!==2&&i!==3).map(c=>`<span class="chip ${c.cls}" title="${esc(c.title)}">${esc(c.text)}</span>`).join(' ');
+  $('clock').textContent=`${hhmmss(S.t_unix)} · ${S.connected?S.broker:'NOT connected to '+S.broker}`;$('clock').title=`2 Hz · ${S.connected?'boat broker '+S.broker:'NOT connected to the boat broker '+S.broker}`;
+  $('holder').textContent='held by '+S.holder;drawFcu(S.fcu_ctl||{});drawBkpi(S);
+  setState(S.wf);callouts(S.callouts);
+  radar(S.dials.radar);compass(S.dials.compass);speed(S.dials.speed);
+  $('p-act').innerHTML=bars(S.panels.act);$('p-aux').innerHTML=rows(S.panels.aux);$('p-health').innerHTML=rows(S.panels.health);
+  $('p-alarms').innerHTML=S.alarms.map(a=>`<div class="row"><span class="${a.level==='alarm'?'a':'w'}">${a.level==='alarm'?'ALARM':'WARNING'}</span><span class="v">${esc(a.text)}</span></div>`).join('');
+  $('p-ev').innerHTML=S.events.map(e=>`<div class="evr ${e.level||'info'}"><span class="t">${hhmmss(e.t)}</span><span class="m">${hl(e.text)}</span></div>`).join('')||'<div class="evr"><span class="t"></span><span class="m k">nothing changed yet</span></div>';
+  drawCtl(S.control);drawPlate(S.plate);drawSim(S.sim);drawConsole(S.console);lmap(S.lmap);drawPick();drawCam(S);layoutCheck();try{drawN6(S)}catch(e){console.error('N6',e,e.stack)}
+  const C=S.tabs.control;$('c-chain').innerHTML=rows(C.chain);$('c-alloc').innerHTML=rows(C.alloc);$('c-resp').innerHTML=rows(C.response);tuning(C);
+  const A=S.tabs.actuation;$('a-thr').innerHTML=A.thr.map(o=>`<div class="card"><div class="h"><span>${esc(o.name)}</span><span>${esc(o.role)}</span></div>${bar(o)}<div style="height:6px"></div>${rows(o.rows)}</div>`).join('');
+  $('a-map').innerHTML=rows(A.map);
+  const N=S.tabs.nav;$('n-gnss').innerHTML=rows(N.gnss);$('n-ekf').innerHTML=rows(N.ekf);$('n-att').innerHTML=rows(N.att);$('n-rates').innerHTML=rows(N.rates);
+  const D=S.tabs.diag;$('d-mav').innerHTML=rows(D.mavlink);$('d-mqtt').innerHTML=rows(D.mqtt);$('d-hosts').innerHTML=rows(D.hosts);
+  $('d-cmds').innerHTML=D.cmds.map(c=>`<div class="ev"><span class="t">${c.t?hhmmss(c.t):''}</span><span>&gt; ${esc(c.word)} : <span class="${c.ok?'ok':'a'}">${esc(c.text)}</span></span></div>`).join('')||'<div class="k">no word sent from this page yet</div>';
+  $('d-tail').textContent=D.tail.length?D.tail.map(x=>`${String(x[0]).padStart(6)} s  ${x[1]}`).join('\n'):'(no FCU block from usv_ui: its console is not on this broker)';
+  $('d-tail-age').textContent=D.tail_age==null?'read-only tail · no block':`read-only tail · block ${D.tail_age} s`;
+  telemetry(S.tele);
+  const B=S.bar;$('ob-w').textContent=B?B.word+(B.why?' —':''):'OCS page not reachable';$('ob-y').textContent=B?(B.why||''):'';
+}
+let last=null;
+async function tick(){try{last=await (await fetch('/state.json',{cache:'no-store'})).json();draw(last)}catch(e){$('clock').textContent='boat_web not reachable'}}
+async function send(word,args){$('reply').textContent='> '+word+(args.length?' '+args.join(' '):'')+' …';
+  try{const r=await (await fetch('/cmd',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({word,args})})).json();
+    $('reply').innerHTML=`&gt; ${esc(word)} : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`}catch(e){$('reply').innerHTML='<span class="a">boat_web not reachable</span>'}tick()}
+for(const b of document.querySelectorAll('button[data-word]'))b.onclick=()=>{const a=b.dataset.args;
+  send(b.dataset.word,a==='@'?$('b-arg').value.trim().split(/\s+/).filter(Boolean):a?a.split(' '):[])};
+// ---- v0.1.62 (Dmitrii 2026-11-07): the top plate's boxes are buttons - a menu, then two clicks within 4 s (as STOP & RESET) ----
+// VEHICLE = enable_auto / disable_auto / confirm_safe through the OCS page (/ocs, the OCS's authority); the others = usv_ui's page words.
+const PLM={vehicle:{h:'VEHICLE - through the OCS',items:()=>[['enable_auto','ocs','enable_auto','AUTO_HOLD: the mission manager takes the FCU (handover first, armed, HOLD)'],
+    ['disable_auto','ocs','disable_auto','back to MANUAL (a running task is aborted by the OCS rules)'],['confirm_safe','ocs','confirm_safe','after a KILLED / FAULT whose cause is gone']]},
+  mode:{h:'FCU MODE - usv_ui mode',items:()=>(((last||{}).fcu_ctl||{}).modes||[['MANUAL','manual'],['HOLD','hold'],['LOITER','loiter'],['AUTO','auto'],['GUIDED','guided']]).map(m=>[m[0],'word','mode '+m[1],'mode '+m[1]])},
+  arm:{h:'ARM - the FCU',items:()=>[['ARM','word','arm','arm the FCU - the transmitter\'s kill still wins'],['DISARM','word','disarm','disarm the FCU']]},
+  holder:{h:'FCU HOLDER - usv_ui',items:()=>[['handover','word','handover','usv_ui releases the FCU to the mission manager'],['takeover','word','takeover','usv_ui commands the FCU again']]},
+  log:{h:'LOG - usv_ui',items:()=>[['log on','word','log on','start usv_ui\'s tlog / CSV log'],['log off','word','log off','stop it']]},
+  cv:{h:'CV FOLD - usv_ui',items:()=>[['cv on','word','cv on','fold the AGX perception into usv_ui\'s map'],['cv off','word','cv off','stop folding it']]}};
+let PLM_ARM={k:null,t:0};
+function plClose(){$('plmenu').hidden=true;PLM_ARM={k:null,t:0}}
+function plOpen(key,box){const m=PLM[key],cur=((box.querySelector('.x')||{}).textContent||'').trim().toLowerCase();PLM_ARM={k:null,t:0};
+  $('plmenu').innerHTML=`<div class="h">${esc(m.h)}</div>`+m.items().map(([lab,kind,line,tip],i)=>
+    `<button type="button" data-i="${i}" data-kind="${kind}" data-line="${esc(line)}" class="${cur===lab.toLowerCase()||cur===line.toLowerCase()?'cur':''}" title="${esc(tip)} - click, then click again within 4 s">${esc(lab)}</button>`).join('');
+  const r=box.getBoundingClientRect(),mm=$('plmenu');mm.style.left=Math.min(r.left,window.innerWidth-220)+'px';mm.style.top=(r.bottom+4)+'px';mm.hidden=false;
+  for(const b of mm.querySelectorAll('button'))b.onclick=e=>{e.stopPropagation();plPick(b,key)}}
+async function plPick(b,key){const id=key+':'+b.dataset.i;
+  if(PLM_ARM.k!==id||Date.now()-PLM_ARM.t>=4000){for(const x of $('plmenu').querySelectorAll('button.pm-armed'))x.classList.remove('pm-armed'),x.textContent=x.dataset.lab||x.textContent;
+    b.dataset.lab=b.dataset.lab||b.textContent;b.classList.add('pm-armed');b.textContent='send '+b.dataset.line+'?';PLM_ARM={k:id,t:Date.now()};
+    setTimeout(()=>{if(PLM_ARM.k===id&&Date.now()-PLM_ARM.t>=3900){b.classList.remove('pm-armed');b.textContent=b.dataset.lab;PLM_ARM={k:null,t:0}}},4000);return}
+  const line=b.dataset.line,kind=b.dataset.kind;plClose();
+  if(kind==='ocs'){$('reply').textContent='> '+line+' (through the OCS) …';
+    try{const r=await (await fetch('/ocs',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({line})})).json();
+      $('reply').innerHTML=`&gt; ${esc(line)} : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`}catch(e){$('reply').innerHTML='<span class="a">boat_web not reachable</span>'}tick();return}
+  const p=line.split(' ');send(p[0],p.slice(1))}
+for(const [id,key] of [['pl-vehicle','vehicle'],['pl-mode','mode'],['pl-arm','arm'],['pl-holder','holder'],['pl-log','log'],['pl-cv','cv']]){const e=$(id);if(!e)continue;
+  e.setAttribute('role','button');e.tabIndex=0;e.onclick=ev=>{ev.stopPropagation();($('plmenu').hidden||PLM_ARM.box!==id)?(plOpen(key,e),PLM_ARM.box=id):plClose()}}
+document.addEventListener('click',e=>{if(!$('plmenu').hidden&&!$('plmenu').contains(e.target))plClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')plClose()});
+// ---- v0.1.63: the commander bar ----
+function drawCtl(C){if(!C)return;const me=C.you||{},cm=C.commander,W=C.where||{};
+  $('ctl-me').innerHTML=me.commander?'<b class="cmd">YOU COMMAND</b>':`<b class="view">VIEWER</b>${cm?' · '+esc(cm.name)+' commands':''}`;$('ctl-me').title=cm?`${cm.name} (${cm.addr}) commands - take control makes you the commander`:'nobody commands: the first command takes it';   // v0.1.78: the badge and the name; the rest on hover
+  $('ctl-pin').hidden=!me.needs_pin;$('ctl-take').hidden=!!me.commander;$('ctl-rel').hidden=!me.commander;
+  if(document.activeElement!==$('ctl-name'))$('ctl-name').value=WIN.name;
+  const whoFull=`${(C.sessions||[]).length} connected: ${(C.sessions||[]).map(x=>x.name+(x.commander?'*':'')+' '+x.addr).join(' · ')}`+(W.where?` · window on ${W.where} (${W.host||''})`:'')+(C.pin?' · PIN on':'');
+  $('ctl-who').textContent=`${(C.sessions||[]).length} connected`+(C.pin?' · PIN':'');$('ctl-who').title=whoFull}   // v0.1.78: the list on hover (row 1 never wraps)
+$('ctl-name').onchange=()=>{WIN.name=($('ctl-name').value||'operator').replace(/[^A-Za-z0-9 _.-]/g,'').slice(0,24)||'operator';try{localStorage.setItem('win.name',WIN.name)}catch(e){};tick()};
+$('ctl-take').onclick=async()=>{const r=await (await fetch('/control',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({op:'take',pin:$('ctl-pin').hidden?undefined:$('ctl-pin').value})})).json();
+  $('reply').innerHTML=`&gt; take control : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`;$('ctl-pin').value='';tick()};
+$('ctl-rel').onclick=async()=>{const r=await (await fetch('/control',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({op:'release'})})).json();
+  $('reply').innerHTML=`&gt; release : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`;tick()};
+// v0.1.51 (item 24): the header's big numerals
+function drawBkpi(S){const sp=(S.dials||{}).speed||{},cp=(S.dials||{}).compass||{},hb=(S.ages||{}).hb,n=(S.alarms||[]).filter(a=>a.level==='alarm').length;
+  const K=(l,v,u)=>`<div class="kpi"><div class="l">${l}</div>${v==null?'<div class="v np">not published</div>':`<div class="v">${v}<span class="u">${u}</span></div>`}</div>`;
+  $('bkpi').innerHTML=K('SOG',sp.sog==null?null:sp.sog.toFixed(2),'m/s')+K('heading',cp.hdg==null?null:String(Math.round(cp.hdg)).padStart(3,'0'),'°')+K('FCU HB',hb==null?null:hb.toFixed(1),'s')+K('alarms',String(n),'')}
+// v0.1.50: the FCU card - every mode as a button (the current one in --action), ARM with a confirming second click, the RC6 rule
+let FCU_BUILT=false,ARM_T=0;
+function drawFcu(c){if(!FCU_BUILT&&c.modes){$('fcu-modes').innerHTML=c.modes.map(([l,a])=>`<button class="btn sm mode" type="button" data-mode="${esc(a)}" data-label="${esc(l)}" title="FCU mode ${esc(l)}: usv_ui sends DO_SET_MODE (as typed: mode ${esc(a)}); the FCU decides">${esc(l)}</button>`).join('');
+    for(const b of $('fcu-modes').querySelectorAll('button'))b.onclick=()=>send('mode',[b.dataset.mode]);FCU_BUILT=true}
+  const m=c.mode||null;for(const b of $('fcu-modes').querySelectorAll('button'))b.classList.toggle('act',!!m&&(b.dataset.label===m||(m==='CUSTOM_MANUAL'&&b.dataset.label==='MODE 20')));
+  $('fcu-now').textContent=`mode ${m||'?'} · ${c.armed==null?'arm ?':c.armed?'ARMED':'disarmed'}`;
+  {const k=c.station_keep;$('sk-hold').classList.toggle('act',k==='hold');$('sk-loiter').classList.toggle('act',k==='loiter')}   // v0.1.81
+  {const g=c.guard;$('guard-now').innerHTML=g?(['clear','off'].includes(g.chip)?`GUARD ${esc(g.chip)}`:`<b class="a">GUARD ${esc(g.chip)}${g.range_m!=null&&g.range_m<10?' '+Number(g.range_m).toFixed(1)+' m':''}</b>`):'<span class="k">GUARD not published</span>'}   // v0.1.80
+  const r=c.rc6;$('rc6-now').innerHTML=r?(r.holds?'<b class="a">RC6 HOLDS THE BOAT</b>':r.raw?'RC6 high · latch cleared':'RC6 low'):'<span class="k">RC6 not published</span>';
+  if(r&&r.policy&&document.activeElement!==$('rc6-pol'))$('rc6-pol').value=r.policy;
+  const g=c.fence;$('fence-now').innerHTML=!g?'fence: not published':`fence <b class="${g.breach&&g.breach.status?'a':''}">${g.enabled===true?'ON':g.enabled===false?'off':'on/off ?'}</b> · ${g.points_n==null?'? points':g.points_n+' points'}${g.matches===true?' · read back identical':g.matches===false?' · read back DIFFERENT':''}${g.breach?(g.breach.status?' · <b class="a">BREACH '+g.breach.count+'</b>':' · no breach'):''}`}   // v0.1.53
+$('fcu-arm').onclick=()=>{const b=$('fcu-arm');if(Date.now()-ARM_T<4000){ARM_T=0;b.textContent='ARM';send('arm',[]);return}
+  ARM_T=Date.now();b.textContent='confirm ARM?';setTimeout(()=>{if(Date.now()-ARM_T>=3900){b.textContent='ARM'}},4000)};
+$('fcu-disarm').onclick=()=>send('disarm',[]);
+async function skSend(m){$('reply').textContent='> station_keep '+m+' …';try{const r=await (await fetch('/ocs',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({line:'station_keep '+m})})).json();   // v0.1.81 (WP37)
+  $('reply').innerHTML=`&gt; station_keep ${esc(m)} : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`}catch(e){$('reply').innerHTML='<span class="a">boat_web not reachable</span>'}tick()}
+$('rc6-pol').onchange=async()=>{$('reply').textContent='> rc6_policy '+$('rc6-pol').value+' …';try{const r=await (await fetch('/ocs',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({line:'rc6_policy '+$('rc6-pol').value})})).json();
+  $('reply').innerHTML=`&gt; rc6 : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`}catch(e){$('reply').innerHTML='<span class="a">boat_web not reachable</span>'}};
+// ---- v0.1.52: the top plate, the SIM banner, the console, the light map, the wireframe's detail panel ----
+const hl=t=>esc(t).replace(/\b([A-Z][A-Z0-9_]{1,}(?:-[A-Z0-9]+)?)\b/g,'<b>$1</b>');     // the keywords bold (ARMED, AUTO_TASK, FCU, UP ...)
+function pbox(id,o,big){const e=$(id);if(!e||!o)return;const c=e.className.split(' ').filter(x=>['pb','big','mid','arm','tg','hold'].includes(x));
+  e.className=c.concat([o.cls||'unk'],o.stale?['stale']:[]).join(' ');e.dataset.cls=o.cls||'unk';
+  e.querySelector('.x').textContent=o.text??'unknown';e.querySelector('.s').innerHTML=o.alarm?`<b>${esc(o.sub)}</b>`:esc(o.sub||'');
+  e.title=e.title.split(' ‖ ')[0]+(o.src?' ‖ from '+o.src:'')}
+function drawPlate(P){if(!P)return;pbox('pl-vehicle',P.vehicle);pbox('pl-mode',P.mode);pbox('pl-arm',P.arm);
+  for(const t of P.toggles||[])pbox('pl-'+t.id,t)}
+function drawSim(M){const on=!!(M&&M.on),fr=!!(M&&M.free_run);$('sim').hidden=!on;$('sim').querySelector('b').textContent=fr?'FREE RUN':'SIMULATION';   // v0.1.68: FREE RUN in the same place
+  $('sim-t').textContent=on?M.why.join(' · '):'';document.title=(on?(fr?'FREE RUN · ':'SIM · '):'')+'USV1 boat window'}
+function drawConsole(C){if(!C)return;const rep=(C.replies||[]).slice(0,3).map(r=>`<div class="evr rep ${r.ok?'ok':'alarm'}"><span class="t">${r.t?hhmmss(r.t):''}</span><span class="m">&gt; <b>${esc(r.word)}</b> : ${esc(r.text)}</span></div>`).join('');
+  const rows=(C.rows||[]).map(x=>`<div class="evr con ${x.level} ${x.kind==='cmd'?'cmd':''}"><span class="t">${x.age_s==null?'':x.age_s.toFixed(1)+' s'}</span><span class="m">${hl(x.text)}</span></div>`).join('');
+  $('p-con').innerHTML=rep+(rows||`<div class="evr"><span class="t"></span><span class="m">${val({u:C.state==='none'?'no FCU block from usv_ui: its console is not on this broker':'no console lines'})}</span></div>`);
+  $('p-con').classList.toggle('stale',C.state==='stale');$('p-con').dataset.state=C.state;
+  $('p-con-h').innerHTML=C.state==='none'?val({u:'not published'}):C.state==='stale'?val({w:`STALE · block ${C.age_s} s`}):`newest first · block ${C.age_s} s`}
+function lmap(M){const cv=$('lmap');if(!cv||!M)return;const dpr=window.devicePixelRatio||1,W=cv.clientWidth||400,H=cv.clientHeight||300;cv.width=W*dpr;cv.height=H*dpr;
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);g.font='11px ui-monospace,Menlo,monospace';cv.dataset.state=M.state;
+  $('lmap-t').innerHTML=lines(M.text);const B=M.bounds;
+  if(!B){g.fillStyle=tv('--muted');g.fillText('no map digest (telemetry/usv/map) - nothing drawn',12,H/2);cv.dataset.items='0';return}
+  const k=Math.min((W-20)/(B[3]-B[2]),(H-20)/(B[1]-B[0])),nc=(B[0]+B[1])/2,ec=(B[2]+B[3])/2,X=e=>W/2+(e-ec)*k,Y=n=>H/2-(n-nc)*k;
+  const nice=[1,2,5,10,20,25,50,100,200,500].find(v=>v*k>=W/6)||500;           // the scale bar and the grid step (metres)
+  g.strokeStyle=tv('--grid');g.lineWidth=1;for(let e=Math.ceil(B[2]/nice)*nice-nice*10;e<=B[3]+nice*10;e+=nice){g.beginPath();g.moveTo(X(e),0);g.lineTo(X(e),H);g.stroke()}
+  for(let n=Math.ceil(B[0]/nice)*nice-nice*10;n<=B[1]+nice*10;n+=nice){g.beginPath();g.moveTo(0,Y(n));g.lineTo(W,Y(n));g.stroke()}
+  g.globalAlpha=M.state==='stale'?0.45:1;
+  if(M.edge.length>1){g.strokeStyle=tv('--muted');g.setLineDash([6,4]);g.lineWidth=1.4;g.beginPath();M.edge.forEach((p,i)=>i?g.lineTo(X(p[1]),Y(p[0])):g.moveTo(X(p[1]),Y(p[0])));g.closePath();g.stroke();g.setLineDash([])}
+  if(M.trail.length>1){g.strokeStyle=tv('--acc');g.globalAlpha*=.7;g.lineWidth=1.6;g.beginPath();M.trail.forEach((p,i)=>i?g.lineTo(X(p[1]),Y(p[0])):g.moveTo(X(p[1]),Y(p[0])));g.stroke();g.globalAlpha=M.state==='stale'?0.45:1}
+  if(M.home){const x=X(M.home.e),y=Y(M.home.n);g.strokeStyle=tv('--text');g.lineWidth=1.5;g.beginPath();g.arc(x,y,6,0,7);g.moveTo(x-9,y);g.lineTo(x+9,y);g.moveTo(x,y-9);g.lineTo(x,y+9);g.stroke();
+    g.fillStyle=tv('--text');g.fillText('CO',x-24,y-7)}
+  for(const p of M.points){const x=X(p.e),y=Y(p.n);g.fillStyle=tv('--panel');g.strokeStyle=tv('--text');g.lineWidth=1.3;g.beginPath();g.moveTo(x,y-5);g.lineTo(x+5,y);g.lineTo(x,y+5);g.lineTo(x-5,y);g.closePath();g.fill();g.stroke();
+    g.fillStyle=tv('--muted');g.fillText(p.name,x+7,y+4)}
+  for(const i of M.items){const x=X(i.e),y=Y(i.n);g.fillStyle=i.hex;g.strokeStyle=tv('--text');g.lineWidth=1;g.beginPath();
+    if(i.kind==='buoy')g.arc(x,y,5,0,7);else g.rect(x-5,y-5,10,10);g.fill();g.stroke()}
+  if(M.boat){const x=X(M.boat.e),y=Y(M.boat.n),L=Math.max(24,1.19*k),Wd=L*0.64;g.save();g.translate(x,y);
+    if(M.boat.hdg!=null){g.rotate(M.boat.hdg*Math.PI/180);g.fillStyle=tv('--acc');g.strokeStyle=tv('--text');g.lineWidth=1;
+      for(const s of [-1,1]){g.beginPath();g.moveTo(s*Wd/2,-L/2);g.quadraticCurveTo(s*Wd/2+L*.09,-L/2+L*.18,s*Wd/2+L*.09,-L/4);g.lineTo(s*Wd/2+L*.09,L/2);
+        g.lineTo(s*Wd/2-L*.09,L/2);g.lineTo(s*Wd/2-L*.09,-L/4);g.quadraticCurveTo(s*Wd/2-L*.09,-L/2+L*.18,s*Wd/2,-L/2);g.fill();g.stroke()}   // two hulls
+      g.fillRect(-Wd/2,-L*.12,Wd,L*.1);g.fillRect(-Wd/2,L*.22,Wd,L*.08)}                                       // the cross beams
+    else{g.strokeStyle=tv('--acc');g.lineWidth=2;g.beginPath();g.arc(0,0,7,0,7);g.stroke()}                      // no heading: a ring, no guessed bow
+    g.restore()}
+  g.globalAlpha=1;g.fillStyle=tv('--text');g.strokeStyle=tv('--text');g.lineWidth=1.5;g.beginPath();g.moveTo(W-18,30);g.lineTo(W-18,10);g.moveTo(W-23,16);g.lineTo(W-18,10);g.lineTo(W-13,16);g.stroke();
+  g.font='bold 11px ui-monospace,Menlo,monospace';g.fillText('N',W-22,42);
+  const sx=12,sy=H-12;g.lineWidth=2;g.beginPath();g.moveTo(sx,sy-4);g.lineTo(sx,sy);g.lineTo(sx+nice*k,sy);g.lineTo(sx+nice*k,sy-4);g.stroke();g.font='11px ui-monospace,Menlo,monospace';g.fillText(nice+' m',sx+nice*k+6,sy+1);
+  cv.dataset.items=String(M.items.length);cv.dataset.scale=String(nice);cv.dataset.boat=M.boat?'1':'0'}
+// a self-check (like the callouts' data-fit): the plate's boxes, EVENTS and CONSOLE rects -> body[data-layout] (tests/test_v0152_wa.py)
+function layoutCheck(){const r={};for(const id of ['sim','hdr','plate','n6r1','n6r2','n6sog','pl-vehicle','pl-mode','pl-arm','pl-holder','pl-log','pl-cv','bkpi','p-ev','p-con','lmap','wfd','wf','camw','b-sr']){const e=$(id);if(!e)continue;
+  const b=e.getBoundingClientRect();r[id]=[Math.round(b.left),Math.round(b.top+scrollY),Math.round(b.width),Math.round(b.height)]}document.body.dataset.layout=JSON.stringify(r)}
+// the wireframe's detail panel: a click on an element or its callout; refreshed live on every draw
+const TABN={ACTUATION:'ACTUATION',DIAG:'DIAGNOSTICS',NAV:'NAV & SENSORS'};
+function pick(id){PICK=PICK===id?null:id;if(last)draw(last)}
+for(const e of document.querySelectorAll('#wf [data-el]'))e.addEventListener('click',()=>pick(e.dataset.el));
+$('wfd-x').onclick=()=>pick(PICK);$('wfd-go').onclick=()=>{const b=CO[PICK];if(b&&b.tab){showTab(b.tab);last&&draw(last)}};
+function drawPick(){const b=PICK&&CO[PICK];$('wfd-x').hidden=!b;$('wfd-go').hidden=!(b&&b.tab);$('wfd').dataset.pick=b?b.id:'';
+  if(!b){$('wfd-n').textContent='click an element';$('wfd-s').innerHTML='';$('wfd').classList.remove('has');return}$('wfd').classList.add('has');   // v0.1.78: the box appears with the first click
+  $('wfd-n').textContent=b.name;const w={warning:'w',fault:'a',unknown:'u',unavailable:'u'}[b.state];
+  $('wfd-s').innerHTML=w?`<span class="${w}">${esc(b.state)}</span>`:`<span class="chip cur">${esc(b.state)}</span>`;
+  $('wfd-go').textContent=b.tab?'open '+TABN[b.tab]+' →':'';$('wfd-go').title='open '+(TABN[b.tab]||'')+': the rest of this element\'s detail';
+  $('wfd-b').innerHTML=(b.detail||[]).slice(0,4).map(x=>`<div class="wl" title="${esc(x)}">${esc(x)}</div>`).join('')}
+// ---- v0.1.54: ■ STOP & RESET (the OCS's macro, two clicks within 4 s like ARM) + the camera card with the boxes ----
+let SR_T=0;
+$('b-sr').onclick=async()=>{const b=$('b-sr');
+  if(Date.now()-SR_T>=4000){SR_T=Date.now();b.textContent='confirm STOP & RESET?';b.classList.add('armed');
+    setTimeout(()=>{if(SR_T&&Date.now()-SR_T>=3900){SR_T=0;b.textContent='■ STOP & RESET';b.classList.remove('armed')}},4000);return}
+  SR_T=0;b.textContent='■ STOP & RESET';b.classList.remove('armed');b.disabled=true;$('reply').textContent='> stop_reset … (the OCS runs the steps: abort, disable_auto, HOLD, DISARM, reset)';
+  try{const r=await (await fetch('/ocs',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({line:'stop_reset'})})).json();
+    $('reply').innerHTML=`&gt; stop_reset : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`}catch(e){$('reply').innerHTML='<span class="a">boat_web not reachable</span>'}
+  b.disabled=false;tick()};
+let CAMT=null,CAM_ON=false,CAM_N=0,CAMBASE=null,CAM_LT=0;
+try{if(localStorage.getItem('boat.boxes')==='0')$('cam-box').checked=false}catch(e){}
+$('cam-box').onchange=()=>{try{localStorage.setItem('boat.boxes',$('cam-box').checked?'1':'0')}catch(e){};drawOv()};
+function camLoop(S){const c=(S&&S.camv)||{},img=$('cam-img'),want=!!c.ok&&!!c.base&&!document.hidden&&!$('t-OVERVIEW').hidden;CAMBASE=c.base||null;
+  if(want===CAM_ON)return;CAM_ON=want;clearTimeout(CAMT);img.onload=img.onerror=null;
+  if(!want){img.src='data:,';img.hidden=true;return}
+  const go=()=>{if(CAM_ON&&CAMBASE)img.src=CAMBASE+'snapshot.jpg?t='+Date.now()};
+  img.onload=()=>{img.hidden=false;CAM_N++;CAM_LT=Date.now();$('cam-off').hidden=true;drawOv();CAMT=setTimeout(go,150)};
+  img.onerror=()=>{img.hidden=true;$('cam-off').hidden=false;$('cam-off').textContent='no picture (snapshot.jpg not answering)';CAMT=setTimeout(go,2000)};go()}
+document.addEventListener('visibilitychange',()=>{camLoop(last)});
+function drawCam(S){const c=S.camv||{};camLoop(S);
+  $('cam-h').textContent=c.ok?`${c.source||'?'} · frames ${c.frames??'?'} · age ${c.age_s==null?'?':Number(c.age_s).toFixed(1)+' s'}`:'camera off';
+  if(!c.ok){$('cam-off').hidden=false;$('cam-off').textContent=c.why||'no camera'}
+  else if(document.hidden)$('cam-off').textContent='paused (tab hidden)';
+  else if(!CAM_N){$('cam-off').hidden=false;$('cam-off').textContent='loading the first picture …'}
+  drawOv()}
+const OBJC={red:'#d64541',green:'#2e9e5b',blue:'#3d7bd9',black:'#555b63',white:'#e8e8e8',yellow:'#e0b400',orange:'#e07b00'};
+const CLSC={buoy:'#ff9f1a',dock_face:'#e8e8e8',window:'#4aa3ff',indicator:'#ffd400'};
+function drawOv(){const S=last;if(!S)return;const D=S.dets||{},ov=$('cam-ov'),img=$('cam-img'),on=$('cam-box').checked;
+  const fw=D.frame_w||1104,fh=D.frame_h||621,W=img.naturalWidth||fw,H=img.naturalHeight||fh,sx=W/fw,sy=H/fh;
+  ov.setAttribute('viewBox',`0 0 ${W} ${H}`);ov.dataset.state=D.state||'none';
+  const ds=(on&&D.state==='live'&&!img.hidden)?(D.dets||[]):[],lw=Math.max(2,W/400),fs=Math.max(14,W/44);
+  ov.innerHTML=ds.map(d=>{const x=d.x0*sx,y=d.y0*sy,w=Math.max(2,(d.x1-d.x0+1)*sx),h=Math.max(2,(d.y1-d.y0+1)*sy),col=CLSC[d.cls]||'#ff4fd8';
+    const lab=`${d.cls}${d.cls==='buoy'&&d.colour&&d.colour!=='unknown'?' '+d.colour:''}${d.light?' · '+d.light:''} · ${d.range_m==null?'no range':Number(d.range_m).toFixed(1)+' m'}`;
+    const ly=y>fs+4?y-4:y+h+fs,tw=lab.length*fs*0.63+fs+8,lx=Math.max(0,Math.min(x,W-tw)),sw=OBJC[d.light&&d.light!=='off'?d.light:d.colour]||'none';
+    return `<g data-cls="${esc(d.cls)}"><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="none" stroke="${col}" stroke-width="${lw}"${d.range_m==null?` stroke-dasharray="${lw*3} ${lw*2}"`:''}/>`+
+      `<rect x="${lx.toFixed(1)}" y="${(ly-fs).toFixed(1)}" width="${tw.toFixed(1)}" height="${(fs+4).toFixed(1)}" fill="#000" fill-opacity=".62"/>`+
+      `<rect x="${(lx+3).toFixed(1)}" y="${(ly-fs+3).toFixed(1)}" width="${(fs-2).toFixed(1)}" height="${(fs-2).toFixed(1)}" fill="${sw}" stroke="${col}" stroke-width="1"/>`+
+      `<text x="${(lx+fs+4).toFixed(1)}" y="${(ly-1).toFixed(1)}" font-family="ui-monospace,Menlo,monospace" font-size="${fs.toFixed(1)}" fill="#fff">${esc(lab)}</text></g>`}).join('');
+  ov.dataset.n=String(ds.length);
+  const pic=CAM_LT?`picture ${((Date.now()-CAM_LT)/1000).toFixed(1)} s · ${CAM_N} snaps`:'no picture yet';
+  $('cam-dt').textContent=D.state==='live'?`${D.n} box${D.n===1?'':'es'} · frame ${D.frame_id??'?'} · dets ${Number(D.age_s).toFixed(1)} s · ${D.source||'?'} · ${pic}${on?'':' · boxes hidden'}`:`${D.why||'boxes not published'} · ${pic}`}
+tick();setInterval(tick,500);
+</script>
+<style>
+/* v0.1.74 (WP30 = docs/OVERNIGHT_2026-11-09_GUI.md N6): two header rows, the dials under the wireframe, the FCU words card, CONTROL & ACTUATION,
+   the MAVLINK console; the page's ids, the whitelist, the 2 Hz FCU block, the commander lock + PIN and the plate menus' words unchanged */
+#n6r1,#n6r2{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 12px}#n6r1{border-bottom:1px solid var(--line)}
+#n6r2{font:11.5px ui-monospace,Menlo,monospace;color:var(--muted);padding-top:2px;padding-bottom:4px}#n6r2>*{white-space:nowrap}
+#n6r1 .pb{min-width:0}#n6r1 .n6num{font:800 20px ui-monospace,Menlo,monospace;white-space:nowrap}#n6r1 .n6num small{font-size:10px;color:var(--muted);margin-right:3px}
+#n6r1 .n6chip{font:11.5px ui-monospace,Menlo,monospace;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel2);white-space:nowrap}
+#n6r1 .n6chip.bad{border-color:var(--alarm);color:var(--alarmText);background:var(--alarmBg)}#n6r1 .grey{color:var(--muted)}
+#n6keep{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:nowrap;order:5}#n6r1 .n6num,#n6r1 .n6chip{order:4}#n6r1 .pb{order:1}
+#radar{max-height:340px}
+#n6r1 .pb{width:auto!important;min-width:110px;max-width:190px;flex:0 1 auto;padding-left:8px;padding-right:8px}
+/* v0.1.78 (WP34, by hand): the header really two rows - row 1 never wraps (the plate narrower, the commander compact with the list on hover),
+   the "click an element" box only once an element is clicked, the wireframe shorter so the dials are on the first screen, the duplicate
+   log / cv buttons hidden (the LOG and CV FOLD boxes carry the words). Nothing removed. */
+#n6r1{flex-wrap:nowrap;gap:6px}#n6r1>*{min-width:0}#n6r1 .pb{min-width:96px;max-width:150px}#n6r1 .pb .x{font-size:18px}
+#n6r1 .n6num,#n6r1 .n6chip,#n6r1 #n6keep{flex:0 0 auto}#n6r1 #ctlbar{flex:0 1 auto;min-width:0;max-width:360px;overflow:hidden;white-space:nowrap;display:flex;flex-wrap:nowrap;gap:6px;align-items:center;order:9;padding:0;background:none;border:0}#n6r1 #ctlbar>*{flex:0 0 auto}#n6r1 #ctl-who{overflow:hidden;text-overflow:ellipsis;max-width:150px;flex:0 1 auto}
+#wf{max-height:360px;width:100%}#wfd:not(.has){display:none}
+#n6tools #b-log-on,#n6tools #b-log-off,#n6tools #b-cv-on,#n6tools #b-cv-off{display:none}#n6r1 .pb .x{font-size:20px}#n6r1 .pb .s{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#n6tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}#n6tools .pb{min-width:0}
+#n6dials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}#n6fcl{font:11px ui-monospace,Menlo,monospace;color:var(--muted);margin-top:4px;line-height:1.5}
+#n6other{display:inline-block;position:relative}#n6other>summary{cursor:pointer;list-style:none}#n6other[open]>div{position:absolute;z-index:40;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px;min-width:330px;box-shadow:0 6px 18px #0007}
+#n6other .om{display:flex;gap:6px;align-items:center;margin:3px 0;font-size:12px}#n6other .om .k{font-size:11px}
+.n6div{display:inline-block;width:1px;height:22px;background:var(--line);margin:0 6px;vertical-align:middle}
+#n6gear{position:fixed;right:14px;top:96px;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px #0008;min-width:300px}
+#d-mavc{max-height:320px;overflow:auto;font:11.5px ui-monospace,Menlo,monospace}#d-mavc div{border-bottom:1px solid var(--line2,var(--line));padding:1px 0}
+</style>
+<script>
+// ==== v0.1.74 (WP30): the boat window redesign - the cards move (ids kept), nothing removed ====
+let N6=false,MAVLINES=[],MAVPAUSE=false;const MAVRE=/^(ack cmd \d+ result \d+|HB\b)|\bHEARTBEAT\b|\(mm\)$/;
+const isMav=x=>x&&(x.kind==='mav'||MAVRE.test(String(x.text||'')));
+const OTHER={ACRO:'ACRO: the transmitter steers with rate stabilisation - nothing autonomous',STEERING:'STEERING: the transmitter steers with heading hold',
+  LOITER:'LOITER: the FCU holds a circle round where it is (the FCU\'s own position hold)',AUTO:'AUTO: the FCU flies its own mission list - the mission manager does not expect this mode',
+  RTL:'RTL: the FCU drives back to its home / rally point by itself',SMART_RTL:'SMART_RTL: the FCU retraces its path home by itself'};
+function n6Init(){if(N6||!$('plate'))return;N6=true;
+  // the header: four rows -> two (row 1 = the plate, row 2 = the context line); the OCS state line goes; adaptive (wrapping)
+  const hdr=$('hdr'),r1=document.createElement('div'),r2=document.createElement('div');r1.id='n6r1';r2.id='n6r2';
+  hdr.parentNode.insertBefore(r1,hdr);hdr.parentNode.insertBefore(r2,hdr.nextSibling);
+  for(const id of ['pl-vehicle','pl-mode','pl-arm','pl-holder'])if($(id))r1.appendChild($(id));
+  r1.insertAdjacentHTML('beforeend','<span class="n6chip" id="n6links" title="the links: FCU (usv_ui\'s block) · OCS (status / the bridge) · AGX (perception) - each age on hover, grey past its threshold">links …</span>'+
+    '<span class="n6chip" id="n6al" title="alarms: the health block\'s faults now">alarms …</span><span class="n6num" id="n6sog" title="SOG: the FCU\'s ground speed (usv_ui\'s block, 2 Hz)"><small>SOG</small>-</span>'+
+    '<span class="n6num" id="n6hdg" title="HDG: the FCU\'s heading (usv_ui\'s block, 2 Hz)"><small>HDG</small>-</span><span id="n6keep"></span>');
+  const keep=$('n6keep');if($('b-sr'))keep.appendChild($('b-sr'));
+  keep.insertAdjacentHTML('beforeend','<button class="btn ghost" type="button" id="n6g" title="⚙: theme · GUI new / classic (this browser)">⚙</button>');
+  const cb=$('ctlbar');if(cb){r1.appendChild(cb);cb.style.margin='0';cb.style.order='9';const nm=cb.querySelector('.ctln');if(nm)nm.style.display='none'}   // the commander: row 1, last (it may wrap; the numerals and the stop word never do)
+  const ob=$('ob-w')&&$('ob-w').closest('div');if(ob)ob.style.display='none';                                                                          // the OCS state line goes
+  for(const sp of document.querySelectorAll('#tabs .k'))if(/^theme$/.test(sp.textContent.trim()))sp.style.display='none';
+  if($('sim'))r2.appendChild($('sim'));r2.insertAdjacentHTML('beforeend','<button class="btn act sm" type="button" id="n6csafe" hidden title="confirm_safe through the OCS: KILLED / FAULT -> MANUAL - click, then click again within 4 s (the transmitter keeps the boat either way)">✓ CONFIRM SAFE</button>');
+  r2.insertAdjacentHTML('beforeend','<span id="n6link" title="the FCU link usv_ui holds">FCU ?</span><span id="n6cam" title="the camera source">camera ?</span><span id="n6clk"></span><span id="n6brk" title="the boat broker this window reads"></span>');
+  const oc=document.querySelector('#tabs a[href*="8096"]');if(oc){oc.textContent='OCS page ↗';r2.appendChild(oc)}
+  hdr.style.display='none';if($('clock'))$('n6clk').appendChild($('clock'));
+  // ⚙: theme + GUI new / classic (per browser; the classic window is /v1/, its way back: /?ui=new)
+  const g=document.createElement('div');g.id='n6gear';g.hidden=true;g.innerHTML='<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><b>⚙</b><span class="k">this browser</span><button class="btn sm ghost" type="button" id="n6gx" style="margin-left:auto" title="close">✕</button></div>'+
+    '<div class="k">theme</div><div id="n6th"></div><div class="k" style="margin-top:8px">GUI</div><label title="new = this window · classic = the v0.1.68 window at /v1/ (remembered here; /?ui=new comes back)"><input type="radio" name="n6ui" value="new" checked> new</label> <label><input type="radio" name="n6ui" value="classic"> classic (/v1/)</label>';
+  document.body.appendChild(g);if($('theme'))$('n6th').appendChild($('theme'));$('n6g').onclick=()=>{g.hidden=!g.hidden};$('n6gx').onclick=()=>{g.hidden=true};
+  for(const r of g.querySelectorAll('input[name=n6ui]'))r.onchange=()=>{try{localStorage.setItem('boat.ui',r.value)}catch(e){}if(r.value==='classic')location.href='/v1/'};
+  // OVERVIEW: the tool row above the wireframe (log · CV fold · snapshot), the compass + speed dials under it with the FCU / RC line, then the words card
+  const wf=$('wf'),card=wf.closest('.card');const tools=document.createElement('div');tools.id='n6tools';card.insertBefore(tools,wf);
+  for(const id of ['pl-log','pl-cv'])if($(id))tools.appendChild($(id));
+  for(const id of ['b-log-on','b-log-off','b-cv-on','b-cv-off'])if($(id))tools.appendChild($(id));
+  tools.insertAdjacentHTML('beforeend','<a class="btn sm ghost" id="n6snap" target="_blank" title="the camera\'s latest frame (snapshot.jpg)">snapshot ↗</a>');
+  const lt=$('b-log-on');if(lt)lt.title='log on: usv_ui records the FCU side LOCALLY ON THE NX - logs/usv/run_<stamp>/<label>_<utc>.tlog (the raw MAVLink) + a 5 Hz .csv + an .events file (every command / ack / note); a few MB per hour; OFF by default. The hub\'s SQLite (LOG=1) is the OCS\'s and separate';
+  const dl=document.createElement('div');dl.id='n6dials';const after=$('wfd')||wf;after.parentNode.insertBefore(dl,after.nextSibling);
+  for(const id of ['compass','speed']){const c=$(id)&&$(id).closest('.card');if(c)dl.appendChild(c)}
+  dl.insertAdjacentHTML('afterend','<div id="n6fcl" title="the FCU / RC line: heartbeat age · EKF · GPS fix · RC ok · SF (RC5) · RC6 · the four PWM (usv_ui\'s 2 Hz block)">…</div>');
+  // right: CAMERA first, the RADAR, then EVENTS · BOAT and CONSOLE · USV_UI side by side
+  const right=$('p-ev').closest('.card').parentNode,camc=$('camc'),rad=$('radar')&&$('radar').closest('.card');
+  if(camc){camc.style.gridColumn='span 1';right.insertBefore(camc,right.firstChild)}if(rad){rad.style.gridColumn='span 1';right.insertBefore(rad,camc?camc.nextSibling:right.firstChild)}   // CAMERA first, the RADAR beside it: EVENTS stay on the first screen
+  const ds=document.querySelector('#t-OVERVIEW .dials');if(ds&&!ds.querySelector('.card'))ds.style.display='none';
+  // the FCU words card: MANUAL · HOLD · GUIDED · MODE 20 | ARM · DISARM, the other six behind other ▾ (a second click each)
+  // CONTROL + ACTUATION -> one tab; DIAGNOSTICS gains the MAVLINK console
+  const tc=document.querySelector('#tabs [data-tab="CONTROL"]'),ta=document.querySelector('#tabs [data-tab="ACTUATION"]');if(tc)tc.textContent='CONTROL & ACTUATION';if(ta)ta.style.display='none';
+  const sa=$('t-ACTUATION'),sc=$('t-CONTROL');if(sa&&sc){sc.insertAdjacentHTML('beforeend','<div class="card" style="grid-column:span 12;padding:6px 10px"><div class="h"><span>ACTUATION</span><span>the four thrusters one by one · the channel map (the allocation check is above, once)</span></div></div>');for(const c of [...sa.children])sc.appendChild(c)}
+  const _st=window.showTab;window.showTab=function(n){return _st(n==='ACTUATION'?'CONTROL':n)};
+  const dg=$('t-DIAG');if(dg)dg.insertAdjacentHTML('beforeend','<div class="card" style="grid-column:span 12" id="d-mavcard"><div class="h"><span>MAVLINK console</span><span>heartbeats · command acks · message rates · the tail (kept out of EVENTS / CONSOLE)</span></div>'+
+    '<div class="btns" style="margin-bottom:6px"><button class="btn sm" type="button" id="d-mavp" title="pause: freeze the tail (the lines keep coming)">pause</button><input class="arg" id="d-mavf" placeholder="filter: msg id / word (ack, 176, HEARTBEAT …)" title="show only the lines containing this" style="flex:1 1 200px"></div>'+
+    '<div id="d-mavr" class="k mono" style="font-size:11px;margin-bottom:4px"></div><div id="d-mavc"></div></div>');
+  $('d-mavp').onclick=()=>{MAVPAUSE=!MAVPAUSE;$('d-mavp').textContent=MAVPAUSE?'live':'pause'};
+  try{if(new URLSearchParams(location.search).get('ui')==='new')localStorage.setItem('boat.ui','new')}catch(e){}
+  const qt=new URLSearchParams(location.search).get('tab');if(qt&&$('t-'+qt))window.showTab(qt)}   // ?tab=DIAG - a link / the captures
+function n6Modes(c){const box=$('fcu-modes');if(!box||box.dataset.n6||!box.children.length)return;box.dataset.n6='1';
+  const by=l=>box.querySelector(`[data-label="${l}"]`);const main=['MANUAL','HOLD','GUIDED','MODE 20'].map(by).filter(Boolean);
+  const oth=document.createElement('details');oth.id='n6other';oth.innerHTML='<summary class="btn sm ghost" title="the other six ArduRover modes - each one a second click">other ▾</summary><div></div>';
+  for(const b of [...box.children])if(!main.includes(b)){const l=b.dataset.label,row=document.createElement('div');row.className='om';row.appendChild(b);row.insertAdjacentHTML('beforeend',`<span class="k">${esc(OTHER[l]||l)}</span>`);oth.querySelector('div').appendChild(row);
+    const send0=b.onclick;let armed=0;b.onclick=()=>{if(Date.now()-armed<4000){armed=0;b.textContent=l;send0&&send0()}else{armed=Date.now();b.textContent=l+' ?';setTimeout(()=>{b.textContent=l},4000)}}}
+  for(const b of main)box.appendChild(b);const dv=document.createElement('span');dv.className='n6div';box.appendChild(dv);
+  for(const id of ['fcu-arm','fcu-disarm'])if($(id))box.appendChild($(id));box.appendChild(oth)}
+// v0.1.78.9 (Dmitrii 2026-11-09): CONFIRM SAFE on the boat window too - shown while KILLED / FAULT, disabled while the kill is held;
+// two clicks within 4 s (this window's rule), the existing OCS line confirm_safe (/ocs, the OCS's authority decides)
+let N6CS=0;
+function n6Csafe(n){const b=$('n6csafe');if(!b)return;const v=n.vstate,latched=v==='KILLED'||v==='FAULT',held=!!(n.sf||n.estop);
+  b.hidden=!latched;b.disabled=held;b.dataset.tip=held?'release the kill / E-stop on the transmitter first':'';if(held)b.title='release the kill / E-stop on the transmitter first - then confirm_safe';
+  if(!latched){N6CS=0;b.textContent='✓ CONFIRM SAFE'}
+  b.onclick=async()=>{if(b.disabled)return;if(Date.now()-N6CS>4000){N6CS=Date.now();b.textContent='send confirm_safe?';setTimeout(()=>{if(Date.now()-N6CS>=3900){N6CS=0;b.textContent='✓ CONFIRM SAFE'}},4000);return}
+    N6CS=0;b.textContent='✓ CONFIRM SAFE';$('reply').textContent='> confirm_safe (through the OCS) …';
+    try{const r=await (await fetch('/ocs',{method:'POST',headers:{'Content-Type':'application/json','X-Boat-Web':'1'},body:JSON.stringify({line:'confirm_safe'})})).json();
+      $('reply').innerHTML=`&gt; confirm_safe : <span class="${r.ok?'ok':'a'}">${esc(r.text)}</span>`}catch(e){$('reply').innerHTML='<span class="a">boat_web not reachable</span>'}}}
+function drawN6(S){n6Init();if(!N6)return;const n=S.n6||{};n6Modes(S.fcu_ctl||{});try{n6Csafe(n)}catch(e){console.error('N6CS',e)}
+  const age=(a,th)=>a==null?'<span class="grey">-</span>':`<span class="${a>th?'grey':''}">${(+a).toFixed(1)}</span>`;
+  $('n6links').innerHTML=`links: FCU ${age(n.hb,2)} · OCS ${age(n.status_age,3)} · AGX ${age(n.perc_age,2)} s`;
+  $('n6links').title=`FCU heartbeat ${n.hb==null?'never':n.hb+' s'} (> 2 s grey) · OCS = status/usv through the bridge ${n.status_age==null?'never':n.status_age+' s'} (> 3 s) · AGX perception ${n.perc_age==null?'never':n.perc_age+' s'} (> 2 s)`;
+  const al=n.faults||[];$('n6al').textContent=al.length?'alarms: '+al.join(' · '):'alarms: none';$('n6al').classList.toggle('bad',al.length>0);
+  $('n6sog').innerHTML='<small>SOG</small>'+(n.sog!=null?(+n.sog).toFixed(2):'-');$('n6hdg').innerHTML='<small>HDG</small>'+(n.hdg!=null?String(Math.round(n.hdg)).padStart(3,'0')+'°':'-');
+  $('n6link').textContent='FCU '+(n.fcu_link||'?');$('n6cam').textContent='camera '+(((S.camv||{}).source)||((S.camv||{}).ok?'on':'none'));$('n6brk').textContent=S.broker?'broker '+S.broker:'';
+  $('n6fcl').textContent=`HB ${n.hb!=null?(+n.hb).toFixed(1)+' s':'-'} · EKF ${n.ekf_pos_ok==null?'?':n.ekf_pos_ok?'pos ok':'NO POS'} · GPS fix ${n.fix!=null?n.fix:'?'} · RC ${n.rc_ok==null?'?':n.rc_ok?'ok':'LOST'} · SF ${n.sf?'KILL':'-'} · RC6 ${n.rc6==null?'?':n.rc6?'HIGH':'low'} · PWM ${(n.pwm||[]).length?n.pwm.join(' '):'-'}`;
+  const lg=$('pl-log');if(lg)lg.title=n.log?`LOG: recording ${n.log} - locally on the NX (logs/usv/run_<stamp>/: .tlog = the raw MAVLink, a 5 Hz .csv, .events); the hub's SQLite (LOG=1) is the OCS's and separate`:'LOG: off - log on records the FCU side locally on the NX (.tlog + 5 Hz .csv + .events, a few MB per hour); the hub\'s SQLite (LOG=1) is separate';
+  if((S.camv||{}).base&&$('n6snap'))$('n6snap').href=S.camv.base.replace(/\/?$/,'/')+'snapshot.jpg';
+  // the two feeds as v0.1.68 minus the MAVLink acks / heartbeats; the MAVLINK console shows them
+  const C=S.console||{},mav=(C.rows||[]).filter(isMav).concat((S.events||[]).filter(isMav));
+  for(const el of document.querySelectorAll('#p-con .evr.con,#p-ev .evr')){const t=((el.querySelector('.m')||{}).textContent||'').trim();el.style.display=MAVRE.test(t)?'none':''}
+  if(!MAVPAUSE){const flt=($('d-mavf').value||'').toLowerCase();MAVLINES=mav.map(x=>`${x.t?hhmmss(x.t):x.age_s!=null?x.age_s.toFixed(1)+' s':''} ${x.text}`);
+    $('d-mavc').innerHTML=MAVLINES.filter(l=>!flt||l.toLowerCase().includes(flt)).map(l=>`<div>${esc(l)}</div>`).join('')||'<div class="k">no acks / heartbeats in the console window now</div>'}
+  const r=n.rates||{};$('d-mavr').textContent=Object.keys(r).length?'rates: '+Object.entries(r).map(([k,v])=>`${k} ${v}`).join(' · '):'rates: the MAVLink card above (usv_ui)'}
+(function(){try{const u=new URLSearchParams(location.search).get('ui');if(u!=='new'&&localStorage.getItem('boat.ui')==='classic')location.replace('/v1/')}catch(e){}})();
+</script></body></html>

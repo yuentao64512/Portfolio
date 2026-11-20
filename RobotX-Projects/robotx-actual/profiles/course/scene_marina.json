@@ -1,0 +1,9 @@
+{
+ "name": "Marina Bay - shoreline / pontoon (ILLUSTRATIVE placeholder)",
+ "illustrative": true,
+ "note": "v0.1.44 (OCS_V2_SPEC §12, §13): a placeholder polyline so the scene layer exists; the one-off OpenStreetMap export of the real shoreline and pontoons replaces these points (a day job). Points are [lat, lon], drawn dim and dashed, labelled 'illustrative'.",
+ "lines": [
+  [[1.28055, 103.85445], [1.28070, 103.85470], [1.28080, 103.85505], [1.28078, 103.85545], [1.28065, 103.85575]],
+  [[1.28150, 103.85600], [1.28165, 103.85590], [1.28172, 103.85570]]
+ ]
+}

@@ -1,0 +1,2855 @@
+{
+"version": "0.1.83.1",
+"r_order": [
+"R0",
+"R1",
+"R2",
+"R3",
+"R4",
+"R5",
+"R6"
+],
+"v_order": [
+"BOOT",
+"KILLED",
+"MANUAL",
+"AUTO_HOLD",
+"AUTO_TASK",
+"AUTO_SAFE_HOLD",
+"FAULT"
+],
+"r_meaning": {
+"R0": "DISCONNECTED: no RoboCommand / judge link",
+"R1": "CONNECTED: judge link up, no valid course yet",
+"R2": "COURSE_VALID: ready to declare (PREPARE goes to the vehicles, R3 when they ack)",
+"R3": "DECLARED: the judge has the declaration, heartbeats run; enable_auto next",
+"R4": "READY: every declared vehicle is in AUTO, waiting for RunStart",
+"R5": "RUNNING: RunStart verified, tasks may start",
+"R6": "ENDED: STOP_RUN sent; declare again or reset"
+},
+"v_meaning": {
+"BOOT": "V0 mission manager up, no FCU heartbeat yet",
+"KILLED": "V1 kill / E-stop asserted: motors dead; release it, then confirm_safe -> MANUAL",
+"MANUAL": "V2 the mission manager commands nothing: usv_ui, the transmitter or nobody drives; enable_auto needs handover + arm + EKF + PREPARE",
+"AUTO_HOLD": "V3 the mission manager holds the FCU in HOLD, no task; start_task / goto from the OCS",
+"AUTO_TASK": "V4 a task behaviour drives (see the task stage); hold pauses, abort drops it, stop in usv_ui takes the FCU back",
+"AUTO_SAFE_HOLD": "V5 paused in HOLD by hold / a soft fault / a keep-out; resume continues the task",
+"FAULT": "V6 a hard fault (FCU_LOST, EKF_BAD, unexpected disarm): clear it, then confirm_safe -> MANUAL",
+"OFFLINE": "the mission manager's last will: it is down"
+},
+"usage": [
+{
+"word": "declare",
+"usage": "declare                 RunDeclaration + PREPARE; R2/R4/R6 -> R3",
+"does": "declare the run"
+},
+{
+"word": "enable_auto",
+"usage": "enable_auto  (auto)     MANUAL -> AUTO_HOLD; needs armed, EKF, PREPARE",
+"does": "vehicle to auto"
+},
+{
+"word": "disable_auto",
+"usage": "disable_auto            AUTO_HOLD -> MANUAL (abort a task first)",
+"does": "vehicle to manual"
+},
+{
+"word": "start_task",
+"usage": "start_task [m4t0|goto|m0t0|m0t1|...][sim]   needs AUTO_HOLD + RunStart; no code = the preselected mission; old names (T4) work",
+"does": "start a mission"
+},
+{
+"word": "goto",
+"usage": "goto --x N --y E [--speed V]   bench task: drive to local metres",
+"does": "bench: go to a point"
+},
+{
+"word": "hold",
+"usage": "hold                    AUTO_HOLD/AUTO_TASK -> AUTO_SAFE_HOLD (task kept)",
+"does": "pause"
+},
+{
+"word": "resume",
+"usage": "resume                  AUTO_SAFE_HOLD -> back to the task or AUTO_HOLD",
+"does": "unpause"
+},
+{
+"word": "abort",
+"usage": "abort  (stop)           drop the task -> AUTO_HOLD",
+"does": "drop the task"
+},
+{
+"word": "confirm_safe",
+"usage": "confirm_safe (confirm)  leave KILLED / FAULT after the input cleared -> MANUAL",
+"does": "operator confirmation"
+},
+{
+"word": "end_run",
+"usage": "end_run  (end)          STOP_RUN; R -> R6",
+"does": "end the run"
+},
+{
+"word": "reset",
+"usage": "reset                   both ends to the start: RESET to the vehicle (abort, manual, run forgotten), OCS -> R2",
+"does": "reset both ends"
+},
+{
+"word": "select_target",
+"usage": "select_target red|green|blue   m0t4: the face to approach (the vehicle picks GREEN by itself)",
+"does": "m0t4: override the colour"
+},
+{
+"word": "save_point",
+"usage": "save_point NAME [--lat LAT --lon LON]   the boat's fix (or that position) as NAME in points.json: m0t2 --names",
+"does": "m0t2: save a point"
+},
+{
+"word": "del_point",
+"usage": "del_point NAME          remove a saved point",
+"does": "delete a point"
+},
+{
+"word": "clear_map",
+"usage": "clear_map               the boat's map forgets its detections (not while a task runs)",
+"does": "clear the boat map"
+},
+{
+"word": "home",
+"usage": "home [--speed V]        GO HOME: abort what runs, 0.3 m/s to the saved point HOME (else the origin), hold - any AUTO state",
+"does": "go home (override)"
+},
+{
+"word": "fcu_mode",
+"usage": "fcu_mode MODE            v0.1.50: the FCU's mode (MANUAL / HOLD / ...) through the mission manager; last wins",
+"does": "FCU mode"
+},
+{
+"word": "arm",
+"usage": "arm                     v0.1.50: ARM the FCU (its pre-arm checks decide)",
+"does": "FCU arm"
+},
+{
+"word": "disarm",
+"usage": "disarm                  v0.1.50: DISARM the FCU",
+"does": "FCU disarm"
+},
+{
+"word": "rc6_policy",
+"usage": "rc6_policy latched|hold  v0.1.50: RC6 latched = a later command wins; hold = no autonomy while RC6 is high",
+"does": "RC6 rule"
+},
+{
+"word": "fence",
+"usage": "fence apply course|geofence | fence on|off   v0.1.53: the USV's FCU geofence (upload + read back; DO_FENCE_ENABLE; off by default)",
+"does": "FCU geofence"
+},
+{
+"word": "tune",
+"usage": "tune [KEY VALUE | save]  v0.1.49: a mission-manager knob (MANUAL / AUTO_HOLD); save = usv_tuned.yaml on the boat",
+"does": "tune a knob"
+},
+{
+"word": "step",
+"usage": "step                    advance the running m0t0 (TEST_MANUAL) one stage; m0t1: skip its timer",
+"does": "test mission step"
+},
+{
+"word": "skip",
+"usage": "skip                    v0.1.68 free run only: end the current stage's behaviour now (the next stage)",
+"does": "free run: skip a stage"
+},
+{
+"word": "session",
+"usage": "session start NAME [--model --tape --path --aim10 --confirm aim --label] | stop | result   v0.1.69: dry buoys / dockface / windows / uavmap / cannon, wet collect - OCS-side, nothing moves",
+"does": "dry / wet sessions"
+},
+{
+"word": "mission",
+"usage": "mission [m4t0|goto|m0t0|m0t1|off][sim] [--auto]   preselect what start_task runs; --auto = start it on RunStart; sim = fake FCU only",
+"does": "preselect the mission"
+},
+{
+"word": "inject",
+"usage": "inject run_start|assistance|keep_out|all_clear|moving|confirm [--lat --lon --cseq N]",
+"does": "bench: judge messages"
+},
+{
+"word": "ready",
+"usage": "ready                   macro: declare + enable_auto + wait for RunStart",
+"does": "macro to R5"
+},
+{
+"word": "manual",
+"usage": "manual                  macro: abort if a task runs, then disable_auto",
+"does": "macro to MANUAL"
+},
+{
+"word": "next",
+"usage": "next                    what is allowed now and why not (into the log)",
+"does": "allowed now"
+},
+{
+"word": "state",
+"usage": "state                   the ocs/state line (into the log)",
+"does": "state line"
+},
+{
+"word": "kill",
+"usage": "kill on|off             plant: assert / release the kill line (V1)",
+"does": "plant: kill"
+},
+{
+"word": "rc6",
+"usage": "rc6 on|off              plant: RC6 MANUAL override (V2)",
+"does": "plant: RC6"
+},
+{
+"word": "estop",
+"usage": "estop on|off            plant: RC5 motor E-stop (V1)",
+"does": "plant: E-stop"
+},
+{
+"word": "fcu",
+"usage": "fcu pause [S]           plant: stop the MAVLink stream S s (default 4) -> FCU_LOST (V6)",
+"does": "plant: stream loss"
+},
+{
+"word": "ekf",
+"usage": "ekf on|off              plant: EKF position ok flag (EKF_BAD -> V6)",
+"does": "plant: EKF"
+},
+{
+"word": "armed",
+"usage": "armed on|off            plant: the transmitter arms / disarms (the fake's arm line; `arm` / `disarm` = MAVLink)",
+"does": "plant: arm state"
+},
+{
+"word": "teleport",
+"usage": "teleport LAT LON [HDG]  plant: move the boat",
+"does": "plant: teleport"
+},
+{
+"word": "map",
+"usage": "map                     open the browser map (tools/map.html) on the hub websocket; BOAT tab = text map",
+"does": "browser map"
+},
+{
+"word": "clear",
+"usage": "clear                   clear the log",
+"does": "clear log"
+},
+{
+"word": "help",
+"usage": "help                    HELP screen (the playbook)",
+"does": "help screen"
+},
+{
+"word": "quit",
+"usage": "quit  (q)               leave the console; the bench keeps running (make stop stops it)",
+"does": "quit"
+},
+{
+"word": "stop_reset",
+"usage": "stop_reset              macro STOP & RESET: abort, disable_auto, fcu_mode HOLD, disarm, report off, reset",
+"does": "macro: hold, disarm, reset"
+}
+],
+"groups": [
+[
+"RUN",
+[
+"declare",
+"ready",
+"end_run",
+"reset",
+"mission",
+"state",
+"next"
+]
+],
+[
+"VEHICLE",
+[
+"enable_auto",
+"disable_auto",
+"manual",
+"hold",
+"resume",
+"confirm_safe",
+"home"
+]
+],
+[
+"TASK",
+[
+"start_task",
+"goto",
+"abort",
+"step",
+"select_target"
+]
+],
+[
+"POINTS",
+[
+"save_point",
+"del_point",
+"clear_map"
+]
+],
+[
+"JUDGE",
+[
+"inject run_start|assistance|",
+"keep_out|all_clear|moving|confirm"
+]
+],
+[
+"PLANT",
+[
+"kill",
+"rc6",
+"estop",
+"ekf",
+"armed",
+"fcu pause",
+"teleport"
+]
+],
+[
+"TUI",
+[
+"map",
+"clear",
+"help",
+"quit"
+]
+]
+],
+"word_to_action": {
+"declare": "DECLARE",
+"enable_auto": "ENABLE_AUTO",
+"disable_auto": "DISABLE_AUTO",
+"start_task": "START_TASK",
+"goto": "GOTO",
+"hold": "HOLD",
+"resume": "RESUME",
+"abort": "ABORT_TASK",
+"confirm_safe": "CONFIRM_SAFE",
+"end_run": "END_RUN",
+"inject": "INJECT",
+"reset": "RESET_RUN",
+"step": "STEP",
+"skip": "SKIP",
+"select_target": "SELECT_TARGET",
+"save_point": "SAVE_POINT",
+"del_point": "DELETE_POINT",
+"clear_map": "CLEAR_MAP",
+"home": "HOME",
+"fcu_mode": "FCU_MODE",
+"arm": "FCU_ARM",
+"disarm": "FCU_ARM",
+"rc6_policy": "RC6",
+"station_keep": "STATION_KEEP",
+"fence": "FENCE_APPLY"
+},
+"examples": {
+"declare": "declare",
+"enable_auto": "enable_auto",
+"disable_auto": "disable_auto",
+"start_task": "start_task m0t1",
+"goto": "goto --x 10 --y 0 --speed 0.6",
+"hold": "hold",
+"resume": "resume",
+"abort": "abort",
+"confirm_safe": "confirm_safe",
+"fence": "fence apply course",
+"end_run": "end_run",
+"reset": "reset",
+"step": "step",
+"skip": "skip",
+"session": "session start buoys",
+"select_target": "select_target red",
+"save_point": "save_point A",
+"del_point": "del_point A",
+"clear_map": "clear_map",
+"home": "home",
+"mission": "mission m0t0 --auto",
+"inject": "inject assistance --lat 1.28112 --lon 103.85501 --cseq 1",
+"ready": "ready",
+"manual": "manual",
+"next": "next",
+"state": "state",
+"kill": "kill on",
+"rc6": "rc6 on",
+"estop": "estop off",
+"fcu": "fcu pause 4",
+"ekf": "ekf off",
+"armed": "armed on",
+"teleport": "teleport 1.28108 103.85502 90",
+"map": "map",
+"clear": "clear",
+"help": "help",
+"quit": "quit",
+"stop_reset": "stop_reset"
+},
+"entries": {
+"DECLARE": {
+"action": "DECLARE",
+"key": "d",
+"cli": "declare",
+"does": "publish the RunDeclaration to the judge; PREPARE (+course) to every vehicle; heartbeats start",
+"ocs_r": [
+"R2",
+"R4",
+"R6"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "R3 DECLARED; the judge answers with RunStart (fake judge: after --start-delay) -> R5",
+"next": "enable_auto",
+"bench_only": false,
+"args": ""
+},
+"ENABLE_AUTO": {
+"action": "ENABLE_AUTO",
+"key": "a",
+"cli": "enable_auto",
+"does": "vehicle MANUAL -> AUTO_HOLD (HOLD mode on the FCU)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"MANUAL"
+],
+"needs": "armed, EKF ok, PREPARE seen, no kill / RC override / fault",
+"then": "V3 AUTO_HOLD; STATE_AUTO in the heartbeat; R3 -> R4 when every declared vehicle is in AUTO",
+"next": "start_task m4t0 (needs RunStart, R5)",
+"bench_only": false,
+"args": ""
+},
+"DISABLE_AUTO": {
+"action": "DISABLE_AUTO",
+"key": "A",
+"cli": "disable_auto",
+"does": "vehicle AUTO_HOLD -> MANUAL",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_HOLD"
+],
+"needs": "no task running: abort first (ABORT_TASK) if in AUTO_TASK / SAFE_HOLD",
+"then": "V2 MANUAL; STATE_MANUAL",
+"next": "enable_auto to go back",
+"bench_only": false,
+"args": ""
+},
+"START_TASK": {
+"action": "START_TASK",
+"key": "t",
+"cli": "start_task m4t0",
+"does": "start a mission by its code (m4t0 = T4 built; goto on the bench; m0t0 / m0t1 = no-motion test missions)",
+"ocs_r": [
+"R5"
+],
+"vehicle_v": [
+"AUTO_HOLD"
+],
+"needs": "a verified RunStart (run_id known to the vehicle)",
+"then": "V4 AUTO_TASK; m4t0 waits in LISTEN for an incident; m0t* start in S1",
+"next": "inject assistance (bench) or wait for the judge; step for m0t0",
+"bench_only": false,
+"args": "mission code m4t0 | goto | m0t0 | m0t1 | m1t1 m1t2 m3t1 m0t2 m0t3 (not built: rejected); +sim = fake FCU only; old names T4 / TEST_AUTO work"
+},
+"SELECT_TARGET": {
+"action": "SELECT_TARGET",
+"key": "-",
+"cli": "select_target red",
+"does": "m0t4: override the vehicle's GREEN rule (the face colour to approach)",
+"ocs_r": [
+"R5"
+],
+"vehicle_v": [
+"AUTO_TASK",
+"AUTO_SAFE_HOLD"
+],
+"needs": "BOX_INSPECT before ALIGN (PREFLIGHT .. ASK_OCS, or held)",
+"then": "the task approaches that colour's face (exactly one must be stable)",
+"next": "resume if held; watch the approach",
+"bench_only": false,
+"args": "red | green | blue"
+},
+"SAVE_POINT": {
+"action": "SAVE_POINT",
+"key": "-",
+"cli": "save_point A",
+"does": "store a named point in the boat's points.json (usv_ui's file): the boat's own fix, or --lat/--lon (the map's drop point) - m0t2 / m0t3 use them by name (--names A,B)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "a mission manager on the boat; no lat/lon = a 3D fix on the boat",
+"then": "the point appears on the map and in MAIN's points list (overwrites a point of that name)",
+"next": "mission m0t2 --names A,B,...",
+"bench_only": false,
+"args": "NAME [--lat LAT --lon LON]"
+},
+"DELETE_POINT": {
+"action": "DELETE_POINT",
+"key": "-",
+"cli": "del_point A",
+"does": "remove a named point from the boat's points.json",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "gone from the map and the list",
+"next": "-",
+"bench_only": false,
+"args": "NAME"
+},
+"HOME": {
+"action": "HOME",
+"key": "-",
+"cli": "home",
+"does": "the go-home override: abort whatever runs and drive slowly (0.3 m/s, GUIDED) to the saved point HOME (else the control origin), then stop and hold - with or without a run",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_HOLD",
+"AUTO_TASK",
+"AUTO_SAFE_HOLD"
+],
+"needs": "an AUTO state (in MANUAL the boat is yours: the transmitter)",
+"then": "AUTO_TASK RETURN_HOME GO -> DONE -> AUTO_HOLD at HOME",
+"next": "manual / disable_auto, or a new mission",
+"bench_only": false,
+"args": "[--speed V]"
+},
+"FCU_MODE": {
+"action": "FCU_MODE",
+"key": "-",
+"cli": "fcu_mode HOLD",
+"does": "v0.1.50: the FCU's mode from a page (MANUAL / HOLD / ...), as Mission Planner would - the FCU decides; with RC6 latched it also clears the latch (last wins)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "the FCU's mode in the bar within a second",
+"next": "enable_auto (from HOLD)",
+"bench_only": false,
+"args": "MODE"
+},
+"FCU_ARM": {
+"action": "FCU_ARM",
+"key": "-",
+"cli": "arm | disarm",
+"does": "v0.1.50: ARM / DISARM the FCU from a page; its pre-arm checks decide (the transmitter's kill still wins)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "armed / disarmed in the bar",
+"next": "fcu_mode HOLD, enable_auto",
+"bench_only": false,
+"args": ""
+},
+"FENCE_APPLY": {
+"action": "FENCE_APPLY",
+"key": "-",
+"cli": "fence apply course",
+"does": "v0.1.53: the USV's FCU geofence - the received course (RxCourse) or the OCS profile's geofence as one inclusion polygon (MAVLink fence upload, MISSION_ACK), read back and compared within 1e-6 deg; nothing is enabled by it",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "not in AUTO_TASK; a received course (source course); a geofence inside the course",
+"then": "the ack: 'fence N points uploaded, read back identical' or the FCU's MAV_MISSION_* refusal; status fence.points_n / matches",
+"next": "fence on",
+"bench_only": false,
+"args": "course | geofence"
+},
+"FENCE_ENABLE": {
+"action": "FENCE_ENABLE",
+"key": "-",
+"cli": "fence on | fence off",
+"does": "v0.1.53: MAV_CMD_DO_FENCE_ENABLE (a command with COMMAND_ACK, not the FENCE_ENABLE parameter); off by default - what a breach does is the FCU's FENCE_ACTION (apply_params.py preset)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "on: a fence on the FCU (fence apply first), not in AUTO_TASK; off: always",
+"then": "status fence.enabled from the FCU (SYS_STATUS geofence bit, else the ack)",
+"next": "-",
+"bench_only": false,
+"args": "on | off"
+},
+"STATION_KEEP": {
+"action": "STATION_KEEP",
+"key": "-",
+"cli": "station_keep hold|loiter",
+"does": "v0.1.81 (WP37): the autonomous station keep - hold = FCU HOLD (motors neutral, drifting), loiter = FCU LOITER (a real position hold: AUTO_HOLD and every stage that holds); the safe hold stays HOLD; kept across runs; default hold until the LOITER drift check on the water (Test Guide W1)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "status station_keep",
+"next": "-",
+"bench_only": false,
+"args": "hold | loiter"
+},
+"RC6": {
+"action": "RC6",
+"key": "-",
+"cli": "rc6_policy latched|hold",
+"does": "v0.1.50: the RC6 override's rule - latched: a later page command wins over a high RC6 (the next flip takes the boat back); hold: while RC6 is high, no autonomy",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "the ack names the rule",
+"next": "-",
+"bench_only": false,
+"args": "latched | hold"
+},
+"REPORT": {
+"action": "REPORT",
+"key": "-",
+"cli": "report on|off",
+"does": "v0.1.53: START / STOP REPORTING - the OCS's heartbeats for every vehicle to RoboCommand at 2 Hz before a declaration (the handbook: at all times in the course area); off = none now, whatever R (v0.1.54)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "the judge page's JUDGE RECEIVES shows our heartbeats",
+"next": "declare",
+"bench_only": false,
+"args": "on | off"
+},
+"USV_READY": {
+"action": "USV_READY",
+"key": "-",
+"cli": "usv ready on|off",
+"does": "v0.1.82: the boat's PILOT READY - an OCS flag; with ocs.usv_heartbeat button DECLARE refuses the boat until \u25b6 HEARTBEAT USV (report on usv) and this; cleared by STOP / RESET",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "report on usv (its heartbeat to RoboCommand)",
+"then": "DECLARE may carry the boat",
+"next": "declare",
+"bench_only": false,
+"args": "on | off"
+},
+"DECLARE_UAV": {
+"action": "DECLARE_UAV",
+"key": "-",
+"cli": "declare uav on|off",
+"does": "v0.1.64 (WP14): the UAV (UAV1, drone SGIT-53577) in the next declaration - its FCU fence and FENCE_ALT_MAX, the pilot's call sign; off by default, m1t2 needs it on; kept across runs",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "the UAV adapter up (launcher UAV on) for the declare itself",
+"then": "the next declare carries both vehicles",
+"next": "uav ready on, declare",
+"bench_only": false,
+"args": "on | off"
+},
+"UAV": {
+"action": "UAV",
+"key": "-",
+"cli": "uav ready on|off",
+"does": "v0.1.64 (WP14): the UAV's words - ready on|off (the pilot said ready: the UAV's PREPARE can go DONE), task N|none (current_task by hand), resend_course (the cached course to the Orin again)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "the UAV adapter up",
+"then": "the UAV card shows it",
+"next": "declare",
+"bench_only": false,
+"args": "ready on|off | task N|none | resend_course"
+},
+"CLEAR_MAP": {
+"action": "CLEAR_MAP",
+"key": "-",
+"cli": "clear_map",
+"does": "the boat's perception map forgets every detection (buoys, dock); the camera fills it again",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "no task running (a task may steer by the map)",
+"then": "the map empties; fresh detections reappear within seconds",
+"next": "-",
+"bench_only": false,
+"args": ""
+},
+"TUNE": {
+"action": "TUNE",
+"key": "-",
+"cli": "tune sway_v 0.3",
+"does": "v0.1.49: a mission-manager knob into the live config (the next task start reads it); `tune save` = a profile copy on the boat (logs/launch/<stamp>/usv_tuned.yaml) - never an FCU parameter",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"MANUAL",
+"AUTO_HOLD"
+],
+"needs": "no task running (a task keeps the values it started with); a whitelisted key, its range",
+"then": "the ack says old -> new; the boat window's TUNING card shows it",
+"next": "start the task; tune save to keep it",
+"bench_only": false,
+"args": "KEY VALUE | save (ocs_cli tune lists the knobs)"
+},
+"HOLD": {
+"action": "HOLD",
+"key": "h",
+"cli": "hold",
+"does": "pause: AUTO_HOLD / AUTO_TASK -> AUTO_SAFE_HOLD, task kept at its sub-state",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_HOLD",
+"AUTO_TASK"
+],
+"needs": "",
+"then": "V5; HOLD on the FCU",
+"next": "resume or abort",
+"bench_only": false,
+"args": ""
+},
+"RESUME": {
+"action": "RESUME",
+"key": "r",
+"cli": "resume",
+"does": "leave SAFE_HOLD: back to the paused task (AUTO_TASK) or to AUTO_HOLD",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_SAFE_HOLD"
+],
+"needs": "the hold cause cleared (no soft fault, no sticky hold)",
+"then": "V4 or V3",
+"next": "-",
+"bench_only": false,
+"args": ""
+},
+"SKIP": {
+"action": "SKIP",
+"key": "-",
+"cli": "skip",
+"does": "v0.1.68 (free run only): end the current stage's behaviour now - the task's own next event fires (SWAY_SEARCH ends its pass early); a stage that ends on the map / the UAV / a timer / a report is refused",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_TASK"
+],
+"needs": "the mission manager in free run (--free-run, the lab profile); a motion stage",
+"then": "the next stage (with --step: parked before it)",
+"next": "resume (with --step), or watch the next stage",
+"bench_only": false,
+"args": ""
+},
+"SESSION": {
+"action": "SESSION",
+"key": "-",
+"cli": "session start buoys",
+"does": "v0.1.69: a dry / wet session - OCS-side (the page server runs it): the observers and feeds for one stage, its METRICS on the MISSION tab, a result file in logs/ocs/sessions/; nothing moves, the FCU is not touched",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "bench / lab / pool profile (bench_mode or test_mode); on the course network only `collect`; the page server up",
+"then": "ocs/state session.current with its metrics; `session stop` writes the result",
+"next": "session stop, session result",
+"bench_only": false,
+"args": "start buoys|dockface|windows|uavmap|cannon|collect [--model --tape --path --aim10 --confirm aim --label] | stop | result"
+},
+"ABORT_TASK": {
+"action": "ABORT_TASK",
+"key": "x",
+"cli": "abort",
+"does": "drop the task: AUTO_TASK / SAFE_HOLD -> AUTO_HOLD",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_TASK",
+"AUTO_SAFE_HOLD"
+],
+"needs": "",
+"then": "V3; TASK_NONE",
+"next": "start_task again, or disable_auto",
+"bench_only": false,
+"args": ""
+},
+"CONFIRM_SAFE": {
+"action": "CONFIRM_SAFE",
+"key": "c",
+"cli": "confirm_safe",
+"does": "operator confirmation to leave KILLED or FAULT -> MANUAL",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"KILLED",
+"FAULT"
+],
+"needs": "the input cleared first (kill released / FCU stream back / EKF ok)",
+"then": "V2 MANUAL (DONE ack when entered)",
+"next": "enable_auto",
+"bench_only": false,
+"args": ""
+},
+"END_RUN": {
+"action": "END_RUN",
+"key": "e",
+"cli": "end_run",
+"does": "STOP_RUN to every vehicle; run -> R6 ENDED; a running task is aborted",
+"ocs_r": [
+"R3",
+"R4",
+"R5"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "",
+"then": "R6; nothing from this run is valid any more",
+"next": "declare for a new run, or reset",
+"bench_only": false,
+"args": ""
+},
+"RESET_RUN": {
+"action": "RESET_RUN",
+"key": "R",
+"cli": "reset",
+"does": "both ends back to the start: RESET to every vehicle (task aborted, auto off, run forgotten), OCS -> R2",
+"ocs_r": [
+"R2",
+"R3",
+"R4",
+"R5",
+"R6"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "a vehicle in KILLED / FAULT stays there (confirm_safe)",
+"then": "R2 COURSE_VALID (R1 without a course); vehicle MANUAL",
+"next": "declare",
+"bench_only": false,
+"args": ""
+},
+"STEP": {
+"action": "STEP",
+"key": "s",
+"cli": "step",
+"does": "advance the running TEST_MANUAL task one stage (TEST_AUTO: skip the rest of its timer)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_TASK"
+],
+"needs": "start_task m0t0 or m0t1 first",
+"then": "S1 -> S2 -> S3 -> DONE (back to AUTO_HOLD)",
+"next": "step again, or abort",
+"bench_only": false,
+"args": ""
+},
+"GOTO": {
+"action": "GOTO",
+"key": "g",
+"cli": "goto --x 20 --y 5",
+"does": "bench-only task: drive the plant to a local point and stop",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"AUTO_HOLD"
+],
+"needs": "a verified RunStart; guards.allow_goto_task in the vehicle profile",
+"then": "V4 AUTO_TASK (GOTO) until arrival, then V3",
+"next": "-",
+"bench_only": true,
+"args": "--x --y (local NED metres from frames.origin) or --lat --lon; --speed"
+},
+"INJECT": {
+"action": "INJECT",
+"key": "i",
+"cli": "inject <what>",
+"does": "bench-only: publish what the judge would (run_start, assistance, keep_out, all_clear, moving, confirm)",
+"ocs_r": [
+"*"
+],
+"vehicle_v": [
+"*"
+],
+"needs": "run_start: R3/R4 (declared); assistance / keep_out / all_clear / moving: vehicle in AUTO (V3-V5), assistance in V3 needs a run; confirm: T4 in WAIT_CONFIRM",
+"then": "the same cmd/<v>/incident envelope the real chain sends, origin=bench",
+"next": "-",
+"bench_only": true,
+"args": "run_start | assistance --lat --lon --cseq | keep_out | all_clear | moving | confirm --cseq | course"
+}
+},
+"missions": [
+{
+"code": "m4t0",
+"task": "T4",
+"title": "Dynamic Incident Response",
+"tier": "Core",
+"status": "built",
+"what": [
+"station-keep and listen; on the judge's AssistanceRequest: break off, ack, drive to the request",
+"position, report readiness, hold until ReadinessConfirm. Core needs no perception (first task end-to-end)."
+],
+"starts": "start_task m4t0 (vehicle AUTO_HOLD, run R5); it then waits in LISTEN for the request",
+"ends": "DONE after ReadinessConfirm -> AUTO_HOLD; abort -> AUTO_HOLD; hold pauses (the detour map survives)",
+"judge_in": "AssistanceRequest, ReadinessConfirm (Adv: KeepOutZone, AllClear; Disr: MovingObjectAlert)",
+"judge_out": "IncidentAck (<= 1 s), ReadinessReport",
+"config": "tasks.t4.speed_mps, arrival_m (usv_pool.yaml)",
+"note": "Advanced: KeepOutZone -> ACK -> AVOID -> AllClear.  Disruptive: MovingObjectAlert -> STANDOFF >= 10 m (not built)",
+"stages": [
+{
+"name": "LISTEN",
+"meaning": "station-keeping, waiting for an AssistanceRequest",
+"behaviour": "StationKeep",
+"leaves_on": "AssistanceRequest -> ACK",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "ACK",
+"meaning": "IncidentAck going out",
+"behaviour": "-",
+"leaves_on": "ack sent -> TRANSIT",
+"judge": "Ack out",
+"detour": ""
+},
+{
+"name": "TRANSIT",
+"meaning": "driving to the request position",
+"behaviour": "Goto",
+"leaves_on": "arrived -> READY",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "READY",
+"meaning": "at the position, ReadinessReport going out",
+"behaviour": "StationKeep",
+"leaves_on": "sent -> WAIT_CONFIRM",
+"judge": "Report out",
+"detour": ""
+},
+{
+"name": "WAIT_CONFIRM",
+"meaning": "holding, waiting for the judge's ReadinessConfirm",
+"behaviour": "StationKeep",
+"leaves_on": "ReadinessConfirm -> DONE",
+"judge": "Confirm in",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "incident served",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": true
+},
+{
+"code": "m1t1",
+"task": "T1",
+"title": "Safe Passage (gates)",
+"tier": "Core",
+"status": "built",
+"what": [
+"enter through the FLASHING BLUE buoy (one clockwise circle), transit the red/green gates keeping GREEN to port",
+"and RED to starboard, exit at the SOLID BLUE buoy (counter-clockwise circle). The boat's own camera finds the buoys."
+],
+"starts": "start_task m1t1 [--planner simple|s6] (vehicle AUTO_HOLD, run R5); m1t1sim on the simulated pool first",
+"ends": "DONE after CIRCLE_EXIT_CCW; abort -> AUTO_HOLD; a scan that finds nothing -> AUTO_SAFE_HOLD (resume scans again)",
+"judge_in": "-",
+"judge_out": "SafePassageReport (entry, exit, each buoy with colour and state), updated as the map changes",
+"config": "t1.planner simple|s6, circle_r_m 3, circle_v 0.5, transit_v 0.6, gate_d_m 2, min_obs 5 (usv profile)",
+"note": "v0.1.21 (ROADMAP WP2): two planners - simple (gate midpoints) and s6 (pathing_sim's Dubins leg); a gate only crossable with RED to port is refused",
+"stages": [
+{
+"name": "WAIT_START",
+"meaning": "holding at the start line",
+"behaviour": "StationKeep",
+"leaves_on": "RunStart",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "SEARCH_ENTRY",
+"meaning": "looking for the flashing blue entry buoy",
+"behaviour": "ScanYaw",
+"leaves_on": "entry buoy seen",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "APPROACH_LEAD",
+"meaning": "no entry in view but a far sighting (a ray): 12 m toward it, then scan again (3 tries)",
+"behaviour": "FollowPath",
+"leaves_on": "arrived -> SEARCH_ENTRY",
+"judge": "-",
+"detour": "SEARCH_ENTRY"
+},
+{
+"name": "CIRCLE_ENTRY_CW",
+"meaning": "one clockwise circle round the entry buoy",
+"behaviour": "Orbit",
+"leaves_on": "circle closed",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "TRANSIT",
+"meaning": "gate by gate: pre -> mid -> post, GREEN to port / RED to starboard (loops)",
+"behaviour": "FollowPath",
+"leaves_on": "no gate left -> EXIT",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "LOOK",
+"meaning": "a pending light nearer than the next gate: face it, 8 s at most",
+"behaviour": "ScanYaw (face)",
+"leaves_on": "decided -> TRANSIT",
+"judge": "-",
+"detour": "TRANSIT"
+},
+{
+"name": "SCAN",
+"meaning": "no usable gate ahead: turning on the spot to find one (nothing -> safe hold)",
+"behaviour": "ScanYaw",
+"leaves_on": "gate -> TRANSIT | exit -> EXIT",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "EXIT",
+"meaning": "to the solid blue exit buoy's circle",
+"behaviour": "FollowPath",
+"leaves_on": "at the circle",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "CIRCLE_EXIT_CCW",
+"meaning": "one counter-clockwise circle round the exit buoy",
+"behaviour": "Orbit",
+"leaves_on": "circle closed -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "course passed",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--planner",
+"label": "planner",
+"choices": [
+"",
+"simple",
+"s6"
+],
+"help": "the gate planner (empty = t1.planner of the profile)"
+},
+{
+"flag": "--step",
+"label": "stage by stage",
+"check": true,
+"help": "park in AUTO_SAFE_HOLD at every stage boundary; resume enters the next stage"
+},
+{
+"flag": "--from",
+"label": "start at",
+"choices": [
+"",
+"SEARCH_ENTRY",
+"TRANSIT",
+"EXIT"
+],
+"help": "an entry stage (needs its precondition, else REJECTED from: ...)"
+}
+],
+"sim": true
+},
+{
+"code": "m1t2",
+"task": "T1",
+"title": "Safe Passage (gates) + UAV buoy map",
+"tier": "Advanced",
+"status": "built",
+"what": [
+"T1 Advanced (v0.1.66, WP16): the boat waits at the start (WAIT_UAV_MAP) while the UAV surveys and reports the buoys - its",
+"colours come from the UAV (the boat is colour-blind for buoys coloured only from above), its positions from the camera + GPS."
+],
+"starts": "declare uav on, uav ready on, declare; start_task m1t2 (needs a fresh UAV status; the declaration's T1 tier = ADVANCED)",
+"ends": "DONE after CIRCLE_EXIT_CCW; WAIT_UAV_MAP: scan.complete / the drone landed / `uav scan done`; 420 s without an entry -> AUTO_SAFE_HOLD",
+"judge_in": "-",
+"judge_out": "SafePassageReport with the fused colours; the UAV's own report relayed (D13)",
+"config": "t1.colour_source uav (set by the mission), t1.uav_wait_s 420; uav.assoc_m 1.0 (the link radius)",
+"note": "v0.1.66: the UAV's buoys (uav/perception/buoys, docs/UAV_BUOY_CONTRACT.md) linked within 1 m to the camera's; UAV-only ones are leads",
+"stages": [
+{
+"name": "WAIT_START",
+"meaning": "holding at the start line",
+"behaviour": "StationKeep",
+"leaves_on": "RunStart",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "WAIT_UAV_MAP",
+"meaning": "holding outside the field while the UAV surveys (its scan.complete, the drone landed, or uav scan done)",
+"behaviour": "StationKeep",
+"leaves_on": "the UAV map is in",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "SEARCH_ENTRY",
+"meaning": "looking for the flashing blue entry buoy",
+"behaviour": "ScanYaw",
+"leaves_on": "entry buoy seen",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "APPROACH_LEAD",
+"meaning": "no entry in view but a far sighting (a ray): 12 m toward it, then scan again (3 tries)",
+"behaviour": "FollowPath",
+"leaves_on": "arrived -> SEARCH_ENTRY",
+"judge": "-",
+"detour": "SEARCH_ENTRY"
+},
+{
+"name": "CIRCLE_ENTRY_CW",
+"meaning": "one clockwise circle round the entry buoy",
+"behaviour": "Orbit",
+"leaves_on": "circle closed",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "TRANSIT",
+"meaning": "gate by gate: pre -> mid -> post, GREEN to port / RED to starboard (loops)",
+"behaviour": "FollowPath",
+"leaves_on": "no gate left -> EXIT",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "LOOK",
+"meaning": "a pending light nearer than the next gate: face it, 8 s at most",
+"behaviour": "ScanYaw (face)",
+"leaves_on": "decided -> TRANSIT",
+"judge": "-",
+"detour": "TRANSIT"
+},
+{
+"name": "SCAN",
+"meaning": "no usable gate ahead: turning on the spot to find one (nothing -> safe hold)",
+"behaviour": "ScanYaw",
+"leaves_on": "gate -> TRANSIT | exit -> EXIT",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "EXIT",
+"meaning": "to the solid blue exit buoy's circle",
+"behaviour": "FollowPath",
+"leaves_on": "at the circle",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "CIRCLE_EXIT_CCW",
+"meaning": "one counter-clockwise circle round the exit buoy",
+"behaviour": "Orbit",
+"leaves_on": "circle closed -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "course passed",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--step",
+"label": "stage by stage",
+"check": true,
+"help": "park in AUTO_SAFE_HOLD at every stage boundary; resume enters the next stage"
+},
+{
+"flag": "--from",
+"label": "start at",
+"choices": [
+"",
+"SEARCH_ENTRY",
+"TRANSIT",
+"EXIT"
+],
+"help": "an entry stage (needs its precondition, else REJECTED from: ...)"
+}
+],
+"sim": true
+},
+{
+"code": "scout",
+"task": "SCOUT",
+"title": "SCOUT \u2014 buoy to buoy, colour-blind, logs the field (declared as Task 1)",
+"tier": "T1 core / advanced (UAV)",
+"status": "built",
+"what": [
+"v0.1.79 (WP35): forward until the first buoy locks, then the nearest unvisited buoy by path length (1.6 m off every mapped",
+"object), a 3 m stand-off, 4 s to log it; a slow 360 scan only when the map runs dry, then the unswept lawnmower points; home at the end.",
+"Colour-blind: every buoy logged with its position (logs/scout_<run>.jsonl); the drone's buoys are targets too."
+],
+"starts": "start_task scout (AUTO_HOLD, run R5; declared SCOUT -> T1 core, or advanced with `declare uav on`); scoutsim on the fake FCU",
+"ends": "RETURN to the start pose -> DONE (AUTO_HOLD) when no frontier is left or budget_s (600 s) is up; abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "SafePassageReport whenever the mapped set changes (buoys only, colour red only when voted)",
+"config": "scout: standoff_m 3, transit_v 0.6, log_s 4, budget_s 600, lane_m 14, clear_m 1.6, min_obs 3, field_m 30 (usv profile)",
+"note": "v0.1.79: the ZED guard (WP36) brakes / backs off / re-plans in every moving stage; t1_safe_passage.py untouched",
+"stages": [
+{
+"name": "WAIT_START",
+"meaning": "holding at the start",
+"behaviour": "StationKeep",
+"leaves_on": "RunStart",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "WAIT_UAV_MAP",
+"meaning": "the drone declared: holding while it surveys (scan.complete, landed, or uav scan done)",
+"behaviour": "StationKeep",
+"leaves_on": "the UAV map is in",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "ADVANCE",
+"meaning": "forward along the heading inside the field (toward its centre near an edge) until the first lock",
+"behaviour": "FollowPath",
+"leaves_on": "first lock -> PICK | far point -> SCAN",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "PICK",
+"meaning": "the nearest unvisited buoy by path length round the clearance rings",
+"behaviour": "-",
+"leaves_on": "target -> APPROACH | none -> SCAN",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "APPROACH",
+"meaning": "to the buoy's stand-off point (3 m, outside every ring, inside the field)",
+"behaviour": "FollowPath",
+"leaves_on": "arrived -> LOG",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "LOG",
+"meaning": "holding 4 s while the map settles; the buoy is logged",
+"behaviour": "StationKeep",
+"leaves_on": "logged -> PICK",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "SCAN",
+"meaning": "the map is exhausted: one slow turn on the spot",
+"behaviour": "ScanYaw",
+"leaves_on": "a new buoy -> PICK | nothing -> FRONTIER",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "FRONTIER",
+"meaning": "to the next unswept lawnmower point",
+"behaviour": "FollowPath",
+"leaves_on": "arrived -> SCAN | a buoy -> PICK",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "RETURN",
+"meaning": "home to the start pose",
+"behaviour": "FollowPath",
+"leaves_on": "at the start -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "field logged (summary line)",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": true
+},
+{
+"code": "m3t1",
+"task": "T3",
+"title": "Coordinated Logistics (dock + fire)",
+"tier": "Core",
+"status": "built",
+"what": [
+"find the dock line, sway the whole standoff line counting each bay's indicator, commit to the GREEN bay, bow in to the",
+"stop distance (a RED indicator on the way in: back out, search again), report the docking; the RED window lights: water on",
+"that window until it turns GREEN (30 s at most), report the firefighting with its window_id; back out astern."
+],
+"starts": "start_task m3t1 [--bay N] (vehicle AUTO_HOLD, run R5, the dock within camera range); m3t1sim on the simulated pool first",
+"ends": "DONE after UNDOCK -> AUTO_HOLD; abort -> AUTO_HOLD; no dock / GREEN bay found -> AUTO_SAFE_HOLD",
+"judge_in": "-",
+"judge_out": "DockingReport, FirefightingReport (Adv: ResourceRequest - not built)",
+"config": "t3.standoff_m / standoff2_m (v0.1.56: finger_m 3.5 + hull/2 + clear 0.60 + 1.0 / 0.3 = 5.7 / 5.0 unless set), stop_m 1.5, fire_s 30, sway_v 0.25, enter_v 0.15, reengage_max 2, window_wait_s 10, undock astern (usv profile); gains.sway_*",
+"note": "v0.1.22 (ROADMAP WP3); the dock is read through usv/dockpath (the students' box core, docs/merge/, can feed it); cv/cannon aims on the AGX",
+"stages": [
+{
+"name": "WAIT_START",
+"meaning": "holding",
+"behaviour": "StationKeep",
+"leaves_on": "started",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "FIND_DOCK",
+"meaning": "turning on the spot until the dock line (three faces) is in the map",
+"behaviour": "ScanYaw",
+"leaves_on": "dock line found",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "TO_LINE",
+"meaning": "to the near end of the standoff line (standoff_m off the dock)",
+"behaviour": "FollowPath",
+"leaves_on": "on the line",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "SWAY_SEARCH",
+"meaning": "sway the whole line, bow to the dock, counting each bay's indicator (RED / GREEN votes)",
+"behaviour": "SwayTransit",
+"leaves_on": "one bay GREEN -> SWAY_TO_ABEAM (none / a tie: a second pass at 3.5 m; still none: hold)",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "SWAY_TO_ABEAM",
+"meaning": "sway along the standoff line, bow to the dock, to abeam of the chosen bay",
+"behaviour": "SwayTransit",
+"leaves_on": "abeam",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "TURN_IN",
+"meaning": "bow to the bay",
+"behaviour": "DockLos align",
+"leaves_on": "aligned",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "ENTER",
+"meaning": "guarded bow-in along the bay centreline to stop_m off the face",
+"behaviour": "DockLos enter",
+"leaves_on": "stop distance -> DOCKED",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "BACK_OUT",
+"meaning": "the bay's indicator RED on the way in (or off its centreline): astern to the standoff line",
+"behaviour": "DockLos astern",
+"leaves_on": "-> SWAY_SEARCH without that bay (2 at most)",
+"judge": "-",
+"detour": "ENTER"
+},
+{
+"name": "DOCKED",
+"meaning": "holding in the bay",
+"behaviour": "StationKeep",
+"leaves_on": "-> REPORT_DOCK",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "REPORT_DOCK",
+"meaning": "DockingReport going out",
+"behaviour": "-",
+"leaves_on": "sent -> AIM_FIRE",
+"judge": "Report out",
+"detour": ""
+},
+{
+"name": "AIM_FIRE",
+"meaning": "cannon at the window seen lit RED (local/usv/cannon/aim with window_id) until it is GREEN, fire_s at most",
+"behaviour": "cannon",
+"leaves_on": "GREEN -> REPORT_FIRE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "REPORT_FIRE",
+"meaning": "FirefightingReport going out",
+"behaviour": "-",
+"leaves_on": "sent -> UNDOCK",
+"judge": "Report out",
+"detour": ""
+},
+{
+"name": "UNDOCK",
+"meaning": "astern out of the bay to the standoff line",
+"behaviour": "DockLos astern",
+"leaves_on": "out -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "task finished",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--bay",
+"label": "bay",
+"choices": [
+"",
+"1",
+"2",
+"3"
+],
+"help": "a bay by hand (1..3 left to right facing the dock); empty = the GREEN one"
+},
+{
+"flag": "--step",
+"label": "stage by stage",
+"check": true,
+"help": "park in AUTO_SAFE_HOLD at every stage boundary; resume enters the next stage"
+},
+{
+"flag": "--from",
+"label": "start at",
+"choices": [
+"",
+"TO_LINE",
+"SWAY_SEARCH",
+"SWAY_TO_ABEAM",
+"TURN_IN",
+"ENTER",
+"AIM_FIRE",
+"UNDOCK"
+],
+"help": "an entry stage (needs its precondition, else REJECTED from: ...)"
+}
+],
+"sim": true
+},
+{
+"code": "goto",
+"task": "GOTO",
+"title": "bench waypoint",
+"tier": "bench",
+"status": "bench",
+"what": [
+"drive to a local N/E point at a speed and stop there. Bench only (guards.allow_goto_task); refused on the course network."
+],
+"starts": "goto --x N --y E [--speed V]  (the OCS sends START_TASK GOTO with the point)",
+"ends": "arrived -> DONE -> AUTO_HOLD; abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "-",
+"config": "guards.allow_goto_task (bench / pool profiles)",
+"note": "",
+"stages": [
+{
+"name": "GO",
+"meaning": "driving to the point (bench task)",
+"behaviour": "Goto",
+"leaves_on": "arrived -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "arrived",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": false
+},
+{
+"code": "m0t0",
+"task": "TEST_MANUAL",
+"title": "state-machine test, by hand",
+"tier": "test",
+"status": "test",
+"what": [
+"walks the task machine S1 -> S2 -> S3 -> DONE with no behaviours: nothing moves, no judge traffic.",
+"Each stage advances on `step` (ocs_cli step, or step in usv_ui) - from either side."
+],
+"starts": "start_task m0t0 (vehicle AUTO_HOLD, run R5)",
+"ends": "step in S3 -> DONE -> AUTO_HOLD; abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "- (the heartbeat keeps TASK_NONE)",
+"config": "-",
+"note": "",
+"stages": [
+{
+"name": "S1",
+"meaning": "test stage 1 of 3: `step` advances it",
+"behaviour": "none (hold)",
+"leaves_on": "step -> S2",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "S2",
+"meaning": "test stage 2 of 3: `step` advances it",
+"behaviour": "none (hold)",
+"leaves_on": "step -> S3",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "S3",
+"meaning": "test stage 3 of 3: `step` finishes it",
+"behaviour": "none (hold)",
+"leaves_on": "step -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "task finished",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": true
+},
+{
+"code": "m0t1",
+"task": "TEST_AUTO",
+"title": "state-machine test, timers",
+"tier": "test",
+"status": "test",
+"what": [
+"the same S1 -> S2 -> S3 -> DONE on timers (step_s each, 5 s by default), nothing moves, no judge traffic.",
+"Proves START_TASK, the stage events, TASK_DONE and both consoles' stage display without touching anything."
+],
+"starts": "start_task m0t1 (vehicle AUTO_HOLD, run R5), or `mission m0t1 --auto` -> starts on RunStart",
+"ends": "DONE after the third timer -> AUTO_HOLD; abort -> AUTO_HOLD; hold pauses the timer; step skips it",
+"judge_in": "-",
+"judge_out": "- (the heartbeat keeps TASK_NONE)",
+"config": "extra.test_auto.step_s (usv_pool.yaml), 5 s",
+"note": "",
+"stages": [
+{
+"name": "S1",
+"meaning": "test stage 1 of 3, timer running",
+"behaviour": "none (hold)",
+"leaves_on": "timer -> S2 | step",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "S2",
+"meaning": "test stage 2 of 3, timer running",
+"behaviour": "none (hold)",
+"leaves_on": "timer -> S3 | step",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "S3",
+"meaning": "test stage 3 of 3, timer running, then DONE",
+"behaviour": "none (hold)",
+"leaves_on": "timer -> DONE | step",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "task finished",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": true
+},
+{
+"code": "m0t2",
+"task": "TEST_PATH",
+"title": "path test (waypoints -> path -> follow)",
+"tier": "test",
+"status": "test",
+"what": [
+"the pool-trial path leg through the final architecture: a path of saved points (or one generated from the CV",
+"map, `pathgen`) is followed by the mission manager's FollowPath behaviour; what usv_ui's `pathto` did by hand."
+],
+"starts": "start_task m0t2 [--names EN,G1,..] (vehicle AUTO_HOLD, run R5); no names = the gates in the mission manager's map (the PoR course)",
+"ends": "last point reached -> DONE -> AUTO_HOLD; abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "-",
+"config": "tasks.test_path (points file or `pathgen` output)",
+"note": "v0.1.21 (ROADMAP WP2); m0t2sim on world_por = the Proof of Readiness run in simulation",
+"stages": [
+{
+"name": "PLAN",
+"meaning": "take the points (file / pathgen) and build the path",
+"behaviour": "-",
+"leaves_on": "path ready -> FOLLOW",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "FOLLOW",
+"meaning": "point by point along the path",
+"behaviour": "FollowPath",
+"leaves_on": "last point -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "path done",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--names",
+"label": "points",
+"text": "EN,G1,G2,EX",
+"help": "saved point names (usv_ui points.json); empty = the gates in the map"
+}
+],
+"sim": true
+},
+{
+"code": "m0t3",
+"task": "TEST_SWAY",
+"title": "sway test (dock line -> sway along it)",
+"tier": "test",
+"status": "test",
+"what": [
+"the pool-trial sway leg through the final architecture: sway along a line the CV dock mapper gives (or two saved",
+"points) at a set range; what usv_ui's `swayto` did between waypoints. The first half of docking (m3t1)."
+],
+"starts": "start_task m0t3 [--names A,B] (vehicle AUTO_HOLD, run R5); no names = the dock line from the map at t3.standoff_m",
+"ends": "end of the line -> DONE -> AUTO_HOLD; abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "-",
+"config": "t3.standoff_m, t3.sway_v; gains.sway_f_pos / sway_f_neg / sway_kpsi / sway_kc",
+"note": "v0.1.22 (ROADMAP WP3): the calibrated sway factors (F+ 1.05 / F- 0.877) are in the mission manager's gains now",
+"stages": [
+{
+"name": "LINE",
+"meaning": "take the line (two points / the dock line at the standoff)",
+"behaviour": "-",
+"leaves_on": "line ready -> TO_START",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "TO_START",
+"meaning": "GUIDED to A",
+"behaviour": "FollowPath",
+"leaves_on": "at A -> SWAY",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "SWAY",
+"meaning": "sway along the line, bow held orthogonal (mode 20)",
+"behaviour": "SwayTransit",
+"leaves_on": "end of line -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "sway done",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--names",
+"label": "points",
+"text": "A,B",
+"help": "two saved points; empty = the dock line from the map"
+}
+],
+"sim": true
+},
+{
+"code": "m0t4",
+"task": "BOX_INSPECT",
+"title": "box survey of the dock faces, GREEN chosen, 1 m approach",
+"tier": "test",
+"status": "built",
+"what": [
+"the students' box inspection (v0.1.27, ROADMAP WP8): find and geolocate the dock's front faces (3 points per face:",
+"left / mid / right), choose the GREEN one (or --target-colour), align on its normal, revalidate, stop 1 m off it."
+],
+"starts": "start_task m0t4sim --scan-x 35 --scan-y 8 [--target-colour red] (vehicle AUTO_HOLD, run R5; world_boxes.yaml for SIL)",
+"ends": "stop distance reached -> DONE -> AUTO_HOLD; a hold (strafe limit, no target face, ALIGN timeout) -> AUTO_SAFE_HOLD, resume goes on; wrong colour at VALIDATE -> back away + abort",
+"judge_in": "-",
+"judge_out": "- (box_survey / box_mission_complete stay in the OCS: ocs/state `internal`)",
+"config": "box_inspect: in the usv profile (stop_range_m 1, strafe_len_m 6, strafe_side, require_blink false, ...); START_TASK args override",
+"note": "test mission; --step / --from OBSERVE | ALIGN | APPROACH work; built to become m3t1's dock-finding stage later (ROADMAP WP12)",
+"stages": [
+{
+"name": "PREFLIGHT",
+"meaning": "RTK, heading, the camera's health beat, thrusters",
+"behaviour": "Hold",
+"leaves_on": "all pass",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "GO_SCAN",
+"meaning": "move to the scan point",
+"behaviour": "Goto",
+"leaves_on": "a face in view / point reached",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "OBSERVE",
+"meaning": "turn to scan_hdg_deg, look for 4.5 s (mode 20, zero frames)",
+"behaviour": "mode 20",
+"leaves_on": "all faces stable / strafe",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "STRAFE",
+"meaning": "one 2 m sway leg to strafe_side, heading held",
+"behaviour": "mode-20 sway",
+"leaves_on": "leg done -> OBSERVE; length used -> on or HOLD",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "ASK_OCS",
+"meaning": "box_survey to the OCS; the face: GREEN (or the chosen colour)",
+"behaviour": "-",
+"leaves_on": "one match -> ALIGN",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "ALIGN",
+"meaning": "GUIDED to the 15 m point on the face normal, then yaw in place",
+"behaviour": "Goto / mode-20 yaw",
+"leaves_on": "within tol and 5 deg; timeout -> HOLD",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "APPROACH",
+"meaning": "close in on the normal (line of sight)",
+"behaviour": "mode-20 surge/yaw",
+"leaves_on": "15 m validation range",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "VALIDATE",
+"meaning": "the face still the chosen colour",
+"behaviour": "mode 20",
+"leaves_on": "colour matches",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "STOP",
+"meaning": "taper to stop_range_m off the face",
+"behaviour": "mode-20 surge/yaw",
+"leaves_on": "face distance reached",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "target reached; box_mission_complete to the OCS",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--target-colour",
+"label": "target",
+"choices": [
+"",
+"red",
+"green",
+"blue"
+],
+"help": "the face to approach; empty = the vehicle's GREEN rule"
+},
+{
+"flag": "--scan-x",
+"label": "scan N",
+"number": true,
+"help": "scan point north, m (local)"
+},
+{
+"flag": "--scan-y",
+"label": "scan E",
+"number": true,
+"help": "scan point east, m (local)"
+},
+{
+"flag": "--scan-hdg",
+"label": "scan heading",
+"number": true,
+"help": "the search looks this way, deg (empty = the heading on arrival)"
+},
+{
+"flag": "--strafe-side",
+"label": "strafe",
+"choices": [
+"",
+"starboard",
+"port"
+],
+"help": "the search sways this way (empty = box_inspect.strafe_side)"
+},
+{
+"flag": "--expected-boxes",
+"label": "faces",
+"number": true,
+"help": "faces to survey (default 3)"
+},
+{
+"flag": "--step",
+"label": "stage by stage",
+"check": true,
+"help": "park in AUTO_SAFE_HOLD at every stage boundary; resume enters the next stage"
+},
+{
+"flag": "--from",
+"label": "start at",
+"choices": [
+"",
+"OBSERVE",
+"ALIGN",
+"APPROACH"
+],
+"help": "an entry stage (needs its precondition, else REJECTED from: ...)"
+}
+],
+"sim": true
+},
+{
+"code": "m0t6",
+"task": "TEST_ORBIT",
+"title": "orbit test (circle a point)",
+"tier": "test",
+"status": "test",
+"what": [
+"orbit a point on its own (v0.1.30, ROADMAP WP8c): the Orbit behaviour of m1t1's entry / exit circles, round a",
+"saved point or a map click - radius, cw / ccw, turns, speed. GUIDED carrots on the circle, no mode 20."
+],
+"starts": "start_task m0t6 --centre A [--radius 3 --dir cw --turns 1 --speed 0.5] (or --lat / --lon: the map; AUTO_HOLD, run R5)",
+"ends": "turns x 360 deg wound -> DONE -> AUTO_HOLD; abort -> AUTO_HOLD; orbit timeout -> aborted",
+"judge_in": "-",
+"judge_out": "-",
+"config": "orbit: r_m 3, direction cw, turns 1, speed_mps 0.5 (START_TASK args override)",
+"note": "v0.1.30; --step / --from APPROACH | ORBIT (ORBIT needs the boat within band_m of the circle)",
+"stages": [
+{
+"name": "APPROACH",
+"meaning": "GUIDED to the point of the circle nearest the boat",
+"behaviour": "Goto",
+"leaves_on": "on the circle -> ORBIT",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "ORBIT",
+"meaning": "round the centre, carrots on the circle",
+"behaviour": "Orbit",
+"leaves_on": "turns done -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "orbit done",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [
+{
+"flag": "--centre",
+"label": "centre",
+"text": "A",
+"help": "the saved point to orbit (tick one below, or drop it on the map)"
+},
+{
+"flag": "--radius",
+"label": "radius m",
+"number": true,
+"help": "orbit radius (default 3 m)"
+},
+{
+"flag": "--dir",
+"label": "direction",
+"choices": [
+"",
+"cw",
+"ccw"
+],
+"help": "cw = clockwise seen from above (default cw)"
+},
+{
+"flag": "--turns",
+"label": "turns",
+"number": true,
+"help": "full circles (default 1)"
+},
+{
+"flag": "--speed",
+"label": "speed m/s",
+"number": true,
+"help": "speed over ground (default 0.5)"
+},
+{
+"flag": "--step",
+"label": "stage by stage",
+"check": true,
+"help": "park in AUTO_SAFE_HOLD at every stage boundary; resume enters the next stage"
+},
+{
+"flag": "--from",
+"label": "start at",
+"choices": [
+"",
+"APPROACH",
+"ORBIT"
+],
+"help": "an entry stage (needs its precondition, else REJECTED from: ...)"
+}
+],
+"sim": true
+},
+{
+"code": "m0t8",
+"task": "TEST_DETECT",
+"title": "ground test: buoy detection ranges (the boat stands still)",
+"tier": "test",
+"status": "test",
+"what": [
+"v0.1.79 (Dmitrii 2026-11-11: check the detection on the ground first): the boat holds still (HOLD, props off on land) while every",
+"buoy the camera maps is logged - range, bearing, sightings; walk a buoy away: the LOST line gives the range it was last seen at."
+],
+"starts": "start_task m0t8 [--duration 600] (AUTO_HOLD; test mode: no run needed)",
+"ends": "duration_s over -> DONE (a summary line per buoy: nearest / farthest / last-seen range); abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "-",
+"config": "test_detect: duration_s 600, lost_s 3, min_obs 2 (logs/detect_<stamp>.jsonl)",
+"note": "v0.1.79: no motion; the mission manager's map does the work (the same path as the missions)",
+"stages": [
+{
+"name": "WATCH",
+"meaning": "standing still, logging every buoy's range (seen / range / lost / back lines)",
+"behaviour": "StationKeep",
+"leaves_on": "duration -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "summary written",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": true
+},
+{
+"code": "m0t9",
+"task": "TEST_GUARD",
+"title": "ground test: the ZED guard (still; a STOP pulses the motors astern)",
+"tier": "test",
+"status": "test",
+"what": [
+"v0.1.80 (WP36; Dmitrii 2026-11-11): the boat holds still while the guard's verdict is logged on every change (clear / SLOW /",
+"STOP with range, bearing extent, pixels, IMU roll / pitch); a STOP sends the scout's BRAKE frame (props in the air!), the back-off is only logged."
+],
+"starts": "start_task m0t9 [--duration 600] (AUTO_HOLD; test mode: no run needed) - PROPS IN THE AIR or the boat on a stand",
+"ends": "duration_s over -> DONE (a summary: the STOPs); abort -> AUTO_HOLD",
+"judge_in": "-",
+"judge_out": "-",
+"config": "test_guard: duration_s 600, pulse 0.4 (0 = no motor), pulse_s 1.5; zed_guard: stop_m 1.5, slow_m 3.0",
+"note": "v0.1.80: walk a board toward the bow: the STOP line's range should read 1.5 +- 0.1 m; tilt the camera +-10 deg: it must not move",
+"stages": [
+{
+"name": "WATCH",
+"meaning": "standing still, logging the guard's verdict; a STOP = one brake pulse",
+"behaviour": "StationKeep",
+"leaves_on": "duration -> DONE",
+"judge": "-",
+"detour": ""
+},
+{
+"name": "DONE",
+"meaning": "summary written",
+"behaviour": "-",
+"leaves_on": "TASK_DONE -> AUTO_HOLD",
+"judge": "-",
+"detour": ""
+}
+],
+"options": [],
+"sim": true
+}
+],
+"flow": [
+[
+"usv_ui ACTIVE",
+"boat console commands the FCU"
+],
+[
+"handover",
+"typed in usv_ui: the beat stops"
+],
+[
+"MANUAL",
+"mission manager may take the FCU"
+],
+[
+"declare",
+"ocs_cli declare -> R3, judge RunStart -> R5"
+],
+[
+"enable_auto",
+"V3 AUTO_HOLD, FCU in HOLD"
+],
+[
+"start_task/goto",
+"V4 AUTO_TASK"
+],
+[
+"hold<->resume",
+"V5 SAFE_HOLD and back"
+],
+[
+"end_run",
+"R6"
+],
+[
+"takeover/stop",
+"typed in usv_ui: ACTIVE again"
+]
+],
+"flow_caption": [
+"boat",
+"beat off",
+"V2",
+"R2>R3",
+"V3",
+"V4",
+"V5",
+"R6",
+"to boat"
+],
+"provenance": {
+"labels": {
+"state": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"vehicle": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"mode": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"armed": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"kill": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"fcu": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"task": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"stage": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"hdg": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"sog": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"heading sog": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"lat": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"lon": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"fault": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"hold": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"rc6": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"run": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"r": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"judge": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"reporting": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"declaration": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"mission": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"course": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"heartbeats": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"map age s": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"map age": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"buoys": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"gates": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"gates detected": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"gates passed": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"entry found": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"exit found": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"faces": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"windows": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"windows lit": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"source": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"age": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"detections": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"perception": "local/usv/perception/health \u00b7 the AGX's observer / cv_publish (or the sim CV) \u00b7 1 Hz \u00b7 stale > 2 s",
+"perception age s": "local/usv/perception/health \u00b7 the AGX's observer / cv_publish (or the sim CV) \u00b7 1 Hz \u00b7 stale > 2 s",
+"camera": "local/usv/perception/health \u00b7 the AGX's observer / cv_publish (or the sim CV) \u00b7 1 Hz \u00b7 stale > 2 s",
+"boxes": "local/usv/perception/health \u00b7 the AGX's observer / cv_publish (or the sim CV) \u00b7 1 Hz \u00b7 stale > 2 s",
+"nx": "local/usv/host/<nx|agx> -> telemetry \u00b7 host_health on each Jetson (the bench: simulated) \u00b7 0.5 Hz \u00b7 stale > 10 s",
+"agx": "local/usv/host/<nx|agx> -> telemetry \u00b7 host_health on each Jetson (the bench: simulated) \u00b7 0.5 Hz \u00b7 stale > 10 s",
+"cpu": "local/usv/host/<nx|agx> -> telemetry \u00b7 host_health on each Jetson (the bench: simulated) \u00b7 0.5 Hz \u00b7 stale > 10 s",
+"temp": "local/usv/host/<nx|agx> -> telemetry \u00b7 host_health on each Jetson (the bench: simulated) \u00b7 0.5 Hz \u00b7 stale > 10 s",
+"cannon": "local/usv/cannon/status \u00b7 the cannon Pi's status publisher (sim: fake_cannon_pi) \u00b7 2 Hz \u00b7 stale > 5 s",
+"pi": "local/usv/cannon/status \u00b7 the cannon Pi's status publisher (sim: fake_cannon_pi) \u00b7 2 Hz \u00b7 stale > 5 s",
+"packets": "local/usv/cannon/status \u00b7 the cannon Pi's status publisher (sim: fake_cannon_pi) \u00b7 2 Hz \u00b7 stale > 5 s",
+"lock": "local/usv/cannon/status \u00b7 the cannon Pi's status publisher (sim: fake_cannon_pi) \u00b7 2 Hz \u00b7 stale > 5 s",
+"uav": "status/uav \u00b7 our UAV adapter (their Orin's telemetry) \u00b7 2 Hz \u00b7 stale > 5 s",
+"items": "status/uav \u00b7 our UAV adapter (their Orin's telemetry) \u00b7 2 Hz \u00b7 stale > 5 s",
+"scan": "status/uav \u00b7 our UAV adapter (their Orin's telemetry) \u00b7 2 Hz \u00b7 stale > 5 s",
+"merged": "status/uav \u00b7 our UAV adapter (their Orin's telemetry) \u00b7 2 Hz \u00b7 stale > 5 s",
+"session": "ocs/session \u00b7 the page server's SessionManager \u00b7 1 Hz \u00b7 stale > 6 s"
+},
+"status": {
+"state": "status/usv.state \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"robot_state": "status/usv.robot_state \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"current_task": "status/usv.current_task \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"task_state": "status/usv.task_state \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"mode": "status/usv.mode \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"armed": "status/usv.armed \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"kill": "status/usv.kill \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"estop": "status/usv.estop \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"lat": "status/usv.lat \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"lon": "status/usv.lon \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"hdg_deg": "status/usv.hdg_deg \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"sog_mps": "status/usv.sog_mps \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"altitude_hae_m": "status/usv.altitude_hae_m \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"flight_phase": "status/usv.flight_phase \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"health": "status/usv.health \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"fault": "status/usv.fault \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"run": "status/usv.run \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s"
+},
+"words": {
+"hold": "intent hold \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 AUTO_SAFE_HOLD, the task kept",
+"resume": "intent resume \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 back to AUTO_TASK (with --step: the next stage)",
+"abort": "intent abort \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 AUTO_HOLD, TASK_NONE",
+"skip": "intent skip \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 free run only: the stage's behaviour ends",
+"start_task": "intent start_task \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 AUTO_TASK (judged missions need R5)",
+"mission": "intent mission \u2192 ocs_app (the preselection) \u00b7 accepted at once; no vehicle command",
+"declare": "intent declare \u2192 ocs_app \u2192 PREPARE to each vehicle, then the RunDeclaration to the judge \u00b7 R3 when every PREPARE is DONE",
+"enable_auto": "intent enable_auto \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 AUTO_HOLD (STATE_AUTO on the heartbeat)",
+"disable_auto": "intent disable_auto \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 MANUAL",
+"end_run": "intent end_run \u2192 ocs_app \u2192 STOP_RUN to every vehicle \u00b7 R6",
+"reset": "intent reset \u2192 ocs_app \u2192 RESET to every vehicle \u00b7 R2",
+"stop_reset": "the STOP & RESET macro (\u25a0 STOP RUN): abort \u00b7 disable_auto \u00b7 fcu_mode HOLD \u00b7 disarm \u00b7 reset - each step's ack shown",
+"fcu_mode": "intent fcu_mode \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u2192 the FCU (DO_SET_MODE) \u00b7 the FCU's COMMAND_ACK decides",
+"arm": "intent arm (asks first) \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u2192 the FCU \u00b7 its pre-arm checks decide",
+"disarm": "intent disarm \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u2192 the FCU \u00b7 COMMAND_ACK",
+"report": "intent report on|off \u2192 ocs_app \u00b7 heartbeats to the judge start / stop at once",
+"session": "intent session \u2192 ocs_app (the guard) \u2192 the page server on ocs/session/cmd \u00b7 its state on ocs/state.session",
+"save_point": "intent save_point \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 the points store (usv_ui/points.json)",
+"home": "intent home \u2192 USV1's mission manager (cmd/usv) \u00b7 ack within 5 s (else TIMED OUT) \u00b7 RETURN_HOME, then AUTO_HOLD at HOME",
+"declare uav": "intent declare_uav \u2192 ocs_app \u00b7 the next declaration carries the UAV"
+},
+"sources": {
+"status": "status/usv \u00b7 the mission manager, through the boat\u2192hub bridge \u00b7 2 Hz \u00b7 stale > 3 s",
+"local": "local/usv/mm/state \u00b7 the mission manager (the boat broker, never bridged) \u00b7 5 Hz \u00b7 stale > 2 s",
+"ocs": "ocs/state \u00b7 ocs_app (this Mac) \u00b7 1 Hz \u00b7 stale > 3 s",
+"map": "telemetry/usv/map \u00b7 the mission manager's map digest, bridged \u00b7 2 Hz \u00b7 stale > 3 s",
+"perception": "local/usv/perception/health \u00b7 the AGX's observer / cv_publish (or the sim CV) \u00b7 1 Hz \u00b7 stale > 2 s",
+"hosts": "local/usv/host/<nx|agx> -> telemetry \u00b7 host_health on each Jetson (the bench: simulated) \u00b7 0.5 Hz \u00b7 stale > 10 s",
+"cannon": "local/usv/cannon/status \u00b7 the cannon Pi's status publisher (sim: fake_cannon_pi) \u00b7 2 Hz \u00b7 stale > 5 s",
+"uav": "status/uav \u00b7 our UAV adapter (their Orin's telemetry) \u00b7 2 Hz \u00b7 stale > 5 s",
+"judge": "robocommand/robotx/<team>/... \u00b7 the judge client in ocs_app (fake / rc-test / RoboCommand) \u00b7 as sent \u00b7 -",
+"session": "ocs/session \u00b7 the page server's SessionManager \u00b7 1 Hz \u00b7 stale > 6 s",
+"page": "/state.json \u00b7 the page server (ocs_web) \u00b7 1 Hz \u00b7 -"
+},
+"button_default": "a page control - nothing is sent",
+"value_default": "/state.json \u00b7 the page server (ocs_web) \u00b7 1 Hz \u00b7 -"
+},
+"system": [
+{
+"id": "ocs",
+"host": "mac",
+"title": "OCS stack (this Mac)",
+"what": "hub broker, OCS app, fake judge or the real wire, op-tui, the judge console, this page (it comes back by itself in a few seconds)",
+"confirm": "",
+"group": "system",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"restart",
+"stop"
+],
+"default": "restart",
+"help": "restart = stop, then start with these options",
+"free": ""
+},
+{
+"name": "judge",
+"label": "judge",
+"choices": [
+"fake",
+"rctest",
+"course"
+],
+"default": "fake",
+"help": "fake = our fake RoboCommand; rctest = RoboNation's test server (start it below first); course = the competition network",
+"free": ""
+},
+{
+"name": "net",
+"label": "network",
+"choices": [
+"profile",
+"ts",
+"lan"
+],
+"default": "profile",
+"help": "profile = NET_PROFILE of network.env; ts = tailnet, lan = pool switch",
+"free": ""
+},
+{
+"name": "log",
+"label": "SQLite log",
+"choices": [
+"off",
+"on"
+],
+"default": "off",
+"help": "LOG=1: every MQTT message of that broker into SQLite",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "rctest",
+"host": "mac",
+"title": "rc-test server (this Mac)",
+"what": "RoboNation's own test server on mosquitto 1885 (scripts/run_rctest.sh)",
+"confirm": "",
+"group": "system",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"start",
+"stop"
+],
+"default": "start",
+"help": "",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "nx",
+"host": "nx",
+"title": "Boat stack (Orin NX)",
+"what": "boat broker, usv_ui (holds the FCU), the mission manager - choose the FCU and the profile",
+"confirm": "",
+"group": "system",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"restart",
+"stop"
+],
+"default": "restart",
+"help": "restart = stop, then start with these options",
+"free": ""
+},
+{
+"name": "fcu",
+"label": "FCU",
+"choices": [
+"fake",
+"uart",
+"usb",
+"eth"
+],
+"default": "fake",
+"help": "fake = the bench plant, no Pixhawk; uart = the real Pixhawk on /dev/ttyTHS1; usb = the FMU USB; eth = udp 14550",
+"free": ""
+},
+{
+"name": "profile",
+"label": "profile",
+"choices": [
+"pool",
+"lab",
+"course"
+],
+"default": "pool",
+"help": "pool = usv_pool.yaml (real guards); lab = the bench with the real Pixhawk, props off, never at the pool; course = the competition",
+"free": ""
+},
+{
+"name": "net",
+"label": "network",
+"choices": [
+"profile",
+"ts",
+"lan"
+],
+"default": "profile",
+"help": "profile = NET_PROFILE of network.env; ts = tailnet, lan = pool switch",
+"free": ""
+},
+{
+"name": "log",
+"label": "SQLite log",
+"choices": [
+"off",
+"on"
+],
+"default": "off",
+"help": "LOG=1: every MQTT message of that broker into SQLite",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "agx",
+"host": "agx",
+"title": "Perception stack (AGX)",
+"what": "cv_publish (real detections) or the simulated camera, and the camera stream",
+"confirm": "",
+"group": "system",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"restart",
+"stop"
+],
+"default": "restart",
+"help": "restart = stop, then start with these options",
+"free": ""
+},
+{
+"name": "mode",
+"label": "perception",
+"choices": [
+"real",
+"sim",
+"demo"
+],
+"default": "real",
+"help": "real = the observers' detections; sim = fake_perception on a world file; demo = one synthetic buoy 8 m ahead",
+"free": ""
+},
+{
+"name": "world",
+"label": "world (sim)",
+"choices": [
+"empty",
+"pool",
+"por",
+"bench",
+"boxes"
+],
+"default": "pool",
+"help": "the world file for --sim",
+"free": ""
+},
+{
+"name": "cam",
+"label": "camera page",
+"choices": [
+"dir",
+"zed",
+"test",
+"off"
+],
+"default": "dir",
+"help": "dir = the observers' preview frames; zed = the ZED itself (no observer can run then); test = a pattern",
+"free": ""
+},
+{
+"name": "net",
+"label": "network",
+"choices": [
+"profile",
+"ts",
+"lan"
+],
+"default": "profile",
+"help": "profile = NET_PROFILE of network.env; ts = tailnet, lan = pool switch",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "fcu",
+"host": "fcu",
+"title": "Reboot the FCU (Pixhawk or the fake)",
+"what": "MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN through usv_ui's share on the NX (tools/fcu_reboot.py); refused when armed; usv_ui shows the link drop and reconnects",
+"confirm": "fcu",
+"group": "system",
+"options": [],
+"refused": ""
+},
+{
+"id": "nx_reboot",
+"host": "nx",
+"title": "Reboot the Orin NX",
+"what": "the whole boat computer (sudo -n reboot); ~1 min without the boat stack",
+"confirm": "nx",
+"group": "system",
+"options": [],
+"refused": ""
+},
+{
+"id": "agx_reboot",
+"host": "agx",
+"title": "Reboot the AGX",
+"what": "the perception computer (sudo -n reboot)",
+"confirm": "agx",
+"group": "system",
+"options": [],
+"refused": ""
+},
+{
+"id": "simworld",
+"host": "mac",
+"title": "Sim scenario (bench fake CV)",
+"what": "restarts the laptop bench's fake_perception + fake_dock on a world (scripts/sim_world.sh); empty = nothing in view, off = no fake CV and no truth layer; the boat's map ages old objects out. On the Jetsons: the AGX card, perception sim + world",
+"confirm": "",
+"group": "settings",
+"options": [
+{
+"name": "world",
+"label": "world",
+"choices": [
+"empty",
+"bench",
+"pool",
+"por",
+"boxes",
+"off"
+],
+"default": "empty",
+"help": "empty = no objects (the default since v0.1.28.1); bench = 3 gates + a dock; pool = the 50 x 25 m pool (Task 1 + dock); por = the PoR course; boxes = the m0t4 boxes; off = stop the fake CV",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "cam",
+"host": "agx",
+"title": "Camera stream (AGX)",
+"what": "only the MJPEG stream (cv/stream, window cam of tmux agx; scripts/agx_cam.sh) - the detectors are not touched; the CAMERA tab's toggle uses this",
+"confirm": "",
+"group": "settings",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"start",
+"stop"
+],
+"default": "start",
+"help": "",
+"free": ""
+},
+{
+"name": "source",
+"label": "source",
+"choices": [
+"auto",
+"dir",
+"zed",
+"test"
+],
+"default": "auto",
+"help": "auto = zed when no observer runs, else dir (v0.1.28.2); dir = the observers' preview frames (BLANK until one runs); zed = the ZED itself (it holds the camera: stop the stream before starting an observer); test = a pattern",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "observer",
+"host": "agx",
+"title": "Buoy observer (AGX)",
+"what": "v0.1.82: OUR observer cv/buoys_multi --headless (buoys + the ZED guard + the 3-8 m obstacles; scripts/agx_observer.sh, tmux agx window obs) - the camera stream shows its preview frames (a stream holding the ZED is restarted on them); needs the perception launch (run_agx.sh: cv_publish). The RUN tile's and the CAMERA card's OBSERVER button",
+"confirm": "",
+"group": "settings",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"status",
+"start",
+"stop"
+],
+"default": "status",
+"help": "",
+"free": ""
+},
+{
+"name": "detector",
+"label": "detector",
+"choices": [
+"default",
+"model-a"
+],
+"default": "default",
+"help": "default = our best.pt (cv/buoys/models); model-a = the colleague's Model A (read-only from ~/buoy_robotx)",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "rec",
+"host": "agx",
+"title": "ZED recorder (AGX)",
+"what": "v0.1.40: our buoy observer with --record (scripts/agx_record.sh, tmux agxrec): it detects as usual and records ~/Desktop/dm3/recordings/<stamp>_<label>/ cam.svo2 + frames.jsonl + session.json; stops by itself at max min or below 5 GB free (status says so). Bring home: scripts/agx_pull_clips.sh on the Mac",
+"confirm": "",
+"group": "settings",
+"options": [
+{
+"name": "do",
+"label": "action",
+"choices": [
+"status",
+"start",
+"stop"
+],
+"default": "status",
+"help": "status = up / down, the newest session, why it stopped, free disk; start = (re)start the observer recording; stop = Ctrl-C it (the SVO is closed; perception from it ends too)",
+"free": ""
+},
+{
+"name": "label",
+"label": "label",
+"choices": [
+"event"
+],
+"default": "event",
+"help": "the session's name: letters, digits, _ and - (e.g. day1_t1_gate, practice_dock); anything else -> event",
+"free": "[A-Za-z0-9][A-Za-z0-9_-]{0,39}"
+},
+{
+"name": "max_min",
+"label": "max min",
+"choices": [
+"10",
+"5",
+"20",
+"30",
+"60",
+"0"
+],
+"default": "10",
+"help": "stop recording after N minutes (0 = until stop); detecting goes on",
+"free": ""
+},
+{
+"name": "replace",
+"label": "ZED in use",
+"choices": [
+"no",
+"yes"
+],
+"default": "no",
+"help": "yes = Ctrl-C the observer / ZED stream holding the camera first (refused while a task runs); no = refused when the ZED is held",
+"free": ""
+},
+{
+"name": "pixhawk",
+"label": "telemetry",
+"choices": [
+"yes",
+"no"
+],
+"default": "yes",
+"help": "no = a camera-only bench clip (--no-pixhawk: no lat / lon / heading)",
+"free": ""
+}
+],
+"refused": ""
+},
+{
+"id": "simreset",
+"host": "mac",
+"title": "Reset the simulator (RESET SIM)",
+"what": "v0.1.33: the boat to the world's start, the mockups back to the file, every fault off, the mode switch HOLD, then abort, confirm_safe, reset on both ends, clear_map and the fake judge's counters (scripts/sim_reset.sh; the SIM page's RESET SIM\u2026 is the same). The stacks stay up",
+"confirm": "reset",
+"group": "settings",
+"options": [],
+"refused": ""
+},
+{
+"id": "stopall",
+"host": "mac",
+"title": "STOP EVERYTHING",
+"what": "every stack down in order: the boat (usv_ui quit first: outputs zeroed, the FCU as the transmitter left it), perception + camera, the judge console, rc-test, the bench / simulator, the OCS last (scripts/stop_all.sh)",
+"confirm": "stop",
+"group": "everything",
+"options": [],
+"refused": ""
+},
+{
+"id": "resetall",
+"host": "mac",
+"title": "RESET EVERYTHING",
+"what": "a clean start, the stacks stay up: RESET SIM when a simulator answers, else reset on both ends + the fake judge's counters (scripts/reset_all.sh)",
+"confirm": "reset",
+"group": "everything",
+"options": [],
+"refused": ""
+},
+{
+"id": "stop_bench",
+"host": "mac",
+"title": "Stop the bench",
+"what": "scripts/stop_bench.sh: every node of the laptop bench (brokers, fake FCU, mm, judge, op-tui)",
+"confirm": "stop",
+"group": "stop",
+"options": [],
+"refused": ""
+},
+{
+"id": "stop_simcv",
+"host": "mac",
+"title": "Stop the fake CV (bench)",
+"what": "scripts/sim_world.sh off: no detections, the truth layer cleared",
+"confirm": "stop",
+"group": "stop",
+"options": [],
+"refused": ""
+},
+{
+"id": "stop_nx",
+"host": "nx",
+"title": "Stop the boat stack (NX)",
+"what": "scripts/stop_usv.sh over ssh: boat broker, usv_ui, the mission manager",
+"confirm": "stop",
+"group": "stop",
+"options": [],
+"refused": ""
+},
+{
+"id": "stop_agx",
+"host": "agx",
+"title": "Stop perception (AGX)",
+"what": "scripts/stop_agx.sh over ssh: cv_publish or the sim CV, the observers, the camera stream",
+"confirm": "stop",
+"group": "stop",
+"options": [],
+"refused": ""
+},
+{
+"id": "stop_ocs",
+"host": "mac",
+"title": "Stop the OCS stack (this Mac)",
+"what": "scripts/stop_ocs.sh: hub, OCS app, judge, op-tui - and this page",
+"confirm": "stop",
+"group": "stop",
+"options": [],
+"refused": ""
+}
+],
+"system_dry": false,
+"judge_url": "http://127.0.0.1:8095/",
+"cam_url": "http://127.0.0.1:8097/",
+"cam_urls": [
+"http://127.0.0.1:8097/"
+],
+"net_profile": "",
+"stage_typical": {
+"source": "python -m optiprimex.sim.campaign --seeds 8 --perception camera,geometric --jobs 12 --stages-out optiprimex/tools/stage_typical.json",
+"when": "2026-11-06",
+"median_s": {
+"m1t1": {
+"SEARCH_ENTRY": 18.0,
+"CIRCLE_ENTRY_CW": 25.0,
+"TRANSIT": 23.5,
+"EXIT": 2.0,
+"CIRCLE_EXIT_CCW": 19.0,
+"APPROACH_LEAD": 16.0,
+"LOOK": 6.5
+},
+"m3t1": {
+"FIND_DOCK": 7.0,
+"TO_LINE": 19.5,
+"SWAY_SEARCH": 68.0,
+"SWAY_TO_ABEAM": 34.0,
+"TURN_IN": 1.0,
+"ENTER": 21.5,
+"DOCKED": 3.0,
+"AIM_FIRE": 8.0,
+"UNDOCK": 15.0,
+"REPORT_DOCK": 0.5,
+"REPORT_FIRE": 0.5
+},
+"m4t0": {
+"LISTEN": 1.0,
+"TRANSIT": 11.5
+},
+"m0t4": {
+"GO_SCAN": 37.0,
+"OBSERVE": 1.5,
+"ALIGN": 13.5,
+"APPROACH": 3.0,
+"STOP": 77.5,
+"STRAFE": 1.5
+},
+"m1t2": {
+"WAIT_UAV_MAP": 80.0,
+"SEARCH_ENTRY": 18.0,
+"CIRCLE_ENTRY_CW": 25.0,
+"TRANSIT": 23.5,
+"EXIT": 2.0,
+"CIRCLE_EXIT_CCW": 19.0,
+"APPROACH_LEAD": 16.0,
+"LOOK": 6.5
+}
+},
+"m3t1_source": "v0.1.56: python -m optiprimex.sim.campaign --missions m3t1 --seeds 12 --worlds pool,marina,extra --perception geometric,camera (+ the model on 4 seeds)",
+"m1t2_source": "v0.1.66: m1t1's medians + WAIT_UAV_MAP = the fake UAV's survey of world_extra_t1adv (238 m at 3 m/s = 79 s)"
+},
+"sim_url": "http://127.0.0.1:8097/",
+"ws": {
+"host": "127.0.0.1",
+"port": 9001
+},
+"host_thresholds": {
+"warn_c": 85.0,
+"alarm_c": 95.0
+}
+}

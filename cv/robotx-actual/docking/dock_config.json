@@ -1,0 +1,28 @@
+{
+  "_comment": "dock_observer.py config (perception only). Camera offsets from the FCU/GPS reference, red HSV thresholds, depth gates, telemetry freshness, map radius. The water-cannon offsets and the Pi link moved to ../cannon/cannon_config.json. Values copied from the students' dock_mapper_config.json on 2026-10-29.",
+  "camera": {
+    "yaw_deg": 0.0,
+    "forward_from_fcu_m": 0.0,
+    "right_from_fcu_m": 0.0
+  },
+  "red_detection": {
+    "hue_low_1": 0,
+    "hue_high_1": 12,
+    "hue_low_2": 168,
+    "hue_high_2": 179,
+    "saturation_min": 95,
+    "value_min": 55,
+    "minimum_red_fraction": 0.05,
+    "minimum_red_pixels": 80
+  },
+  "depth": {
+    "maximum_m": 25.0,
+    "minimum_valid_fraction": 0.15
+  },
+  "telemetry": {
+    "maximum_age_s": 0.75
+  },
+  "map": {
+    "radius_m": 25.0
+  }
+}

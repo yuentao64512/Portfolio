@@ -1,0 +1,237 @@
+# v0.1.90.3 (Dmitrii, venue: "clear the missions presets, should be very straight forward"): the buttons are 1 · USV only, 2 · UAV only,
+# 3 · UAV + USV, sim, custom; lab / bench-uavmap / m1t1-usv (scout) are `hidden: true` (kept, not shown).
+# The launcher's presets (v0.1.86 WP42: sim · lab · 0 bench-uavmap · 1 m1t2-uav · 2 m1t2-both · 3 m1t1-usv · 3b m1t1-gates · custom; event removed; v0.1.38; v0.1.42 WP9d: sim / lab / event / custom - the profile cut, one word per situation; scripts/launch.sh -> http://127.0.0.1:8094/): one starting point per situation; every field can be
+# changed on the page before LAUNCH. The fields (optiprimex/tools/launcher.py FIELDS):
+#   mode        sim (the Mac only: run_sim.sh) | real (three hosts: run_ocs.sh here, run_usv.sh on the NX, run_agx.sh on the AGX over ssh)
+#   judge       venue (DEMO rc-test, VLAN 70: the default) | alpha .. delta (the course RoboCommand .2:1883) | course (RC_HOST) | fake (ours) | rctest (last)
+#   net         ts (tailnet) | lan (the pool / event switch) | manual (the addresses typed on the page)
+#   fcu         fake | uart | usb | eth                 (real mode; sim = the simulator's plant)
+#   usv_profile pool | lab | course                     (real mode: run_usv.sh --pool | --lab | --course; test mode follows the profile)
+#   cv          real | fake | off                       (real mode: the AGX's cv_publish | run_agx.sh --sim | nothing)
+#   perception  camera | geometric                      (sim mode: the camera path to the map | the fast geometric fake)
+#   world       pool | marina | boxes | por | empty     (sim, and the AGX's fake CV)
+#   usv_ui      true | false                            (sim: usv_ui on the simulated boat)
+#   heartbeat_hz, status_hz, map_hz                     (the OCS's heartbeat to RoboCommand; the boat's status and map rates)
+#   ui          v2 | v1                              (v0.1.43: the OCS page; v1 = the classic page frozen at /v1/)
+#   log         false | true                            (LOG=1: every MQTT message to SQLite)
+#   usv_window  mac | nx | off                         (v0.1.63, real mode: where the USV window serves the team LAN for a delegate)
+#   auto_mission false | true                           (v0.1.86: with `mission` - RunStart -> 3-2-1 -> start_task by itself; true by default on the real presets)
+#   mission     none | m4t0 | m1t1 | m1t2 | scout | m3t1 | m0t4 | m0t8 | m0t9   (v0.1.86: preselected at launch; `ocs_cli mission off` clears it)
+#   tiers       profile | {T1: ADVANCED, T2: NONE, ...}  (v0.1.86: the declaration's tier row for the run; T4 NONE = the preset's yes to 'are you sure?')
+#   t4          false | true                         (v0.1.88: T4 Dynamic Incident Response - on = T4 TIER_CORE, off = TIER_NONE; the launcher's
+#                                                    tick box, off in every preset; it wins over the tier row's T4; an operator's
+#                                                    `mission ... --t4` in the OCS wins over both)
+#   lucky       false | true                         (v0.1.90: m1t1 / m1t2 take the closest uncertain-colour pair inside the course as a
+#                                                    gate, and go straight to the gates when no flashing blue entry is found - a risk)
+#   record      auto | off                              (v0.1.86: the ZED recording at DECLARE; forced off unless cv real; the observer records from launch with depth pairs)
+#   uav         off | on                               (v0.1.65: the UAV adapter + the UAV window; every preset off - `declare uav` decides the declaration)
+#   free_run    off | on                               (v0.1.68, lab and custom only: the mission manager on a ghost plant, mode requests only to
+#                                                       the real FCU, the AGX's fake CV on the same world; never with judge course)
+sim:
+  title: "sim"
+  about: "the Mac alone - rehearse between runs: the simulator on the water day's hull (omni_usv), world marina, scout preselected (one click away)"
+  mode: sim
+  judge: fake
+  net: ts
+  fcu: fake
+  usv_profile: course
+  cv: real
+  world: marina
+  log: false
+  usv_window: mac
+  uav: "off"
+  mission: scout
+  auto_mission: false
+  tiers: profile
+  t4: false
+  lucky: false
+  record: "off"
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+lab:
+  title: "lab (bench) - real Pixhawk, props off"
+  hidden: true                     # v0.1.90.3: off the launcher's buttons (kept for the bench and the tests)
+  about: "the real Pixhawk on the bench (props off, ESC power off): --lab guards, the AGX's real CV, our fake judge"
+  mode: real
+  judge: fake
+  net: ts
+  fcu: uart
+  usv_profile: lab
+  cv: real
+  world: pool
+  log: true
+  usv_window: mac
+  uav: "off"
+  free_run: "off"
+  mission: none
+  auto_mission: false
+  tiers: profile
+  t4: false
+  lucky: false
+  record: "off"
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+bench-uavmap:
+  title: "0 · bench: UAV map → USV"
+  hidden: true                     # v0.1.90.3: off the launcher's buttons (kept for the bench and the tests)
+  about: "the UAV adapter + the drone's buoy relay -> local/USV1/perception/map; the NX's fake FCU; m0t8 at hand; flip fcu to uart (--lab) for the full chain (props off)"
+  mode: real
+  judge: fake
+  net: lan
+  fcu: fake
+  usv_profile: lab
+  cv: "off"
+  world: pool
+  log: true
+  usv_window: mac
+  uav: "on"
+  uav_buoys: broker
+  mission: none
+  auto_mission: false
+  tiers: profile
+  t4: false
+  lucky: false
+  record: "off"
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+m1t2-uav:
+  title: "2 · UAV only — boat holds"
+  about: "the drone flies and maps; the boat holds in AUTO · LOITER the whole run (no task); RunStart flies the drone"
+  mode: real
+  judge: venue
+  net: lan
+  fcu: uart
+  usv_profile: course
+  cv: real
+  world: marina
+  log: true
+  usv_window: nx
+  uav: "on"
+  uav_buoys: broker
+  mission: m1t2
+  auto_mission: false
+  tiers: {T1: ADVANCED, T2: NONE, T3: NONE, T4: NONE}
+  t4: false
+  lucky: false
+  record: auto
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+m1t2-both:
+  title: "3 · UAV + USV — m1t2"
+  about: "the drone maps first; the boat holds (WAIT_UAV_MAP) and goes by itself at the drone's touchdown (disarmed after flying, map quiet 5 s)"
+  mode: real
+  judge: venue
+  net: lan
+  fcu: uart
+  usv_profile: course
+  cv: real
+  world: marina
+  log: true
+  usv_window: nx
+  uav: "on"
+  uav_buoys: broker
+  mission: m1t2
+  auto_mission: true
+  tiers: {T1: ADVANCED, T2: NONE, T3: NONE, T4: NONE}
+  t4: false
+  lucky: false
+  record: auto
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+m1t1-usv:
+  title: "3 · USV alone - SCOUT as Task 1"
+  hidden: true                     # v0.1.90.3: off the launcher's buttons (kept for the bench and the tests)
+  about: "colour-blind buoy-to-buoy, logs the field; starts by itself at RunStart (3-2-1)"
+  mode: real
+  judge: venue
+  net: lan
+  fcu: uart
+  usv_profile: course
+  cv: real
+  world: marina
+  log: true
+  usv_window: nx
+  uav: "off"
+  mission: scout
+  auto_mission: true
+  tiers: {T1: CORE, T2: NONE, T3: NONE, T4: NONE}
+  t4: false
+  lucky: false
+  record: auto
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+m1t1-gates:
+  title: "1 · USV only — m1t1"
+  about: "the boat alone, the gate mission: crew → DECLARE → ENABLE AUTO → RunStart → it starts by itself (3-2-1). Tick lucky to take uncertain-colour pairs as gates"
+  mode: real
+  judge: venue
+  net: lan
+  fcu: uart
+  usv_profile: course
+  cv: real
+  world: marina
+  log: true
+  usv_window: nx
+  uav: "off"
+  mission: m1t1
+  auto_mission: true
+  tiers: {T1: CORE, T2: NONE, T3: NONE, T4: NONE}
+  t4: false
+  lucky: false
+  record: auto
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2
+custom:
+  title: "custom"
+  about: "a free starting point - the real hosts with the fake FCU on the NX and the fake CV on the AGX; change anything"
+  mode: real
+  judge: fake
+  net: ts
+  fcu: fake
+  usv_profile: lab
+  cv: fake
+  world: pool
+  log: true
+  usv_window: mac
+  uav: "off"
+  free_run: "off"
+  mission: none
+  auto_mission: false
+  tiers: profile
+  t4: false
+  lucky: false
+  record: "off"
+  perception: camera
+  usv_ui: true
+  heartbeat_hz: 2
+  status_hz: 2
+  map_hz: 2
+  ui: v2

@@ -1,0 +1,14 @@
+# OCS hub, POOL profile - mosquitto on the Mac: the boat broker bridges in over the pool Wi-Fi/LAN, map.html and the
+# bench TUI use websockets 9001. Rendered by scripts/run_ocs.sh (@PERSIST@). Anonymous: the course profile adds ACLs.
+listener @PORT@ 0.0.0.0
+protocol mqtt
+listener @WS@ 0.0.0.0
+protocol websockets
+allow_anonymous true
+persistence true
+persistence_location @PERSIST@/
+max_queued_messages 10000
+sys_interval 2
+log_type error
+log_type warning
+log_type notice

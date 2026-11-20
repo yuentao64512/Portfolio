@@ -1,0 +1,19 @@
+# Empty world (v0.1.28.1): the bench's default since the fake buoys moved into the sim scenarios. fake_perception runs (its
+# health beat keeps the camera preflight alive) but sees nothing; pick a scenario with scripts/sim_world.sh bench|pool|por|boxes,
+# the OCS page's SETTINGS -> Sim scenario, or WORLD=bench scripts/run_bench.sh.
+name: empty
+origin: {lat: 1.2810202, lon: 103.8550097}          # Course Alpha's centre, Marina Bay (v0.1.33; was 1.3000 / 103.8000)
+start: {x_n: 0.0, y_e: 0.0, hdg_deg: 0.0}
+
+camera:
+  name: zed2i_left
+  intrinsics: zed2i_hd2k          # the field of view from optiprimex/sim/zed.py (50.9 deg, v0.1.34; was 100)
+  min_range_m: 0.5
+  max_range_m: 25.0
+  hz: 5
+  noise_range_m: 0.15
+  noise_bearing_deg: 1.0
+  dropout: 0.05
+  conf: 0.85
+
+objects: []

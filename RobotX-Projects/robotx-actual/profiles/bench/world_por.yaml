@@ -1,0 +1,33 @@
+# Proof of Readiness course (handbook 3.1.2, "How to Build: USV Proof of Readiness Course"): two RED/GREEN pairs
+# 6-10 ft wide (2.4 m here), the USV starts 3 m behind the first gate and must pass through both without striking a
+# buoy. The handbook drawing's spacing between the pairs is unreadable in the extract; 15 m (~50 ft) is assumed - edit
+# x_n of gate 2 to the course you build. Lights are steady (any red/green buoys may be used for the PoR).
+# Frame and start as world_pool.yaml (fake FCU defaults, start at the origin heading north).
+name: world_por
+origin: {lat: 1.2810202, lon: 103.8550097}          # Course Alpha's centre, Marina Bay (v0.1.33; was 1.3000 / 103.8000)
+start: {x_n: 0.0, y_e: 0.0, hdg_deg: 0.0}
+teleports:                                 # v0.1.33
+  - {name: before gate 2, x_n: 13.0, y_e: 0.0, hdg: 0.0}
+bounds:
+  - [-3.0, -8.0]
+  - [25.0, -8.0]
+  - [25.0, 8.0]
+  - [-3.0, 8.0]
+
+camera:
+  name: zed2i_left
+  intrinsics: zed2i_hd2k          # the field of view from optiprimex/sim/zed.py (50.9 deg, v0.1.34; was 72)
+  min_range_m: 0.5
+  max_range_m: 25.0
+  hz: 5
+  noise_range_abc: [0.02, 0.0, 0.0015]
+  noise_bearing_deg: 0.25
+  p_drop_max: 0.7
+  p_miscolour_max: 0.5
+  conf: 0.85
+
+objects:
+  - {id: 1, kind: buoy, colour: green, light: steady, gate: 1, x_n: 3.0,  y_e: -1.2}
+  - {id: 2, kind: buoy, colour: red,   light: steady, gate: 1, x_n: 3.0,  y_e: 1.2}
+  - {id: 3, kind: buoy, colour: green, light: steady, gate: 2, x_n: 18.0, y_e: -1.2}
+  - {id: 4, kind: buoy, colour: red,   light: steady, gate: 2, x_n: 18.0, y_e: 1.2}

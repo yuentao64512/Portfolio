@@ -12,6 +12,7 @@ A cleaned collection of RobotX aerial-drone computer-vision and radio-control ex
 | `04-clean-dirty-inspection` | Clean versus dirty surfaces viewed by a drone camera | Aerial wall, roof, panel, structure, or facility inspection |
 | `05-drone-rc-control` | Converts drone-camera detections to a 100 x 100 grid and communicates over serial radio | Drone RC/mission experimentation and sending target positions to a controller |
 | `simulation` | Gazebo boat and drone simulation with OCS/robocommand integration, ASV wave models, MAVLink control, worlds, and launch scripts | Testing the combined RobotX boat/drone control workflow before hardware deployment |
+| `robotx-actual` | Actual USV Orin NX control source: UAV, USV, OCS, USV UI, shared scripts and robocommand | Reviewing and deploying the physical RobotX boat control stack |
 
 Each project has its own README with its purpose, application cases, expected files, and commands.
 

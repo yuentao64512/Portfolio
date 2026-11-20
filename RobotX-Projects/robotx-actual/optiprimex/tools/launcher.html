@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OptiPrime launcher</title>
+<style>
+/* v0.1.47: the palettes come from /themes.css (the five themes + --up); this page keeps only its layout */
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header b{font-size:15px}header .sp{flex:1}
+main{display:grid;grid-template-columns:minmax(320px,440px) 1fr;gap:14px;padding:14px 16px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px}
+.plinks b.pin,#nettab b.pin{background:var(--warnBg,#fff3c4);color:var(--text,#222);border:1px solid var(--warn,#c90);border-radius:4px;padding:0 5px;font:700 12px ui-monospace,Menlo,monospace;letter-spacing:.08em}   /* v0.1.78.9 */
+#nettab table,#crstab table{width:100%;border-collapse:collapse;font:12px ui-monospace,Menlo,monospace}#crstab th,#crstab td{text-align:left;padding:2px 8px 2px 0}#nettab th{text-align:left;color:var(--dim);font-weight:600;padding:2px 8px 2px 0;border-bottom:1px solid var(--line)}
+#nettab td{padding:2px 8px 2px 0;border-bottom:1px solid var(--line);vertical-align:top}#nettab td.act{font-weight:700}#nettab .up{color:var(--ok,#3c3)}#nettab .dn{color:var(--bad,#e55)}
+.card h3{margin:0 0 8px;font-size:12px;letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{flex:1;min-width:90px}
+button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font:inherit;cursor:pointer}
+button.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+button.go{background:var(--action);border:2px solid var(--actionLine);color:var(--actionText);font-weight:800}button.stop{background:var(--alarmPale);border:2px solid var(--alarm);color:var(--alarmText);font-weight:700}   /* v0.1.50 */
+button.on{background:var(--actionPale);border:2px solid var(--actionLine);font-weight:700}
+button:disabled{opacity:.5;cursor:default}
+.row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin:5px 0}
+.row label{color:var(--dim)}
+.seg{display:flex;gap:4px;flex-wrap:wrap}.seg button{padding:4px 9px}
+input[type=text],input[type=number]{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:5px 7px;font:inherit;width:100%}
+.hide{display:none!important}
+.about{color:var(--dim);margin:6px 0 0}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;margin:6px 0;white-space:pre-wrap;word-break:break-all;font:12px/1.4 ui-monospace,Menlo,monospace}
+.step{margin:8px 0}.step .h{font-weight:600}.host{display:inline-block;min-width:38px;padding:1px 6px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);margin-right:6px;font-size:11px;text-align:center}
+.note{color:var(--warn)}.err{color:var(--bad)}
+#log{max-height:46vh;overflow:auto}
+#log .step{color:var(--acc);margin:4px 0 0}#log .cmd{color:var(--dim)}#log .bad{color:var(--bad)}#log .ok{color:var(--ok)}#log .warn{color:var(--warn)}
+.links a{color:var(--acc);margin-right:14px}
+.state{padding:2px 8px;border-radius:10px;border:1px solid var(--line)}
+#banner{margin:14px 16px 0;border:1px solid var(--warn);background:var(--panel);border-radius:8px;padding:12px}
+#banner b{color:var(--warn)}#banner .btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.hrow{display:grid;grid-template-columns:90px 1fr auto;gap:8px;align-items:center;margin:4px 0}
+.okc{color:var(--ok)}
+#form.ro{pointer-events:none;opacity:.4}
+#rotag{color:var(--warn);margin:0 0 8px}.badc{color:var(--bad)}
+/* v0.1.47 (UI_QOL A1, A4, A5) */
+.cmdbox{position:relative}.cmdbox pre{padding-right:64px}
+.cmdbox .cp{position:absolute;top:4px;right:4px;padding:1px 7px;font-size:13px;line-height:1.3}
+.cmdbox .chip{position:absolute;top:6px;right:34px;font-size:11px;padding:0 6px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--muted,var(--dim))}
+.plinks{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 8px}
+.plinks a{color:var(--acc);text-decoration:none;display:inline-flex;align-items:center;gap:5px}.plinks a:hover{text-decoration:underline}
+.plinks i{display:inline-block;width:9px;height:9px;border-radius:50%;border:1px solid var(--dim);background:transparent}
+.plinks a.up i{background:var(--up);border-color:var(--up)}.plinks .w{font-size:11px;color:var(--muted,var(--dim))}
+#prog{margin:0 0 8px}.pl{display:grid;grid-template-columns:44px 1fr auto;gap:8px;margin:1px 0;color:var(--dim)}
+.pl.up{color:var(--up);font-weight:700}.pl.died{color:var(--alarm,var(--bad));font-weight:700}.pl .why{font-size:11px;font-weight:400}
+.con{max-height:320px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:11.5px ui-monospace,Menlo,monospace;white-space:pre-wrap}
+</style><link rel="stylesheet" href="/themes.css"></head>
+<body>
+<header><b>OptiPrime launcher</b><span id="ver" class="about"></span><span class="sp"></span>
+  <span class="state" id="state">idle</span>
+  <select id="theme" title="the theme of every page (this select is the source of truth: the OCS page's /prefs carries it to the OCS, judge, SIM and boat pages; a page's own selector writes back)"><option value="dark">dark</option><option value="light">light</option><option value="hc-dark">HC dark</option><option value="hc-light">HC light</option><option value="fun">fun</option></select>
+</header>
+<div id="banner" class="hide"><div id="bantext"></div><div class="btns">
+  <button class="go" id="reconnect" title="adopt the running launch: its links, its STOP, the per-host status - nothing is started">RECONNECT</button>
+  <button class="stop" id="banstop" title="type stop below first: stops what that launch started">STOP ALL</button>
+  <button id="stopnew" title="type stop below first: stop it, then the form is yours for a new launch">STOP, then start new</button>
+  <input type="text" id="banword" placeholder="type stop" style="width:110px"></div></div>
+<main>
+<section id="form"><p id="rotag" class="hide">showing the running launch (read-only) - STOP it to start another</p>
+  <div class="card"><h3>preset</h3><div class="presets" id="presets"></div><p class="about" id="about"></p></div>
+  <div class="card"><h3>the run</h3>
+    <div class="row"><label title="sim: this Mac only (run_sim.sh); real: run_ocs.sh here, run_usv.sh on the NX, run_agx.sh on the AGX over ssh">mode</label><div class="seg" data-k="mode"></div></div>
+    <div class="row"><label title="fake: our judge; rctest: RoboNation's test server on this Mac (home); venue: the venue's rc-test on our team broker; course: the RoboCommand at RC_HOST">judge</label><div class="seg" data-k="judge"></div></div>
+    <div class="row" data-for="sim"><label title="the world file the simulator runs">world</label><div class="seg" data-k="world"></div></div>
+    <div class="row" data-for="sim"><label title="camera: rendered frames through the students' measuring code to the map; geometric: the fast fake">perception</label><div class="seg" data-k="perception"></div></div>
+    <div class="row"><label title="usv_ui on the boat (sim: on the simulated boat)">usv_ui</label><div class="seg" data-k="usv_ui" data-bool="1"></div></div>
+    <div class="row"><label title="v0.1.86: the mission preselected at launch (the OCS shows it; ocs_cli mission off clears it)">mission</label><div class="seg" data-k="mission"></div></div>
+    <div class="row"><label title="v0.1.86: on = RunStart -> 3-2-1 -> start_task by itself (once per run); off = RunStart says mission_ready, the boat stays in AUTO_HOLD">auto start</label><div class="seg" data-k="auto_mission" data-bool="1"></div></div>
+    <div class="row"><label title="v0.1.88: T4 Dynamic Incident Response in the declaration - on = TIER_CORE, off = TIER_NONE (off in every preset; an operator's mission --t4 in the OCS still wins)">T4 (incident)</label><div class="seg" data-k="t4" data-bool="1"></div></div>
+    <div class="row"><label title="v0.1.94: m1t1 / m1t2 fallback - uncertain-colour pairs count as gates, blue is checked as usual but any colour passes; no entry found: the exit is orbited instead; an entry found later: orbit it and run the gates again (once); speeds x1.25. A risk - off in every preset">lucky (gates)</label><div class="seg" data-k="lucky" data-bool="1"></div></div>
+    <div class="row" data-for="real"><label title="v0.1.86: the ZED recording (observer --record --pairs-s 10 from launch) and the logging session at DECLARE; off unless cv real">record</label><div class="seg" data-k="record"></div></div>
+    <div class="row"><label title="v0.1.86: the declaration's tier row for this run (profile = the OCS profile's)">tiers</label><span id="tiers" class="dim"></span></div>
+    <div class="row"><label title="v0.1.86: one TCP connect each (0.5 s, every 10 s): RoboCommand per judge, ssh :22 per Jetson - addresses from the env files, never shown">reachable</label><span id="reach" class="dim">checking…</span></div>
+  </div>
+  <div class="card" data-for="real"><h3>the boat</h3>
+    <div class="row"><label title="fake: the software FCU on the NX; uart / usb / eth: the real Pixhawk (props off on the bench)">fcu</label><div class="seg" data-k="fcu"></div></div>
+    <div class="row"><label title="run_usv.sh --pool | --lab (bench guards, never on the water) | --course">profile</label><div class="seg" data-k="usv_profile"></div></div>
+    <div class="row"><label title="real: cv_publish + the camera on the AGX; fake: run_agx.sh --sim on the world; off: the AGX is not started">cv</label><div class="seg" data-k="cv"></div></div>
+    <div class="row" data-for="real"><label title="v0.1.63: where the USV window (8098) serves the team LAN for a delegate - nx: on the boat (survives this Mac; the event's default), mac: here, off: none. One commander (take over at once); commands from another computer need the PIN printed by its step">USV window</label><div class="seg" data-k="usv_window"></div></div>
+    <div class="row" data-for="fakecv"><label>fake CV world</label><div class="seg" data-k="world"></div></div>
+    <div class="row" data-for="uavbuoys"><label title="v0.1.69: the UAV's buoys - broker: the NX's broker bridges their Orin mosquitto (UAV_BUOY_PATH direct); udp: their detector sends JSON to our adapter's 14605, the adapter relays it through the hub (relay)">UAV buoys</label><div class="seg" data-k="uav_buoys"></div></div>
+    <div class="row" data-for="freerun"><label title="v0.1.68 (WP17): FREE RUN - the mission manager runs every stage against a ghost plant; the real FCU gets mode requests only (no frames / targets / velocities); the AGX runs the fake CV on the same world. The lab and custom presets only; never with judge course. Bench only, props off, ESC power off">free run</label><div class="seg" data-k="free_run"></div></div>
+    <div class="row"><label title="v0.1.65 (D15): on = the UAV adapter (the UAV team's wire to their Orin; in sim their fake copter + listener too) and the UAV window (8099). Every preset off. This only starts processes: the UAV is declared only with `declare uav on`">UAV</label><div class="seg" data-k="uav"></div></div>
+  </div>
+  <div class="card" data-for="real"><h3>network</h3>
+    <div class="row"><label title="ts: the tailnet (network.ts.env); lan: the event / pool switch (network.lan.env); manual: type the addresses">net</label><div class="seg" data-k="net"></div></div>
+    <div id="manual" class="hide">
+      <div class="row"><label>OCS host</label><input type="text" data-k="ocs_host" placeholder="this Mac, as the boat reaches it"></div>
+      <div class="row"><label>boat host</label><input type="text" data-k="boat_host" placeholder="the NX's address (its broker 1884)"></div>
+      <div class="row"><label>AGX host</label><input type="text" data-k="agx_host" placeholder="the AGX's address"></div>
+      <div class="row"><label>NX ssh</label><input type="text" data-k="nx_ssh" placeholder="user@host or an ssh alias"></div>
+      <div class="row"><label>AGX ssh</label><input type="text" data-k="agx_ssh" placeholder="user@host or an ssh alias"></div>
+      <div class="row"><label>RC host</label><input type="text" data-k="rc_host" placeholder="judge course only"></div>
+      <div class="row"><label title="v0.1.65: UAV_HOST - the UAV team's Orin (UAV: on)">UAV host</label><input type="text" data-k="uav_host"></div>
+      <div class="row"><label>UAV listen port</label><input type="text" data-k="uav_listen_port"></div>
+      <div class="row"><label>UAV bridge port</label><input type="text" data-k="uav_bridge_port"></div>
+      <div class="row"><label title="v0.1.66: the UAV Orin's mosquitto (the buoys)">UAV broker host</label><input type="text" data-k="uav_broker_host"></div>
+      <div class="row"><label>UAV broker port</label><input type="text" data-k="uav_broker_port"></div>
+      <div class="row"><label title="v0.1.66: direct | relay | off">UAV buoy path</label><input type="text" data-k="uav_buoy_path"></div>
+    </div>
+  </div>
+  <div class="card"><h3>rates and logging</h3>
+    <div class="row"><label title="the OCS heartbeat to RoboCommand (ocs.heartbeat_hz)">heartbeat Hz</label><input type="number" step="0.5" data-k="heartbeat_hz"></div>
+    <div class="row"><label title="the boat's status rate on the broker (rates.status_hz)">status Hz</label><input type="number" step="0.5" data-k="status_hz"></div>
+    <div class="row"><label title="the boat's perception-map rate on the broker (rates.map_hz)">map Hz</label><input type="number" step="0.5" data-k="map_hz"></div>
+    <div class="row"><label title="the OCS page: v2 (default) or the classic v0.1.42 page frozen at /v1/ (same state, same commands; LAUNCH_UI sets the default)">OCS page</label><div class="seg" data-k="ui"></div></div>
+    <div class="row"><label title="LOG=1: every MQTT message to SQLite (real stacks)">log</label><div class="seg" data-k="log" data-bool="1"></div></div>
+    <p class="about">a changed rate goes into a generated copy of the profile under logs/launch/ - the profiles themselves stay as they are</p>
+  </div>
+</section>
+<section>
+  <div class="card"><h3>the plan</h3><div id="errs" class="err"></div><div id="plan"></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="go" id="launch" title="start the plan above, step by step (the log below)">LAUNCH</button><span class="sp" style="flex:1"></span>
+      <input type="text" id="stopword" placeholder="type stop" style="width:110px"><button class="stop" id="stop" title="scripts/stop_all.sh: the boat, the AGX, the judge, rc-test, the bench, the OCS last">STOP ALL</button></div>
+  </div>
+  <div class="card" id="netcard"><h3>network <span class="dim" style="font-weight:400">every address the launchers use, per profile (network*.env, read now; this page only) · ● answers a ping</span>
+    <button class="b" id="netref" style="float:right;font-size:11px" title="read the files again and ping every address">↻ check</button></h3><div id="nettab" class="dim">…</div><div id="netmsg" class="dim" style="margin-top:6px;font-size:11px"></div></div>
+  <div class="card" id="crscard"><h3>RoboCommand networks <span class="dim" style="font-weight:400">v0.1.82: which course this Mac is plugged into (its DHCP address), the broker (TCP 1883), the retained RxCourse (only while the OCS is not running)</span>
+    <button class="b" id="crsref" style="float:right;font-size:11px" title="check again (one short MQTT look at robocommand/robotx/course when the OCS is not running)">↻ check</button></h3><div id="crstab" class="dim">press ↻ check</div></div>
+  <div class="card hide" id="hostcard"><h3>running (checked every 5 s)</h3><div id="hosts"></div></div>
+  <div class="card"><h3>progress</h3><div class="plinks" id="links" title="every 5 s, launched from here or by hand: a filled dot = the page answers"></div>
+    <div id="prog"></div><pre id="log">nothing launched yet</pre></div>
+  <div class="card"><h3>console <span class="dim" style="font-weight:400">a started window's last lines (tmux, read only - type in the window itself)</span></h3>
+    <select id="conwin" title="which window the plan started (here or on a Jetson over ssh)"><option value="">pick a window</option></select>
+    <pre id="con" class="con">-</pre></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let THEME="dark";                                     // v0.1.47 (A6): /prefs is the truth; localStorage only a cache for the first paint
+try{let t=localStorage.getItem("ocs.theme");if(t==="contrast")t="hc-dark";THEME=t||"dark";document.documentElement.dataset.theme=THEME}catch(e){}
+let P={},F={},cfg={},cur="sim",PH={};
+// v0.1.47 (A2): a title on every choice - the row label's text, per option
+const TIPS={mode:{sim:"sim: this Mac only - scripts/run_sim.sh (the simulator, the bench, the OCS / SIM / judge pages); the Jetsons are not touched",
+  real:"real: run_ocs.sh here, run_usv.sh on the NX and run_agx.sh on the AGX over ssh"},
+ judge:{auto:"auto: the course (ALPHA-DELTA) whose network a Mac adapter is on now (scripts/net_roles.sh status); never the venue DEMO",fake:"fake: our fake RoboCommand on the hub (JSON wire), RunStart 2 s after a valid declaration",
+  rctest:"rctest: RoboNation's test server on this Mac (1885, the protobuf wire) + its judge console and the judge page wired to 1885",
+  venue:"venue: the venue's rc-test - RoboNation's practice server on our team broker (VENUE_RC_HOST:VENUE_RC_PORT in network.env, its page VENUE_RC_WEB); protobuf, the console read-only; with sim: our simulated boat is declared and reported to it",
+  course:"course (auto): the RoboCommand at RC_HOST (network.lan.env) or the course NIC's DHCP gateway - the console read-only",
+  alpha:"ALPHA: the course RoboCommand RC_ALPHA_HOST (network.lan.env; handbook 192.168.65.2:1883) - the checker below says if this Mac is on that network",
+  bravo:"BRAVO: RC_BRAVO_HOST (192.168.66.2:1883)",charlie:"CHARLIE: RC_CHARLIE_HOST (192.168.67.2:1883)",delta:"DELTA: RC_DELTA_HOST (192.168.68.2:1883)"},
+ world:{pool:"pool: the pool world (profiles/bench/world_pool.yaml)",marina:"marina: the marina world (the event's layout)",boxes:"boxes: the boxes world (m0t4)",
+  por:"por: the port world",empty:"empty: no objects - the plant only",bench:"bench: the small bench world"},
+ perception:{camera:"camera: rendered frames through the students' measuring code (sim_observer -> cv_publish) to the map",geometric:"geometric: the fast fake perception (no camera path)"},
+ usv_ui:{true:"on: usv_ui runs on the boat (sim: on the simulated boat) and holds the FCU link",false:"off: no usv_ui (--no-ui); the mission manager holds the FCU link itself"},
+ fcu:{fake:"fake: the software FCU on the NX (no Pixhawk)",uart:"uart: the real Pixhawk on /dev/ttyTHS1 (props off on the bench)",usb:"usb: the real Pixhawk over USB (props off on the bench)",
+  eth:"eth: the real Pixhawk over ethernet (props off on the bench)"},
+ usv_profile:{pool:"pool: run_usv.sh --pool (usv_pool.yaml)",lab:"lab: run_usv.sh --lab - bench guards, a real Pixhawk indoors, never on the water",course:"course: run_usv.sh --course (usv_course.yaml, no GOTO)"},
+ cv:{real:"real: cv_publish + the camera stream on the AGX",fake:"fake: run_agx.sh --sim on the world file (fake perception + fake dock)",off:"off: the AGX is not started"},
+ net:{ts:"ts: the tailnet (network.ts.env)",lan:"lan: the event / pool switch (network.lan.env)",manual:"manual: type the addresses below"},
+ ui:{v2:"v2: the OCS page (default)",v1:"v1: the classic v0.1.42 page frozen at /v1/ (same state, same commands)"},
+ log:{true:"on: LOG=1 - every MQTT message to SQLite (real stacks)",false:"off: no SQLite log"},
+ free_run:{off:"off: the FCU's own position (the default)",on:"on: FREE RUN - ghost position, no motion to the FCU (mode requests only); lab profile + a real FCU; never judge course"},
+ uav:{off:"off: nothing UAV runs (the default of every preset)",on:"on: the UAV adapter + the UAV window (8099); in sim the UAV team's fake copter + listener - declare uav on to declare it"}};
+const tip=(k,c)=>((TIPS[k]||{})[String(c)])||`${k}: ${c}`;
+const post=(u,b)=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json","X-Launch":"1"},body:JSON.stringify(b)}).then(r=>r.json());
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// v0.1.82 (WP39): the judge field = the course dropdown (venue = the Team Village DEMO)
+const SEG_LABEL={judge:{venue:"DEMO (venue)",course:"course (auto)",alpha:"ALPHA",bravo:"BRAVO",charlie:"CHARLIE",delta:"DELTA"}};
+// v0.1.86 (WP42 §2.2 + §6 item 6): the reachable judge(s) get a green dot; AGX · USV-NX · UAV-NX ●/○ (no auto-switching)
+let REACH=null,JL={};
+function reachTick(){fetch("/reach.json").then(r=>r.json()).then(d=>{REACH=d;const el=$("reach");if(el){
+  const j=Object.entries(d.jetsons||{}).map(([k,v])=>`<span class="${v.up?"up":"dn"}" title="${esc(v.label)}: ${v.up===null?"no address set":v.up?"ssh :22 answers":"no answer"}">${v.up?"●":"○"}</span> ${esc(v.label)}`).join(" · ");
+  el.innerHTML=j+" · "+esc(d.line||"")}segs()}).catch(()=>{})}
+setInterval(reachTick,10000);setTimeout(reachTick,300);
+function segs(){
+  document.querySelectorAll(".seg").forEach(el=>{
+    const k=el.dataset.k,bool=el.dataset.bool,choices=bool?[true,false]:F[k]||[];
+    const dot=c=>k==="judge"&&REACH&&REACH.judges&&c in REACH.judges?(REACH.judges[c]?'<span class="up">● </span>':'<span class="dim">○ </span>'):"";
+    el.innerHTML=choices.map(c=>`<button data-v="${c}" class="${cfg[k]===c?"on":""}" title="${esc(tip(k,c)+(k==="judge"&&JL[c]?" · "+JL[c]:""))}">${dot(c)}${bool?(c?"on":"off"):((SEG_LABEL[k]||{})[c]||c)}</button>`).join("");
+    el.querySelectorAll("button").forEach(b=>b.onclick=()=>{cfg[k]=bool?b.dataset.v==="true":b.dataset.v;render()});
+  });
+  document.querySelectorAll("input[data-k]").forEach(el=>{const k=el.dataset.k;if(document.activeElement!==el)el.value=cfg[k]??"";
+    if(PH[k])el.placeholder=PH[k];                                       // v0.1.47 (A3): from network.ts.env / network.lan.env, read now
+    el.oninput=()=>{cfg[k]=el.type==="number"?parseFloat(el.value):el.value.trim();plan()}});
+}
+function render(){
+  const sim=cfg.mode==="sim";
+  document.querySelectorAll('[data-for="sim"]').forEach(e=>e.classList.toggle("hide",!sim));
+  document.querySelectorAll('[data-for="real"]').forEach(e=>e.classList.toggle("hide",sim));
+  document.querySelectorAll('[data-for="fakecv"]').forEach(e=>e.classList.toggle("hide",sim||(cfg.cv!=="fake"&&cfg.free_run!=="on")));
+  document.querySelectorAll('[data-for="uavbuoys"]').forEach(e=>e.classList.toggle("hide",sim||cfg.uav!=="on"));   // v0.1.69
+  if(cfg.uav==="on"&&!cfg.uav_buoys)cfg.uav_buoys="broker";
+  document.querySelectorAll('[data-for="freerun"]').forEach(e=>e.classList.toggle("hide",sim||!("free_run" in cfg)));   // v0.1.68: lab / custom only
+  $("manual").classList.toggle("hide",cfg.net!=="manual");
+  document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("on",b.dataset.p===cur));
+  $("about").textContent=(P[cur]||{}).about||"";
+  const tr=$("tiers");if(tr)tr.textContent=cfg.tiers&&typeof cfg.tiers==="object"?Object.entries(cfg.tiers).map(([k,v])=>k+" "+v).join(" · "):"profile";
+  segs();plan();
+}
+let planT=0;
+function plan(){clearTimeout(planT);planT=setTimeout(()=>post("/plan",{cfg:Object.assign({},cfg,{theme:THEME})}).then(r=>{
+  $("errs").innerHTML=(r.errors||[]).map(esc).join("<br>");$("launch").disabled=!r.ok||S.probe.up;
+  if(!r.plan){$("plan").innerHTML="";return}
+  const p=r.plan;let h="";
+  p.files.forEach(f=>h+=`<div class="step"><span class="host">mac</span>writes ${esc(f.path)} (a profile copy with your rates)</div>`);
+  p.remote_files.forEach(f=>h+=`<div class="step"><span class="host">nx</span>copies ${esc(f.path)} to ${esc(f.host)}</div>`);
+  // v0.1.59 (A6): a clock step above 5 s in red (LAUNCH is refused: the reason is in the red lines above the plan)
+  p.steps.forEach((s,i)=>h+=`<div class="step${s.clock&&s.clock.ok===false?" err":""}"><div class="h"><span class="host">${esc(s.host)}</span>${i+1}. ${esc(s.label)}</div>${cmdbox(s.cmd)}</div>`);
+  h+=`<div class="step"><div class="h"><span class="host">mac</span>stop (STOP ALL runs it)</div>${cmdbox(p.stop)}</div>`;
+  p.notes.forEach(n=>h+=`<div class="note">• ${esc(n)}</div>`);
+  $("plan").innerHTML=h;
+}),150)}
+// v0.1.47 (A1): a copy button on every command - the exact text, a 1 s "copied" chip
+const cmdbox=c=>`<div class="cmdbox"><pre>${esc(c)}</pre><button class="cp" title="copy this command (the exact text)">⧉</button><span class="chip hide">copied</span></div>`;
+function copyText(t){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);
+  return new Promise((ok,no)=>{const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")?ok():no()}catch(e){no(e)}a.remove()})}
+document.addEventListener("click",e=>{const b=e.target.closest(".cmdbox .cp");if(!b)return;const box=b.parentElement,chip=box.querySelector(".chip");
+  copyText(box.querySelector("pre").textContent).then(()=>{chip.textContent="copied"},()=>{chip.textContent="copy failed"}).finally(()=>{chip.classList.remove("hide");
+    clearTimeout(chip._t);chip._t=setTimeout(()=>chip.classList.add("hide"),1000)})});
+function choose(name){cur=name;cfg=Object.assign({},P[name]);delete cfg.title;delete cfg.about;render()}
+$("launch").onclick=()=>post("/launch",{cfg:Object.assign({preset:cur},cfg,{theme:THEME})}).then(r=>{if(!r.ok)$("errs").textContent=r.why;poll()});
+let S={probe:{up:false,hosts:{}}},adopted=false,stopThenNew=false,loadedRec=false;
+function session(){fetch("/session.json").then(r=>r.json()).then(d=>{S=d;adopted=d.adopted;
+  const up=d.probe.up,rec=d.record;
+  $("banner").classList.toggle("hide",!up||adopted);
+  if(up&&!adopted){
+    if(rec){const h=Object.entries(d.probe.hosts).map(([k,v])=>`${k}: ${v.reach?(v.found.join(", ")||"nothing"):"no answer"}${v.missing.length&&v.reach?" (missing "+v.missing.join(", ")+")":""}`).join(" · ");
+      $("bantext").innerHTML=`<b>The launch from ${esc(rec.when)} (${esc(rec.title||"")}) is still running.</b> ${esc(h)}`;$("reconnect").classList.remove("hide")}
+    else{$("bantext").innerHTML=`<b>Running here without a launch record:</b> ${esc(d.probe.foreign.join(", "))} - stop it before a new launch`;$("reconnect").classList.add("hide")}}
+  $("launch").disabled=$("launch").disabled||up;
+  $("form").classList.toggle("ro",adopted&&up);                 // reconnected: the form shows the running launch, read-only
+  $("rotag").classList.toggle("hide",!(adopted&&up));
+  if(adopted&&d.record&&!loadedRec){loadedRec=true;cfg=Object.assign({},d.record.cfg);cur=cfg.preset&&P[cfg.preset]?cfg.preset:cur;
+    delete cfg.preset;delete cfg.title;delete cfg.about;render()}
+  if(!adopted)loadedRec=false;
+  $("launch").title=up?"something is running: RECONNECT or STOP first":"start the plan above, step by step (the log below)";
+  const hosts=d.probe.hosts||{};$("hostcard").classList.toggle("hide",!(adopted||(up&&Object.keys(hosts).length)));
+  $("hosts").innerHTML=Object.entries(hosts).map(([k,v])=>`<div class="hrow"><b>${esc(k)}</b><span class="${!v.reach||v.missing.length?"badc":"okc"}">${v.reach?((v.found.join(", ")||"nothing")+(v.missing.length?" · MISSING "+v.missing.join(", "):" · ok")):"does not answer"}</span>`+
+    (adopted&&v.reach&&v.missing.length?`<button data-h="${esc(k)}" class="rs" title="stop what is left on this host, then its launch step again">restart this host</button>`:"<span></span>")+`</div>`).join("");
+  document.querySelectorAll("button.rs").forEach(b=>b.onclick=()=>post("/restart",{host:b.dataset.h}).then(r=>{if(!r.ok)$("errs").textContent=r.why;poll()}));
+  if(stopThenNew&&!up){stopThenNew=false}
+  // v0.1.47 (A5): the five links, each with its dot (probed every 5 s, before a launch too); (A4) PROGRESS per process / page
+  $("links").innerHTML=(d.pages||[]).map(p=>`<a href="${esc(p.url)}" target="_blank" class="${p.up?"up":""}" title="${esc(p.title+" - "+p.why)}"><i></i>${esc(p.name)} <span class="w">${p.up?"up":"down"}</span>${p.pin?` <b class="pin" title="the USV window's PIN: a browser on another computer types it once before it may command (watching needs none) - USV_WINDOW_PIN in network.env changes it">PIN ${esc(p.pin)}</b>`:""}</a>`).join("");
+  const W={up:"up",starting:"starting",died:"died",unknown:"?"};
+  // v0.1.59 (A6): the launch's clock offsets on top of PROGRESS (red above 5 s)
+  $("prog").innerHTML=Object.entries(d.clocks||{}).map(([k,c])=>`<div class="pl ${c.ok===false?"died":(c.ok?"up":"unknown")}" title="ssh ${esc(c.host)} date +%s vs this Mac"><span class="host">${esc(k)}</span><span>clock ${c.offset_s==null?"no answer":(c.offset_s>0?"+":"")+c.offset_s+" s"} <span class="why">· limit 5 s</span></span><span>${c.ok===false?"OFF":(c.ok?"ok":"?")}</span></div>`).join("")+(d.progress||[]).map(p=>`<div class="pl ${p.state}" title="${esc(p.key)}"><span class="host">${esc(p.host)}</span><span>${esc(p.label)} <span class="why">· ${esc(p.why)}</span></span><span>${W[p.state]||p.state}</span></div>`).join("");
+}).catch(()=>{})}
+$("reconnect").onclick=()=>post("/adopt",{}).then(r=>{if(!r.ok){$("errs").textContent=r.why;return}
+  cfg=Object.assign({},r.cfg);cur=cfg.preset&&P[cfg.preset]?cfg.preset:cur;delete cfg.preset;delete cfg.title;delete cfg.about;loadedRec=true;render();session();poll()});
+const banStop=(thenNew)=>post("/stop",{confirm:$("banword").value}).then(r=>{if(!r.ok)$("errs").textContent=r.why;else stopThenNew=thenNew;$("banword").value="";poll();setTimeout(session,1500)});
+$("banstop").onclick=()=>banStop(false);$("stopnew").onclick=()=>banStop(true);
+setInterval(session,3000);session();
+$("stop").onclick=()=>post("/stop",{confirm:$("stopword").value}).then(r=>{if(!r.ok)$("errs").textContent=r.why;$("stopword").value="";poll()});
+// v0.1.47 (A6): this select is the source of truth - POST /prefs (the launcher pushes it to the OCS page's /prefs); /prefs read every 2 s
+function applyTheme(t){if(!t)return;THEME=t;document.documentElement.dataset.theme=t;if(document.activeElement!==$("theme"))$("theme").value=t;
+  try{localStorage.setItem("ocs.theme",t)}catch(e){}}
+$("theme").onchange=()=>{applyTheme($("theme").value);post("/prefs",{theme:THEME}).catch(()=>{});plan()};
+$("theme").value=THEME;
+function prefs(){fetch("/prefs",{cache:"no-store"}).then(r=>r.json()).then(d=>{const t=(d.prefs||{}).theme;if(t&&t!==THEME){applyTheme(t);plan()}}).catch(()=>{})}
+prefs();setInterval(prefs,2000);
+let last=-1;
+// v0.1.52: the CONSOLE card - the picked window's tail every 2 s while the page is visible
+// v0.1.53: ?con=host:session:window preselects (the rc-test console link)
+let CONK=(new URLSearchParams(location.search).get("con"))||"";
+async function conPoll(){if(document.hidden)return;try{const r=await (await fetch("/console.json?key="+encodeURIComponent(CONK))).json();
+  const sel=$("conwin"),have=[...sel.options].map(o=>o.value).join("|"),want=[""].concat(r.windows.map(w=>w.key)).join("|");
+  if(have!==want){sel.innerHTML='<option value="">pick a window</option>'+r.windows.map(w=>`<option value="${esc(w.key)}">${esc(w.label)}</option>`).join("");sel.value=CONK}
+  if(CONK){const c=$("con"),end=c.scrollTop+c.clientHeight>=c.scrollHeight-4;c.textContent=r.ok?(r.lines.join("\n")||"(empty)"):"not answering (the window is gone, or the host)";if(end)c.scrollTop=c.scrollHeight}}catch(e){}}
+document.addEventListener("DOMContentLoaded",()=>{$("conwin").onchange=()=>{CONK=$("conwin").value;$("con").textContent=CONK?"…":"-";conPoll()}});setInterval(conPoll,2000);
+function poll(){fetch("/status.json").then(r=>r.json()).then(s=>{
+  $("state").textContent=s.state+(s.dry?" · dry run":"");
+  $("state").style.borderColor=s.state==="failed"?"var(--bad)":(s.state==="done"||s.state==="adopted")?"var(--ok)":"var(--line)";
+  if(s.log.length!==last){last=s.log.length;
+    $("log").innerHTML=s.log.length?s.log.map(l=>`<div class="${l.kind}">${esc(l.text)}</div>`).join(""):"nothing launched yet";
+    $("log").scrollTop=1e9}
+}).catch(()=>{$("state").textContent="launcher closed"})}
+fetch("/presets.json").then(r=>r.json()).then(d=>{P=d.presets;F=d.fields;PH=d.placeholders||{};JL=d.judge_label||{};$("ver").textContent=d.version?("v"+d.version):"";
+  $("presets").innerHTML=Object.keys(P).filter(k=>!P[k].hidden).sort((a,b)=>{const ta=String(P[a].title||a),tb=String(P[b].title||b),da=/^\d/.test(ta),db=/^\d/.test(tb);return da===db?ta.localeCompare(tb):(da?-1:1)}).map(k=>`<button data-p="${k}" title="${esc(P[k].about||"")}">${esc(P[k].title||k)}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach(b=>b.onclick=()=>choose(b.dataset.p));
+  choose(P.sim?"sim":Object.keys(P)[0]);
+});
+setInterval(poll,1000);poll();
+// v0.1.78.3: the NETWORK reference table - read from network*.env by the launcher at each request, a ping per address
+// v0.1.78.4: ssh to the NX / AGX in a Terminal window (an interactive login: a password prompt is fine from another laptop);
+// the target is the network files' ORIN_SSH / AGX_SSH - the page only says nx | agx
+function sshCell(r){const s=r.ssh;if(!s||(!s.target&&!r.pin))return"";   // v0.1.78.12: no target (e.g. UAV_SSH unset) = no buttonsconst up=r.hosts.length&&r.hosts[0].up;const E=x=>String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const a=s.auth==="key"?'<span class="up" title="a key logs in from this laptop: the launch\'s steps work">key ok</span>':s.auth==="password"?'<span class="dn" title="the host asks this laptop for a password: the launch\'s ssh steps cannot type it - copy the key once">password needed</span>':'';
+  return (r.pin?`<div style="margin-bottom:3px"><b class="pin" title="the USV window (http://${E(r.hosts.length?r.hosts[0].addr:"")}:8098/): a browser on another computer types this PIN once before it may command - USV_WINDOW_PIN in network.env changes it">USV window PIN ${E(r.pin)}</b></div>`:"")+
+    `<div style="margin-bottom:3px;white-space:nowrap"><button class="b" data-ssh="${s.which}" data-act="open" ${up&&s.target?"":"disabled"} title="${up?"a Terminal window: ssh "+s.target+" (asks the password if this laptop has no key)":"waiting for the host to answer a ping"}">ssh ↗</button> `+
+    (r.observer?`<button class="b" data-obs="${r.observer.state==="up"?"stop":"start"}" title="${r.observer.state==="up"?"stop the buoy observer (window obs of tmux agx)":"start the buoy observer: cv/buoys/run.sh --headless in tmux agx, window obs - the camera picture + the detections (needs the launch's perception on the AGX; refused when the ZED is held)"}">observer ${r.observer.state==="up"?"■":"▶"}</button> <span class="${r.observer.state==="up"?"up":"dn"}" title="${E(r.observer.text)}">observer ${E(r.observer.state)}</span> `:"")+
+    (s.auth==="password"?`<button class="b" data-ssh="${s.which}" data-act="copy-id" title="a Terminal window: ssh-copy-id ${s.target} (creates ~/.ssh/id_ed25519 first if this laptop has none; asks the Jetson's password once)">copy my key ↗</button> `:"")+a+`</div>`}
+function sshGo(which,action){fetch("/ssh",{method:"POST",headers:{"Content-Type":"application/json","X-Launch":"1"},body:JSON.stringify({which,action})}).then(r=>r.json()).then(j=>{
+  const el=document.getElementById("netmsg");if(el)el.textContent=j.ok?(j.dry?"dry run - would open: ":"opened a Terminal: ")+j.cmd:"not opened: "+(j.why||"?")+(j.cmd?" - run it yourself: "+j.cmd:"")})}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-ssh]");if(b&&!b.disabled)sshGo(b.dataset.ssh,b.dataset.act)});
+// v0.1.78.7: the AGX buoy observer (start / stop) - the answer in the message line, then the table again
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-obs]");if(!b||b.disabled)return;b.disabled=true;const el=document.getElementById("netmsg");if(el)el.textContent="observer "+b.dataset.obs+"…";
+  fetch("/observer",{method:"POST",headers:{"Content-Type":"application/json","X-Launch":"1"},body:JSON.stringify({action:b.dataset.obs})}).then(r=>r.json()).then(j=>{if(el)el.textContent=j.text||j.why||"?";netTab()}).catch(()=>{if(el)el.textContent="no answer from the launcher"})});
+function netTab(){const el=document.getElementById("nettab");if(!el)return;fetch("/network.json").then(r=>r.json()).then(t=>{
+  const E=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const cell=(v,p)=>`<td class="${t.active===p?"act":""}">${E(v)||'<span class="dim">-</span>'}</td>`;
+  el.innerHTML=`<table><tr><th>what</th><th>key</th><th>lan${t.active==="lan"?" (active)":""}</th><th>ts${t.active==="ts"?" (active)":""}</th><th>network.env</th><th>now</th></tr>`+
+    t.rows.map(r=>`<tr><td>${E(r.role)}</td><td>${E(r.key)}</td>${cell(r.lan,"lan")}${cell(r.ts,"ts")}<td>${E(r.base)}${r.port?":"+E(r.port):""}</td>`+
+      `<td>${sshCell(r)}${r.hosts.length?r.hosts.map(h=>`<span style="white-space:nowrap"><span class="${h.up?"up":"dn"}" title="${E(h.addr)}: ${h.up?"answers a ping (or this Mac's own interface)":"no answer to a ping (1 s)"}">●</span> ${E(h.addr)}</span>`).join("<br>"):'<span class="dim">not set</span>'}</td></tr>`).join("")+"</table>"
+}).catch(()=>{el.textContent="no answer from the launcher"})}
+// v0.1.82 (WP39): the RoboCommand network checker
+function crsTab(){const el=document.getElementById("crstab");if(!el)return;el.textContent="checking…";fetch("/course_check.json").then(r=>r.json()).then(t=>{
+  const nic=t.nic?`this Mac: ${esc(t.nic.addr)} (${esc(t.nic.iface)}${t.nic.dhcp?", DHCP":", no DHCP lease"})`:"this Mac: no interface in 192.168.65-68.x";
+  el.innerHTML=`<div>${nic}${t.ocs_running?" · the OCS runs (no RxCourse probe)":""}</div><table class="nt"><tr><th>course</th><th>RoboCommand</th><th>here</th><th>broker</th><th>RxCourse</th></tr>`+
+   t.rows.map(r=>`<tr class="${r.on_network||r.broker?"ok":"dim"}" data-tip="${esc(r.note||"")}"><td><b>${esc(r.course)}</b></td><td>${esc(r.host||"-")}:${esc(r.port||"-")}</td>`+
+     `<td>${r.on_network===true?"● on this network":r.on_network===false?"not on this network":"-"}</td><td>${r.broker===true?"up":r.broker===false?"no answer":"-"}</td>`+
+     `<td>${r.rx_course?(r.rx_course.error?esc(r.rx_course.error):`${esc(r.rx_course.course_id||"?")} · ${r.rx_course.corners} corners · pinger ${Math.round((r.rx_course.pinger_hz||0)/1000)} kHz`):"-"}</td></tr>`).join("")+"</table>"}).catch(()=>{el.textContent="no answer from the launcher"})}
+document.addEventListener("DOMContentLoaded",()=>{const c=document.getElementById("crsref");if(c)c.onclick=crsTab});
+document.addEventListener("DOMContentLoaded",()=>{const b=document.getElementById("netref");if(b)b.onclick=netTab});netTab();setInterval(netTab,30000);
+</script>
+</body></html>

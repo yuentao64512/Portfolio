@@ -1,0 +1,28 @@
+{
+  "_comment": "cannon_sender.py config: the water-cannon pivot offsets from the camera, the Pi receiver and the HMAC key file (path only - the key is never copied into this tree). Values copied from the students' dock_mapper_config.json on 2026-10-29; key_file set to where it lives on the AGX.",
+  "water_cannon": {
+    "forward_from_camera_m": 0.0,
+    "right_from_camera_m": 0.0
+  },
+  "network": {
+    "pi_ip": "192.168.6.7",
+    "pi_port": 5005,
+    "key_file": "/home/optiprime-agxorin/actual_buoy/buoy_link.key"
+  },
+  "status_file": "../docking/runs/latest/latest_status.json",
+  "max_rate_hz": 15,
+  "aim_rate_hz": 5,
+  "aim_fresh_s": 1.0,
+  "stale_after_s": 1.0,
+  "_comment_v0160": "v0.1.61 (WP12-rest): the students' dock_color_aim.v1. aim_colour red = the handbook's lit target window (green = their bench target). target_file = what the observer writes with --cannon COLOUR (relative to this folder); target_fresh_s its age limit. camera_to_cannon = their color_dock_config.json section (zeros until they send it). colour_hsv overrides aim_core.HSV per colour.",
+  "aim_colour": "red",
+  "target_file": "runs/latest/cannon_target.json",
+  "target_fresh_s": 0.5,
+  "camera_to_cannon": {
+    "camera_yaw_deg": 0.0,
+    "camera_forward_from_cannon_m": 0.0,
+    "camera_right_from_cannon_m": 0.0,
+    "camera_up_from_cannon_m": 0.0
+  },
+  "colour_hsv": {}
+}

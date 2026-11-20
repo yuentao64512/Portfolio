@@ -1,0 +1,10 @@
+# Punggol Digital District - 4 corners from Google Maps, in order around the
+# edge, point 5 repeats point 1 to close the polygon.
+# max_alt sets the fence's maximum altitude (FENCE_ALT_MAX, metres above home).
+# format: lat,lon
+max_alt,20
+1.412697,103.913419
+1.412373,103.913658
+1.412521,103.914133
+1.412872,103.913997
+1.412697,103.913419

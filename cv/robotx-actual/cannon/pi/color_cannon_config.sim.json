@@ -1,0 +1,28 @@
+{
+  "_comment": "OURS, for the simulator and the tests only (v0.1.61): the students' real color_cannon_config.json is not in the tree yet. Sections and keys are the ones their color_cannon_receiver.py reads; the values are placeholders chosen so the sim's dock geometry passes their checks. allowed_colors red = the handbook's target window (3.3.4). The pump is disabled and never used here (the sim runs the receiver without --live). fake_cannon_pi.py copies this file next to a copy of the receiver in the run folder and sets key_file / port there.",
+  "network": {
+    "bind_ip": "127.0.0.1",
+    "port": 5005,
+    "allowed_sender_ip": "127.0.0.1",
+    "key_file": "SET_BY_FAKE_CANNON_PI",
+    "watchdog_s": 1.0,
+    "maximum_packet_age_s": 1.0
+  },
+  "target": {
+    "allowed_colors": ["red"],
+    "minimum_confidence": 0.5,
+    "minimum_color_fraction": 0.30,
+    "minimum_range_m": 0.5,
+    "maximum_range_m": 12.0,
+    "minimum_forward_m": 0.3
+  },
+  "camera_height_above_cannon_m": 0.0,
+  "gpio_bcm": {"pan_servo": 18, "tilt_servo": 19, "pump_trigger": 17, "pump_active_high": true},
+  "pan_servo": {"center_pulse_us": 1500, "microseconds_per_degree": 10.0, "direction": 1, "maximum_abs_angle_deg": 60.0,
+                "minimum_pulse_us": 900, "maximum_pulse_us": 2100},
+  "tilt_servo": {"center_pulse_us": 1500, "microseconds_per_degree": 10.0, "direction": 1, "maximum_abs_angle_deg": 45.0,
+                 "minimum_pulse_us": 1000, "maximum_pulse_us": 2000},
+  "tracking": {"stable_angle_delta_deg": 2.0, "stable_packets_required": 5, "settle_time_s": 1.0},
+  "pump": {"enabled": false, "arm_file": "/nonexistent/cannon_arm", "arm_file_required_text": "NEVER_IN_THE_SIM",
+           "requested_duration_s": 10.0, "absolute_maximum_duration_s": 10.0, "cooldown_s": 30.0}
+}

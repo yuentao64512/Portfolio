@@ -1,0 +1,262 @@
+# USV mission manager, COURSE profile (v0.1.23, ROADMAP WP4): usv_pool.yaml with the course guards - no GOTO task.
+# Use on the NX at the competition: scripts/run_usv.sh with USV_CONFIG=profiles/course/usv_course.yaml.
+# USV mission manager, POOL profile (runs on the Orin NX next to usv_ui).
+# usv_ui holds the Pixhawk UART and re-shares it on udp 14551; the mission manager connects to the share, so both
+# run at once and the local/usv/tui/active beat decides who commands (usv_ui 'handover' / 'takeover').
+#   scripts/run_usv.sh          starts the boat broker, this mission manager, the boat logger and usv_ui (tmux 'usv')
+vehicle_id: USV1
+vehicle: usv
+node: mission_manager
+log_dir: ./logs
+
+mavlink:
+  endpoint: udpin:127.0.0.1:14551      # usv_ui's share (its default --share udpout:127.0.0.1:14551; rc.sh shares the same way)
+  sysid: 200                           # = CMAN_SYSID: the only system id mode 20 accepts control frames from
+  compid: 191                          # usv_ui is 190 -> COMMAND_ACKs are addressed to the one that asked
+  target_sysid: 1
+
+mqtt:
+  host: 127.0.0.1
+  port: 1884                           # the boat broker (config/mosquitto/boat_pool.conf.in); AGX publishes here too
+  client_id: usv-mm
+  bridge_name: ocs                     # $SYS/broker/connection/ocs/state tells the health monitor if the hub bridge is up
+
+timeouts:
+  fcu_s: 2.0
+  rc_s: 2.0
+  perception_s: 0.0                    # the detector is optional at the pool: no PERCEPTION_LOST fault when it is off
+  cmd_ack_s: 0.5
+  hold_reassert_s: 5.0
+  tui_active_s: 2.0                    # a tui/active beat younger than this = usv_ui has the FCU (V2 override)
+
+limits:
+  max_amp: 0.5                         # mode-20 amplitude cap for the companion controller (pool: keep it gentle)
+  max_speed_mps: 0.6                   # v0.1.94 (Dmitrii 14 Nov: "several competitive strategies, select on scoring"): the package
+                                       #   confident_fast ranked 1st of 16 (80 sim runs each, handbook points, morning camera): 261.6 / 325
+                                       #   mean, 0 contacts; careful (0.3, no confident gates) 232.4, 3 contacts. Back to 0.3 = "careful".
+                                       # v0.1.92 (Dmitrii 2026-11-13: "go slowly, so if any skipping or freezing is happening, we still good"):
+                                       #   now enforced on every task command (was a label). Sim, 6 worlds x 10 seeds x perception 5 / 1 Hz:
+                                       #   0.3 -> 0 contacts at both rates, +30-80 s a run; 0.6 / 0.25 -> contacts at 5 Hz
+  goto_arrive_r_m: 1.5
+  goto_settle_r_m: 3.0
+  goto_timeout_s: 180
+
+rates:
+  tick_hz: 10
+  status_hz: 2
+  local_hz: 5
+  map_hz: 2
+
+guards:
+  require_armed_for_auto: true         # the companion NEVER arms: the operator arms with the transmitter / usv_ui 'arm'
+  require_ekf_for_auto: true
+  require_prepare_for_auto: false     # v0.1.90.7 / .8 (Dmitrii): ENABLE AUTO (HOLD -> LOITER) before DECLARE - the rule everywhere
+  require_run_for_task: true
+  test_mode: false                      # v0.1.37 (WP10d): run-free tasks without a run (never on the course)
+  v1_exit_requires_confirm: false      # v0.1.87.2 (Dmitrii 2026-11-12): KILLED -> MANUAL by itself once the kill releases (no confirm_safe)
+  v6_exit_requires_confirm: true
+  allow_goto_task: false               # course: START_TASK GOTO refused (decision 23)
+  rc_lost_action: report               # v0.1.29.3: report | hold (RC_LOST -> AUTO_SAFE_HOLD, enable_auto refused). Decided 2026-11-04:
+                                       # hold here - switch to hold once the lab day shows rc ok / rc NO right (transmitter on / off)
+  link_loss_action: continue           # the hub bridge drops during a task: continue (events queue, QoS 1) | safe_hold (V5 after
+  link_loss_s: 5.0                     # link_loss_s; the hold clears when the link is back and the operator resumes) - MODULES S6
+  cmd_max_age_s: 10.0                  # v0.1.43 (OCS_V2_SPEC §6): a cmd sent longer ago than this is REJECTED stale (a queued QoS-1 replay
+                                       # after a link loss); clocks within 1 s; 0 = not checked
+
+frames:
+  cam_forward_m: 0.0                   # camera offset from the GPS/EKF reference; same values as usv_ui --cam-*
+  cam_right_m: 0.0
+  cam_yaw_deg: 0.0
+  origin_lat: null                     # control origin: null = first good fix. For one shared frame with usv_ui put
+  origin_lon: null                     #   usv_ui's co.json lat/lon here (usv_ui shows "CO same / DIFFERS").
+
+ocs_gateway:
+  enabled: true
+  port: 9102
+
+t1:                                    # m1t1 Safe Passage (v0.1.21; decided 2026-11-02): planner simple | s6 (START_TASK args.planner wins)
+  planner: simple
+  circle_r_m: 3.0                      # entry (clockwise) / exit (counter-clockwise) circles - v0.1.92: under guidance underway the hull's
+                                       # turn sets the radius (fast SIL, omni_usv: 0.15 m/s -> 3.3 m, 0.2 -> 4.1 m, 0.3 -> 5.6 m flown), not this
+  circle_v: 0.12                       # v0.1.93.2 (Dmitrii 13 Nov: slightly more surge + yaw, steadier); v0.1.92 FINAL 0.10: ~2.4 m flown (Dmitrii 1.5-2 m; 0.08 -> 2.0 m). Sim 8 worlds x 10: 0.10 DONE 70/70, 14-18 min; 0.08 65/70
+  circle_v_max: 0.15                   # v0.1.94.2 (Dmitrii: "in slow mode we might drift away"): the orbit's drift boost - pushed back (over ground < 70 %
+                                       #   of the asked) -> up to 0.15, back to 0.12 when it keeps up. Sim with a current: 0 m/s 261 vs 259, 0.05 228 vs 219, 0.10 147 vs 80
+  lead_in_m: 3.0                       # v0.1.92 FINAL: (the s6 / old leg only) - the gate steps use min(spacing - 1.5, 3.0) before each gate
+  turn_first_deg: 25                   # v0.1.92 FINAL (Cowork 5.2): T1's legs - a carrot > 25 deg off the bow -> hold and turn on the spot first
+  # v0.1.92 FINAL STRATEGY (Dmitrii + Cowork addendum 6 §6.4; sim: logs/sim_explore_2026-11-13/FINDINGS_CLAUDE.md, extra/SIM_REPORT)
+  start_mode: advance360               # 2 m ahead at 0.2 m/s, one full turn on the spot (~180 s on this hull), then the ladder | straight
+  gate_steps: true                     # each gate: to its pre-point (0.15) -> turn on the spot onto its line (6 deg, 90 s cap) -> through at
+  through_v: 0.15                      #   v0.1.93.2: 0.15 (was 0.12) m/s on cross-track LOS (la 1.5 m) -> passed only inside width/2 - 0.25, else MISSED -> again (2x)
+  look_lock: true                      # stop, bow on a suspect 4 s, before approaching it (0.25 m/s) to 5 m and reading its light
+  start_v: 0.35                        # v0.1.94.2 show time (sim SHOW: show_a, 0 contacts am); v0.1.93.2 0.25 (Dmitrii 13 Nov: slightly more surge): the 2 m start advance (was 0.2)
+  approach_v: 0.35                     # v0.1.94.2 show time; v0.1.93.2: to a suspect 0.25 (was 0.2)
+  scout_v: 0.40                        # v0.1.94.2 show time: the colour-blind step to the next buoy (default 0.3)
+  lucky_v_k: 1.25                      # v0.1.94.2: lucky (the operator's fallback) runs its run-ins x1.25; circles / gate lines stay
+  look_lock_s: 6.0                     # v0.1.93.2 (Dmitrii, final settings 13 Nov): the lock 6 s (was 4) ...
+  look_lock_tol_deg: 5.0               #   ... and the bow straight at the target: within 5 deg (was 10)
+  no_entry_finale: true                # v0.1.93.2 (Dmitrii 13 Nov: "if we don't see a blue buoy - advance 3 m, a quick 360, end the mission"):
+                                       #   when the search gives up (scout budget + leads spent, lucky off) - not the safe hold
+  start_scan_stop_blue: true           # v0.1.93.2 (Dmitrii: "after we get a blue fix during the initial look-around, we stop yawing and proceed
+                                       #   to approach and look-lock"): the start turn ends when the map holds a blue lantern
+  squeeze: false                       # v0.1.93 (WP49 §3.5) BUILT, OFF: Dmitrii chose it as the default (02:40), but our fast SIL (real planner +
+                                       #   guard, world E3: a 1.2 m box 1.4 m past gate 2) went 0/4 -> 0/4 done with 1 contact - the dog-leg
+                                       #   takes the hull ~0.1 m from the next gate's buoy. true = his tick for a course with an object near a gate
+                                       #   the boat cut across the gate's buoy, the guard stopped it; overnight sim, docs/MORNING_2026-11-13.md)
+  scout_entry_s: 420                   # v0.1.92 (Cowork consult 2026-11-13): the entry search's scouting budget, then lucky / the hold
+  check_r_m: 7.0                       # v0.1.92: a blue / undecided buoy within 7 m is read for its light ...
+  check_hold_m: 5.0                    #   ... a farther one approached to 5 m first
+  check_s: 10.0                        #   ... for 10 s (v0.1.94: the boat's lamp window is 8 samples / 8 s; was 6), the 2nd try from 2 m closer
+  through_v_conf: 0.35                 # v0.1.94 confident_fast: a CONFIDENT gate (both buoys well mapped, lamp-coloured, seen near) through at
+  transit_v_conf: 0.5                  #   0.35 and run in at 0.5 (others keep through_v / transit_v); 0 / 0 = off ("careful")
+  check_still_deg: 4.0                 # v0.1.94: LOOK_LOCK / CHECK_BLUE hold the heading still once facing within 4 deg (13 Nov: they hunted)
+  transit_v: 0.30                      # v0.1.94.2 show time (circle_v 0.15+ lost points: guard holds 7 -> 21+); v0.1.93.2: 0.20 (Dmitrii: slightly faster, steadier); v0.1.92 FINAL 0.15: the run-in leg to a gate's pre-point (was 0.6); through the gate: through_v 0.12
+  gate_d_m: 2.0                        # pre / post points before and after each gate line
+  s6_d_m: 3.0                          # s6: pre / post distance (pathing_sim spec d)
+  rmin_m: 1.83                         # s6: Dubins turn radius (the spec's best tuning, cfg 31)
+  min_obs: 5                           # a buoy seen fewer times is not used (ghosts)
+  scan_rate_dps: 6.5                   # v0.1.93.2: T1's turns on the spot (start scan, look-lock, align, check) stay 6.5 deg/s while the
+                                       #   transit yaw cap goes to 8 (Dmitrii: "yawing during transition a bit faster, not scanning"); was 20 (capped)
+  clear_m: 0.60                        # v0.1.54 (Dmitrii): hull edge >= this from every mapped course object (the dock standoff reads it too)
+  keep_clear_m: 0.35                   # v0.1.92 FINAL (Cowork addendum 4): T1 ONLY - keep 1.2 m from other mapped buoys (0.25 + 0.38 + 0.35 + 0.20);
+                                       # dock faces) - gatepath.planner.Clearance; a narrower gate is crossed on its centre line, logged
+  track_m: 0.45                        # v0.1.54: the tracker's allowance on top
+  keep_track_m: 0.20                   #   the pair being passed has none (the gate is a corridor); unknown objects keep the guard's rings
+  hull_len_m: 1.19                     # v0.1.54: the BlueBoat footprint
+  hull_beam_m: 0.76
+  # search_lat: 1.2812309              # v0.1.54: where Task 1 is (a point before the entry, from the course map) - the scan's last lead
+  # search_lon: 103.8546383            #   when nothing is in view (Course Extra's start area is ~50 m from Task 1); START_TASK args win
+t3:                                    # m3t1 dock + fire (v0.1.22; decided 2026-11-03): START_TASK args override (bay, fire_s ...)
+  standoff_m: null                     # the sway line off the dock face; v0.1.56 (D6): null = finger_m + hull_len_m/2 + clear_m +
+                                       #   standoff_margin_m (5.70 m today); a number here (or the TUNE knob) is the override
+  standoff2_m: null                    # the second search pass (null = ... + standoff2_margin_m: 5.00 m)
+  finger_m: 3.5                        # v0.1.56: the pontoon finger length from the bay line toward the water (measure the real dock)
+  standoff_margin_m: 1.0               # v0.1.56: beyond the finger tips + half the hull + the 0.60 m rule (t1.clear_m)
+  standoff2_margin_m: 0.3
+  stop_m: 1.5                          # bow-in stops this far off the face (v0.1.39, WP10h: 1.0 -> 1.5 - at 1.0 m the windows
+                                       # 0.6 m each side of the bay centre are outside the 51 deg camera: 1 of 12 seeds fired on GREEN, 12 of 12 at 1.5)
+  fire_s: 30.0                         # water until a window is seen GREEN, at most this long
+  sway_v: 0.25                         # sway command along the standoff line (mode 20)
+  enter_v: 0.15                        # bow-in surge cap
+  undock: astern
+  undock_v: 0.2
+box_inspect:                           # m0t4 box survey (v0.1.27, WP8; decided 2026-11-04): START_TASK args override
+  stop_range_m: 1.0                    # stop this far off the chosen face
+  align_range_m: 15.0                  # the align point on the face normal (VALIDATE happens there)
+  strafe_len_m: 6.0                    # the search sways at most this far (then on with the target, or HOLD)
+  strafe_side: starboard               # starboard | port
+  require_blink: false                 # Task 3 bay indicators are steady; true = blinking targets only
+test_path:                             # m0t2 path test (v0.1.21)
+  points_file: usv_ui/points.json      # usv_ui's saved points (and its pathgen output) for START_TASK args.names
+  speed_mps: 0.6
+t4:
+  speed_mps: 0.3                       # v0.1.94: the detour's transit speed (as simulated: 0 contacts in 99) - not the T1 cap
+  confirm_timeout_s: 120
+  transit_timeout_s: 300
+
+home:                                  # v0.1.30 (WP8c): the go-home override (OCS ⌂ HOME / `home`) - decided 2026-11-04
+  speed_mps: 0.3                       # slowly, GUIDED, to the saved point HOME (else the control origin), then stop and hold
+  arrive_r_m: 1.5
+
+perception:                            # v0.1.31 (WP9a): the map's ghost filter (pool 2026-11-04: 1-3 sighting ghosts beside two 270+ tracks)
+  min_obs: 3                           # entities seen fewer times stay internal: not in the digest, the map, gates, markers, tasks
+  forget_s: 5.0                        # such a young entity not seen again for this long is dropped
+  max_age_s: 600                       # v0.1.92 (overnight sim): out of view this long -> stale (no longer a gate). Was 30 s / dropped after 150 s:
+  drop_age_s: 900                      #   at 0.2 m/s a scan (90 s) + an entry circle (160 s) forgot gate 1, the boat went for gate 2 and over
+                                       #   the forgotten buoy. Buoys do not move; ghosts are already kept out by min_obs / forget_s.
+  depth_fuse_tol_deg: 1.0              # v0.1.94: a depthless buoy box inside a guard depth cluster's bearing span (+- 1 deg, same frame) takes the
+  depth_fuse_k: 1000.0                 #   cluster's range if its box height agrees (range x height ~ 1000 px m at hd1080, x/÷ 1.6) - 13 Nov pm replay:
+                                       #   130 sightings ranged, the depth "obstacles" 92 -> 60 (they were the buoys, mapped twice)
+  ranged_max_m: 15.0                   # v0.1.94 (Dmitrii: "discriminate far-field"): a buoy's depth beyond 15 m counts as its bearing only (a ray,
+                                       #   a lead) - 13 Nov pm replay: 9 buoys -> 5, the 4 dropped placed at 20-24 m from depth near the 25 m clip
+  assoc_colour_m: 10.0                 # v0.1.92: within 10 m a lit red / green / blue sighting never joins an entity decided another of those
+  assoc_gate_a: 0.0                    # v0.1.92: the range gate (Cowork: 0.35 + 0.08 r, 0.8..1.6 m) stays OFF - 12 Nov's replay
+                                       #   (logs/cv_review/overnight_2026-11-13/assoc_replay.py): 22 -> 19 mixed, but 18 -> 35 split markers
+  lamps:                               # v0.1.94 (13 Nov pm: 496 lamps read, no light decided): the blink decision on the boat by WORLD
+    enabled: true                      #   bearing (usv/lamp_tracks), every sighting incl. bearing-only; replay 13 Nov pm: 233 tracks (the
+    az_tol_deg: 4.0                    #   observer's image tracker: ~1200), decisions from 9 s on
+    window_s: 8.0                      #   8 samples in 8 s (2.3 fps; was the observer's 12 in 6 s)
+    min_samples: 8
+    min_on: 3                          #   lit samples before the lamp's colour colours the buoy
+  merge:                               # v0.1.94 (Dmitrii: "merge radius growth by distance, but also by detected number"): the merge pass
+    enabled: true                      #   (PerceptionMap.merge_buoys): a + b * (closest range either buoy was seen from), clamped
+    a: 0.35                            #   min_m..max_m; the same number on both -> number_m; two numbers / two lamp colours never merge
+    b: 0.08
+    min_m: 0.8
+    max_m: 2.5
+    number_m: 5.0
+    lamp_m: 3.0                        #   the same decided lamp (colour + pattern) on both -> 3 m (same-colour gate lamps are ~6 m apart)
+
+scout:                                 # v0.1.79 (WP35): mission scout - buoy to buoy, colour-blind (docs/SCOUT_BRIEF_2026-11-11.md §2.2; START_TASK args win)
+  standoff_m: 3.0                      # the visit point this far from the buoy (outside every clearance ring, inside the inset field)
+  arrive_m: 1.0
+  transit_v: 0.6
+  scan_rate_dps: 20                    # one 360 deg scan = 18 s, only when the map runs dry
+  max_yaw_dps: 10.0                    # v0.1.82 (Dmitrii: slow turns to detect): a carrot > 20 deg off the bow = turn on the spot at this rate; the scan too
+  log_s: 4                             # station-keep at a buoy while the map settles
+  budget_s: 900                        # then RETURN to the start pose (v0.1.85: 900, Dmitrii 2026-11-12 00:35 - the real hull needs ~9.5 min)
+  margin_m: 4.0                        # the field (RxCourse) inset: the hull never leaves it (v0.1.85: 4, the addendum - was 2)
+  lane_m: 14                           # the lawnmower lanes (~0.7 x the detection range; 9 if the first run shows < 12 m)
+  coverage_r_m: 14
+  visit_r_m: 2.0                       # a map buoy within this of a logged one is the same buoy
+  clear_m: 1.6                         # NOT T1's 0.60: farther than the guard's 1.5 m stop range
+  min_obs: 3
+  report_period_s: 2
+  field_m: 30                          # no RxCourse (Team Village, home): a 30 x 30 m square ahead of the start (Dmitrii 2026-11-11)
+  log_dir: logs                        # logs/scout_<run_id>.jsonl
+
+test_detect:                           # v0.1.79: m0t8 ground test (the boat stands still; walk a buoy away: the LOST line = last-seen range)
+  duration_s: 600
+  lost_s: 3
+  min_obs: 2
+  log_dir: logs
+
+zed_guard:                             # v0.1.80 (WP36): the ZED proximity guard (the AGX observer -> perception/guard; docs/SCOUT_BRIEF_2026-11-11.md §4)
+  enabled: true
+  require: true                        # true: no guard message at all = guard lost (speed cap + CAUTION) from the start; false: only after the first
+  stop_m: 1.5                          # STOP (frames in a row) -> BRAKE -> BACKOFF -> the ring -> re-plan
+  slow_m: 3.0                          # SLOW: the leg capped at slow_v; the sighting is remembered (the frame's lower edge hides low things inside ~2 m)
+  slow_v: 0.15                         # v0.1.92: below the 0.3 cap (limits.max_speed_mps), so SLOW still slows
+  brake_s: 1.5
+  brake_surge: 0.4                     # mode-20 frame, astern
+  backoff_m: 2.0                       # straight astern on mode 20 (blind: no stern sensor)
+  backoff_surge: 0.3
+  lost_s: 1.5
+  max_repeats: 3                       # the 3rd trigger within repeat_r_m -> AUTO_SAFE_HOLD + CAUTION
+  repeat_r_m: 1.0                      # v0.1.92: the 3rd stop on the SAME object (within 1 m) -> hold (was 3 m: two gates in a gate field)
+  ring_m: 2.0                          # v0.1.81.1: every obstacle's keep-clear ring (Dmitrii: 2 m, centred 1 m behind the seen face)
+  ring_behind_m: 1.0
+  map: true                            # v0.1.81.1: the observer's `far` clusters (3-8 m ahead) -> depth obstacles on the map (2 Hz); false = STOPs only
+  depth_min_obs: 3                     # sightings before a depth ring counts (the planners, the map)
+  memory_s: 20                         # a SLOW sighting is kept this long as a point in the local frame
+  frames: 3
+
+test_guard:                            # v0.1.80: m0t9 ground test - PROPS IN THE AIR (a STOP pulses the motors astern)
+  duration_s: 600
+  pulse: 0.4                           # 0 = no motor at all
+  pulse_s: 1.5
+  log_dir: logs
+
+station_keep:                          # v0.1.81 (WP37): the autonomous station keep (AUTO_HOLD and every stage that holds); the safe hold stays HOLD
+  mode: hold                           # hold = FCU HOLD (motors neutral, drifting) | loiter = FCU LOITER (a real position hold). Dmitrii 2026-11-11:
+                                       # hold until the LOITER drift check on the water passes (Test Guide W1), then `ocs_cli station_keep loiter`
+
+guidance:                              # v0.1.85 (WP41, docs/PROMPT_COMPUTE_NIGHT_2026-11-11.md P0 + addendum): turn under way, never in place
+  mode: underway                       # underway = scout / m1t1 / m1t2 steer by usv/guidance.py (velocity-yaw, the law); fcu = the FCU's own GUIDED (before)
+  v_min_mps: 0.4                       # the floor while the target is within the drive cone (the sketch: 0.4 wins)
+  drive_cone_deg: 90
+  arc_v_mps: 0.3                       # beyond the cone: a slow arc, not a pirouette
+  yaw_rate_max_dps: 8.0                # v0.1.93.2 final (Dmitrii: transit yaw a bit faster; T1 scans held at t1.scan_rate_dps 6.5); 6.5 earlier today; was 5 (11 Nov: 10-20 asked, the hull did 1.8 in place; 13 Nov: 360 in 76-79 s)
+  heading_timeout_s: 15                # forward held at 0 (bow-clear / boundary) this long without the heading coming round -> drive anyway
+  bow_clear_m: 3.5                     # T0.2b: an object this close in the +-30 deg bow cone with |e| > 30 deg -> turn in place
+  bnd_slow_m: 6                        # T0.2c: the ray to the RxCourse boundary < 6 m -> <= 0.15 m/s; < 2.5 m with |e| > 15 deg -> turn in place
+  bnd_stop_m: 2.5
+  los_m: 3                             # T0.2d: the look-ahead along the planned polyline
+  start_fwd_m: 1.0                     # §6 item 10 (Dmitrii 00:40): every moving task starts with 1 m straight ahead at >= v_min
+  scan_r_m: 5                          # T0.3: the circle scan (scan_mode orbit under underway); the radius = max(scan_r, v / omega(v))
+  scan_v_mps: 0.3                      # the addendum: 0.3 (the hull holds ~5.4 m), not 0.4
+  course_tol_m: 1.5                    # WP46: a task target only inside the RxCourse boundary + this (smaller than the gap between courses)
+  require_rxcourse: judge              # WP46: a real RoboCommand (protobuf) and no RxCourse on the boat -> scout / m1t1 / m1t2 refuse to start
+
+plant:                                 # v0.1.85 (WP41 T0.4): the free run's ghost plant (the sim's fake FCU takes --hull from run_sim.sh)
+  hull: omni_usv                       # ideal (45 deg/s) | omni_usv (11 Nov: <= 2 deg/s in place, ~4 at 0.5 m/s)
+  str_ramp_s: 0                        # 25 = the FCU's 11 Nov steering ramp

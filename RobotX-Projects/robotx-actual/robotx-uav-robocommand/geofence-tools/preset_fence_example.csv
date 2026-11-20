@@ -1,0 +1,9 @@
+# PLACEHOLDER preset/default fence for geofence_udp_listener.py --preset-fence-file.
+# Replace this with your actual default ArduPilot fence before real use -
+# these are just test coordinates near the Punggol site, not a verified safe
+# flying area.
+# format: lat,lon
+1.412200,103.913200
+1.412200,103.914200
+1.413000,103.914200
+1.413000,103.913200

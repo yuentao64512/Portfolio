@@ -1,0 +1,10 @@
+# Lawnmower mission area - Punggol Digital District, 4 corners in order
+# around the edge, point 5 repeats point 1 to close the polygon.
+# max_alt sets the fence's maximum altitude (FENCE_ALT_MAX, metres above home).
+# format: lat,lon
+max_alt,20
+1.412671,103.913356
+1.412380,103.913572
+1.412481,103.913768
+1.412709,103.913545
+1.412671,103.913356

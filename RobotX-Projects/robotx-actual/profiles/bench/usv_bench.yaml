@@ -1,0 +1,170 @@
+# USV mission manager, laptop bench profile.
+# The fake FCU sends to udp 14550; the boat broker is the local mosquitto on 1884 (bridged to the hub on 1882).
+vehicle_id: USV1
+vehicle: usv
+node: mission_manager
+log_dir: ./logs
+
+mavlink:
+  endpoint: udpin:127.0.0.1:14550
+  sysid: 200
+  compid: 191
+  target_sysid: 1
+
+mqtt:
+  host: 127.0.0.1
+  port: 1884
+  client_id: usv-mm
+  bridge_name: ocs
+
+timeouts:
+  fcu_s: 2.0
+  rc_s: 2.0
+  perception_s: 0.0      # perception not required on the bench yet
+  cmd_ack_s: 0.5
+  hold_reassert_s: 5.0
+  tui_active_s: 2.0
+
+limits:
+  max_amp: 0.6
+  max_speed_mps: 1.0
+  goto_arrive_r_m: 1.5
+  goto_settle_r_m: 3.0
+  goto_timeout_s: 120
+
+rates:
+  tick_hz: 10
+  status_hz: 2
+  local_hz: 5
+  map_hz: 2
+
+guards:
+  require_armed_for_auto: true
+  require_ekf_for_auto: true
+  require_prepare_for_auto: false     # v0.1.90.8 (Dmitrii: "uniform rule everywhere"): ENABLE AUTO, then DECLARE
+  require_run_for_task: true
+  test_mode: true                      # v0.1.37 (WP10d): run-free tasks without a run (pool / lab / bench)
+  v1_exit_requires_confirm: true
+  v6_exit_requires_confirm: true
+  allow_goto_task: true        # bench only: START_TASK GOTO; set false in the final profile
+  cmd_max_age_s: 10.0                  # v0.1.43 (OCS_V2_SPEC §6): a cmd sent longer ago than this is REJECTED stale (a queued QoS-1 replay
+                                       # after a link loss); clocks within 1 s; 0 = not checked
+
+frames:
+  origin_lat: 1.2810202
+  origin_lon: 103.8550097
+
+ocs_gateway:
+  enabled: true
+  port: 9102
+
+t1:                                    # m1t1 Safe Passage (v0.1.21; decided 2026-11-02): planner simple | s6 (START_TASK args.planner wins)
+  planner: simple
+  circle_r_m: 3.0                      # entry (clockwise) / exit (counter-clockwise) circles
+  circle_v: 0.5
+  transit_v: 0.6                       # GUIDED carrot speed through the gates
+  gate_d_m: 2.0                        # pre / post points before and after each gate line
+  s6_d_m: 3.0                          # s6: pre / post distance (pathing_sim spec d)
+  rmin_m: 1.83                         # s6: Dubins turn radius (the spec's best tuning, cfg 31)
+  min_obs: 5                           # a buoy seen fewer times is not used (ghosts)
+  scan_rate_dps: 20.0                  # SEARCH_ENTRY / SCAN turn rate; one full turn, then AUTO_SAFE_HOLD
+  clear_m: 0.60                        # v0.1.54 (Dmitrii): hull edge >= this from every mapped course object (buoys of any colour, box /
+                                       # dock faces) - gatepath.planner.Clearance; a narrower gate is crossed on its centre line, logged
+  track_m: 0.45                        # v0.1.54: the tracker's allowance on top (carrot cut + overshoot, measured in the fast SIL)
+  hull_len_m: 1.19                     # v0.1.54: the BlueBoat footprint
+  hull_beam_m: 0.76
+  # search_lat: 1.2812309              # v0.1.54: where Task 1 is (a point before the entry, from the course map) - the scan's last lead
+  # search_lon: 103.8546383            #   when nothing is in view (Course Extra's start area is ~50 m from Task 1); START_TASK args win
+t3:                                    # m3t1 dock + fire (v0.1.22; decided 2026-11-03): START_TASK args override (bay, fire_s ...)
+  standoff_m: null                     # the sway line off the dock face; v0.1.56 (D6): null = finger_m + hull_len_m/2 + clear_m +
+                                       #   standoff_margin_m (5.70 m today); a number here (or the TUNE knob) is the override
+  standoff2_m: null                    # the second search pass (null = ... + standoff2_margin_m: 5.00 m)
+  finger_m: 3.5                        # v0.1.56: the pontoon finger length from the bay line toward the water (measure the real dock)
+  standoff_margin_m: 1.0               # v0.1.56: beyond the finger tips + half the hull + the 0.60 m rule (t1.clear_m)
+  standoff2_margin_m: 0.3
+  stop_m: 1.5                          # bow-in stops this far off the face (v0.1.34: 1.0 -> 1.5 - with the real 51 deg camera the
+                                       # windows 0.6 m to each side of the bay centre are out of view at 1.0 m; v0.1.39: every profile 1.5)
+  fire_s: 30.0                         # water until a window is seen GREEN, at most this long
+  sway_v: 0.25                         # sway command along the standoff line (mode 20)
+  enter_v: 0.15                        # bow-in surge cap
+  undock: astern
+  undock_v: 0.2
+box_inspect:                           # m0t4 box survey (v0.1.27, WP8; decided 2026-11-04): START_TASK args override
+  stop_range_m: 1.0                    # stop this far off the chosen face
+  align_range_m: 15.0                  # the align point on the face normal (VALIDATE happens there)
+  strafe_len_m: 6.0                    # the search sways at most this far (then on with the target, or HOLD)
+  strafe_side: starboard               # starboard | port
+  require_blink: false                 # Task 3 bay indicators are steady; true = blinking targets only
+test_path:                             # m0t2 path test (v0.1.21)
+  points_file: usv_ui/points.json      # usv_ui's saved points (and its pathgen output) for START_TASK args.names
+  speed_mps: 0.6
+t4:
+  confirm_timeout_s: 120
+  transit_timeout_s: 300
+
+home:                                  # v0.1.30 (WP8c): the go-home override (OCS ⌂ HOME / `home`) - decided 2026-11-04
+  speed_mps: 0.3                       # slowly, GUIDED, to the saved point HOME (else the control origin), then stop and hold
+  arrive_r_m: 1.5
+orbit:                                 # v0.1.30 (WP8c): m0t6 TEST_ORBIT defaults (START_TASK args override)
+  r_m: 3.0
+  direction: cw
+  turns: 1
+  speed_mps: 0.5
+
+perception:                            # v0.1.31 (WP9a): the map's ghost filter (pool 2026-11-04: 1-3 sighting ghosts beside two 270+ tracks)
+  min_obs: 3                           # entities seen fewer times stay internal: not in the digest, the map, gates, markers, tasks
+  forget_s: 5.0                        # such a young entity not seen again for this long is dropped
+
+scout:                                 # v0.1.79 (WP35): mission scout - buoy to buoy, colour-blind (docs/SCOUT_BRIEF_2026-11-11.md §2.2; START_TASK args win)
+  standoff_m: 3.0                      # the visit point this far from the buoy (outside every clearance ring, inside the inset field)
+  arrive_m: 1.0
+  transit_v: 0.6
+  scan_rate_dps: 20                    # one 360 deg scan = 18 s, only when the map runs dry
+  max_yaw_dps: 10.0                    # v0.1.82 (Dmitrii: slow turns to detect): a carrot > 20 deg off the bow = turn on the spot at this rate; the scan too
+  log_s: 4                             # station-keep at a buoy while the map settles
+  budget_s: 600                        # then RETURN to the start pose
+  margin_m: 2.0                        # the field (RxCourse) inset: the hull never leaves it
+  lane_m: 14                           # the lawnmower lanes (~0.7 x the detection range; 9 if the first run shows < 12 m)
+  coverage_r_m: 14
+  visit_r_m: 2.0                       # a map buoy within this of a logged one is the same buoy
+  clear_m: 1.6                         # NOT T1's 0.60: farther than the guard's 1.5 m stop range
+  min_obs: 3
+  report_period_s: 2
+  field_m: 30                          # no RxCourse (Team Village, home): a 30 x 30 m square ahead of the start (Dmitrii 2026-11-11)
+  log_dir: logs                        # logs/scout_<run_id>.jsonl
+
+test_detect:                           # v0.1.79: m0t8 ground test (the boat stands still; walk a buoy away: the LOST line = last-seen range)
+  duration_s: 600
+  lost_s: 3
+  min_obs: 2
+  log_dir: logs
+
+zed_guard:                             # v0.1.80 (WP36): the ZED proximity guard (the AGX observer -> perception/guard; docs/SCOUT_BRIEF_2026-11-11.md §4)
+  enabled: true
+  require: false                        # true: no guard message at all = guard lost (speed cap + CAUTION) from the start; false: only after the first
+  stop_m: 1.5                          # STOP (frames in a row) -> BRAKE -> BACKOFF -> the ring -> re-plan
+  slow_m: 3.0                          # SLOW: the leg capped at slow_v; the sighting is remembered (the frame's lower edge hides low things inside ~2 m)
+  slow_v: 0.3
+  brake_s: 1.5
+  brake_surge: 0.4                     # mode-20 frame, astern
+  backoff_m: 2.0                       # straight astern on mode 20 (blind: no stern sensor)
+  backoff_surge: 0.3
+  lost_s: 1.5
+  max_repeats: 3                       # the 3rd trigger within repeat_r_m -> AUTO_SAFE_HOLD + CAUTION
+  repeat_r_m: 3.0
+  ring_m: 2.0                          # v0.1.81.1: every obstacle's keep-clear ring (Dmitrii: 2 m, centred 1 m behind the seen face)
+  ring_behind_m: 1.0
+  map: true                            # v0.1.81.1: the observer's `far` clusters (3-8 m ahead) -> depth obstacles on the map (2 Hz); false = STOPs only
+  depth_min_obs: 3                     # sightings before a depth ring counts (the planners, the map)
+  memory_s: 20                         # a SLOW sighting is kept this long as a point in the local frame
+  frames: 3
+
+test_guard:                            # v0.1.80: m0t9 ground test - PROPS IN THE AIR (a STOP pulses the motors astern)
+  duration_s: 600
+  pulse: 0.4                           # 0 = no motor at all
+  pulse_s: 1.5
+  log_dir: logs
+
+station_keep:                          # v0.1.81 (WP37): the autonomous station keep (AUTO_HOLD and every stage that holds); the safe hold stays HOLD
+  mode: hold                           # hold = FCU HOLD (motors neutral, drifting) | loiter = FCU LOITER (a real position hold). Dmitrii 2026-11-11:
+                                       # hold until the LOITER drift check on the water passes (Test Guide W1), then `ocs_cli station_keep loiter`

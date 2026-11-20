@@ -1,0 +1,50 @@
+# sim_day S15 / S16 (v0.1.79, WP35 + WP18's colour-blind world): the scout mission's field. A course the size of the venue's ALPHA
+# (25.0 x 30.2 m, 755 m2 - received 2026-11-09), ten buoys >= 4 m apart, EVERY LIGHT OFF: the camera sees black bodies only, colour-blind
+# as tomorrow's six-class model is (docs/CV_NEW_REVIEW_2026-11-10.md). The camera = the ZED 2i 4 mm preset (hd2k, 50.9 deg) mounted
+# 1.0 m above the water (Dmitrii 2026-11-11). Start: the middle of a short side, 2 m inside, facing the field.
+# x_n north, y_e east, metres from `origin`.
+name: world_scout
+origin: {lat: 1.2810202, lon: 103.8550097}          # Course Alpha's centre, Marina Bay (as world_pool)
+start: {x_n: 2.0, y_e: 0.0, hdg_deg: 0.0}
+teleports:
+  - {name: "facing away (S16 item 6)", x_n: 2.0, y_e: 0.0, hdg: 180.0}
+  - {name: "a corner",                  x_n: 3.0, y_e: -10.0, hdg: 90.0}
+walls: false                               # open water: the field is a course, not a pool
+course: bounds
+course_id: SIM-SCOUT
+bounds:                                    # the field (the scout's polygon; drawn on the maps, not walls)
+  - [0.0, -12.5]
+  - [30.2, -12.5]
+  - [30.2, 12.5]
+  - [0.0, 12.5]
+
+camera:                                    # ZED 2i 4 mm preset (gate_pathing_simulator_spec 4.1), 1.0 m above the water
+  name: zed2i_left
+  intrinsics: zed2i_hd2k                   # 50.9 deg (optiprimex/sim/zed.py)
+  height_m: 1.0                            # v0.1.79: the mount (render.Camera.height_m; 0.8 when absent)
+  min_range_m: 0.5
+  max_range_m: 20.0                        # the brief's detection range (§3); depth rated to 20 m
+  hz: 5
+  noise_range_abc: [0.02, 0.0, 0.0015]
+  noise_bearing_deg: 0.25
+  p_drop_max: 0.7
+  p_miscolour_max: 0.0                     # nothing to miscolour: every light is off
+  conf: 0.85
+
+lights: {period_s: 2.0, on_s: 1.0}
+
+objects:                                   # 0.40 m high above the water (render: a sphere of size_m with 0.7 x size_m above the water -> 0.57), all unlit
+  - {id: 1,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 8.0,  y_e: -6.0}
+  - {id: 2,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 9.0,  y_e: 5.0}
+  - {id: 3,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 13.0, y_e: 0.0}
+  - {id: 4,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 15.0, y_e: -9.0}
+  - {id: 5,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 17.0, y_e: 8.0}
+  - {id: 6,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 20.0, y_e: -3.0}
+  - {id: 7,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 22.0, y_e: 4.0}
+  - {id: 8,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 25.0, y_e: -8.0}
+  - {id: 9,  kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 26.0, y_e: 9.0}
+  - {id: 10, kind: buoy, colour: black, light: off, size_m: 0.57, x_n: 28.0, y_e: 1.0}
+  # v0.1.80 (WP36): two obstacles the detector cannot see (no class for them; the renderer and fake perception skip kind obstacle) -
+  # only the ZED guard (sim/fake_guard on the fast SIL, the sim observer's guard on run_sim.sh) stops for them
+  - {id: 41, kind: obstacle, sensed: false, x_n: 11.0, y_e: 2.6, r_m: 0.15, height_m: 1.0}                 # a mooring pole
+  - {id: 42, kind: obstacle, sensed: false, x_n: 23.5, y_e: -2.0, x2_n: 23.5, y2_e: 0.5, height_m: 0.5}   # a 2.5 m floating boom

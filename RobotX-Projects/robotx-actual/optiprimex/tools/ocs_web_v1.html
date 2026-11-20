@@ -1,0 +1,670 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OCS · OptiPrime</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#30363d;--ink:#e6edf3;--dim:#8b949e;--ok:#3fb950;--bad:#f85149;--warn:#d29922;
+--acc:#58a6ff;--mag:#d2a8ff;--cur:#1f6feb;--chip:#21262d}
+html[data-theme="light"]{--bg:#ffffff;--panel:#f6f8fa;--panel2:#eaeef2;--line:#d0d7de;--ink:#1f2328;--dim:#57606a;--ok:#1a7f37;--bad:#cf222e;--warn:#9a6700;--acc:#0969da;--chip:#eaeef2;--mag:#8250df}
+html[data-theme="contrast"]{--bg:#000000;--panel:#000000;--panel2:#0a0a0a;--line:#ffffff;--ink:#ffffff;--dim:#e6e6e6;--ok:#00ff66;--bad:#ff4040;--warn:#ffd400;--acc:#00e5ff;--chip:#1a1a1a;--mag:#ff7bff}
+html[data-theme="contrast"] *{border-color:#ffffff}html[data-theme="contrast"] button{font-weight:700}
+
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+code,.mono,input,select,textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.dim{color:var(--dim)}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.acc{color:var(--acc)}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 14px 0}
+.top{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;letter-spacing:.03em}.brand small{font-weight:400;color:var(--dim);margin-left:6px}
+.ladder{display:flex;gap:2px}.ladder span{padding:2px 7px;border-radius:4px;background:var(--chip);color:var(--dim);font:11px ui-monospace,Menlo,monospace;cursor:default}
+.ladder span.cur{background:var(--cur);color:#fff;font-weight:700}.ladder span.badcur{background:var(--bad);color:#fff;font-weight:700}
+.chip{padding:2px 8px;border-radius:10px;background:var(--chip);font-size:11px;white-space:nowrap}.chip.ok{color:var(--ok)}.chip.bad{color:var(--bad)}.chip.warn{color:var(--warn)}
+.next{flex:1 1 320px;min-width:240px;background:#0f2a1a;border:1px solid #23863633;color:#7ee2a8;border-radius:6px;padding:4px 10px;font-size:12.5px}
+.next b{color:#3fb950}
+#warnbadge{cursor:pointer}
+nav{display:flex;gap:2px;margin-top:8px;overflow-x:auto}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);padding:7px 12px;font:600 12px -apple-system,Segoe UI,sans-serif;letter-spacing:.04em;cursor:pointer}
+nav button.on{color:var(--ink);border-bottom-color:var(--acc)}nav button:hover{color:var(--ink)}
+nav .sp{flex:1}
+main{padding:12px 14px 40px}
+.tab{display:none}.tab.on{display:block}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-main{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+.cword{font-size:34px;font-weight:800;letter-spacing:.04em;margin:4px 0}.cword.NOT{color:var(--bad)}.cword.ARMED{color:var(--warn)}.cword.RUNNING{color:var(--ok)}.cword.HELD{color:#d29922}
+.cbtns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.chain{display:flex;flex-direction:column;gap:4px}.chain div{padding:4px 8px;border:1px solid var(--line);border-radius:5px}
+.chain div.on{background:#1f6feb;color:#fff;border-color:#1f6feb}.chain div.done{opacity:.55}
+.tl div{font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:2px 0}.tl .bad{color:var(--bad);font-weight:700}.tl .ok{color:var(--ok)}.tl .warn{color:var(--warn)}
+.vcard{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin:2px 6px 2px 0;font:12px ui-monospace,Menlo,monospace}.vcard .age.bad{color:var(--bad);font-weight:700}
+.minicard iframe{width:min(100%,340px);height:auto;aspect-ratio:1/1;display:block;margin:0 auto}
+@media(max-width:1000px){.g2,.g3,.g-main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.card h2{margin:0 0 8px;font-size:11.5px;letter-spacing:.08em;color:var(--acc);display:flex;align-items:center;gap:8px}
+.card h2 .r{margin-left:auto;font-weight:400;letter-spacing:0;color:var(--dim)}
+table{border-collapse:collapse;width:100%}td,th{padding:3px 8px 3px 0;vertical-align:top;text-align:left}th{color:var(--dim);font-weight:600;font-size:11px}
+td.k{color:var(--dim);white-space:nowrap;width:1%}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:2px 12px}.kv .k{color:var(--dim)}
+.big{font-size:17px;font-weight:700}
+.chain{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}.chain span{padding:1px 6px;border-radius:4px;background:var(--chip);color:var(--dim);font:11px ui-monospace,Menlo,monospace}
+.chain span.cur{background:var(--cur);color:#fff}.chain span.done{color:var(--ok)}
+.flow{display:flex;gap:2px;flex-wrap:wrap}.flow span{flex:1 1 0;min-width:90px;text-align:center;padding:4px 2px;border-radius:4px;background:var(--chip);color:var(--dim);font-size:11px}
+.flow span.cur{background:var(--cur);color:#fff}
+.groups{display:grid;gap:8px}.grp{display:flex;align-items:flex-start;gap:8px}.grp>.gl{width:70px;flex:none;color:var(--mag);font-size:11px;font-weight:700;letter-spacing:.06em;padding-top:5px}
+.btns{display:flex;flex-wrap:wrap;gap:5px}
+button.b,a.b{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:4px 10px;font:12px ui-monospace,Menlo,monospace;cursor:pointer}
+button.b:hover,a.b:hover{border-color:var(--acc)}button.b.go{border-color:#238636;background:#132a1c}button.b.no{opacity:.45;cursor:not-allowed}
+button.b.primary{background:var(--cur);border-color:var(--cur);color:#fff}button.b.danger{border-color:#da3633;color:#ffa198}
+.console{display:flex;gap:6px}.console input{flex:1;background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:6px 8px}
+.usage{color:var(--dim);font:11.5px ui-monospace,Menlo,monospace;margin:4px 0 6px;min-height:16px}
+.results{max-height:220px;overflow:auto;font:11.5px ui-monospace,Menlo,monospace}.results .r1{border-top:1px solid #1c232c;padding:3px 0}
+.results .line{color:var(--acc)}.log{max-height:360px;overflow:auto;font:11.5px ui-monospace,Menlo,monospace}.log div{border-bottom:1px solid #1a2029;padding:1px 0;white-space:pre-wrap}
+.log .t{color:var(--dim)}.kind{display:inline-block;width:52px;color:var(--mag)}
+.warn-list div{padding:3px 0;border-bottom:1px solid #1a2029}.warn-list .age{color:var(--dim);font:11px ui-monospace,monospace;margin-right:6px}
+.mlist{display:grid;gap:5px}.mitem{padding:6px 8px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--panel2)}
+.mitem.sel{border-color:var(--acc)}.mitem .code{font:700 12px ui-monospace,Menlo,monospace}.badge{font-size:10.5px;padding:0 6px;border-radius:8px;background:var(--chip);margin-left:6px}
+.badge.built{color:var(--ok)}.badge.test{color:var(--acc)}.badge.planned{color:var(--warn)}.badge.bench{color:var(--mag)}
+.form{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 10px;align-items:center}
+.form select,.form input{background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:4px 6px;width:100%;max-width:260px}
+.cmdprev{background:#0d1117;border:1px dashed var(--line);border-radius:5px;padding:6px 8px;font:12px ui-monospace,Menlo,monospace;margin:10px 0;word-break:break-all}
+.vrd{font-size:11.5px;margin-top:4px}
+.sys{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.sysc{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}.sysc h3{margin:0 0 4px;font-size:13px}
+.host{font:700 10.5px ui-monospace,monospace;padding:1px 6px;border-radius:4px;margin-right:6px}.host.mac{background:#1f3a5f;color:#9cc9ff}
+.host.nx{background:#3b2a12;color:#f0b35a}.host.agx{background:#2c1f3d;color:#cfa8ff}.host.fcu{background:#3d1f1f;color:#ff9f9f}
+.cur-info{font:11.5px ui-monospace,Menlo,monospace;color:var(--dim);margin:6px 0}
+.refused{color:var(--warn);font-size:11.5px;margin-top:6px}
+.banner{background:#2d2310;border:1px solid #9e6a03;color:#e3b341;border-radius:6px;padding:6px 10px;margin-bottom:10px}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:50}.modal.on{display:flex}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;width:min(520px,92vw)}
+.modal input{width:100%;background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:7px;margin:8px 0}
+#tip{position:fixed;z-index:60;max-width:420px;background:#111823;border:1px solid #3b4757;border-radius:6px;padding:7px 9px;font-size:12px;
+pointer-events:none;display:none;box-shadow:0 6px 20px #0008;white-space:pre-line}
+#tip b{color:var(--acc)}
+iframe{width:100%;height:calc(100vh - 150px);border:1px solid var(--line);border-radius:8px;background:#000}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center}.filters label{font-size:11.5px;color:var(--dim)}
+.filters input[type=text]{background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+.camctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.camctl select{background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+.sw{display:inline-flex;align-items:center;gap:7px;font-weight:700;cursor:pointer}.sw input{appearance:none;width:34px;height:18px;border-radius:9px;background:var(--chip);border:1px solid var(--line);position:relative;cursor:pointer;margin:0}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--dim);transition:.15s}.sw input:checked{background:#238636}.sw input:checked::after{left:18px;background:#fff}
+.camview{background:#000;border:1px solid var(--line);border-radius:8px;min-height:320px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.camview img{max-width:100%;max-height:calc(100vh - 240px);display:block}.camview .off{color:var(--dim);padding:40px;text-align:center}
+.stops{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}.stop{border:1px solid #da363355;border-radius:8px;background:#1d1214;padding:8px 10px}
+.stop button{width:100%;margin-top:6px}.stop .what{font-size:11.5px;color:var(--dim)}
+nav button.gear{color:var(--dim)}nav button.gear.on{color:var(--ink)}
+.ck{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:3px 12px}.ck div{display:flex;gap:6px;align-items:baseline;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block;transform:translateY(1px)}.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.dot.na{background:var(--dim)}.dot.soft{background:var(--warn)}
+.nextbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+button.big{font-size:13px;padding:6px 14px;font-weight:700}
+.sev-bad{background:#3a141680;border-left:3px solid var(--bad);padding-left:4px!important;color:#ffb3ad}.sev-warn{border-left:3px solid var(--warn);padding-left:4px!important}
+.sev-ok{border-left:3px solid #2386364d;padding-left:4px!important}
+.feed{max-height:210px;overflow:auto;font:11.5px ui-monospace,Menlo,monospace}.feed div{border-bottom:1px solid #1a2029;padding:1px 0}.feed .to{color:var(--acc)}.feed .from{color:var(--mag)}
+.answer{font-weight:700;padding:4px 8px;border-radius:5px;background:var(--chip);margin:6px 0}.answer.ok{color:var(--ok)}.answer.warn{color:var(--warn)}.answer.bad{color:#fff;background:#8e1519}
+.pts{display:grid;gap:3px;margin:6px 0}.pts label{display:flex;gap:6px;align-items:center;font:12px ui-monospace,Menlo,monospace}.pts .x{margin-left:auto;cursor:pointer;color:var(--bad)}
+.mctl{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}.mctl h3{margin:0 0 6px;font-size:11px;color:var(--mag);letter-spacing:.06em}
+.qform{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 8px;align-items:center;margin:6px 0}
+.qform select,.qform input,#qsel{background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 6px;max-width:260px;width:100%}
+.pop{display:none;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}.pop.on{display:block}
+</style></head><body>
+<div style="background:#5a4a00;color:#fff;font:12px monospace;padding:3px 10px">classic · v0.1.42 page frozen 2026-11-06 · v2 at <a style="color:#fff" href="/">/</a> (this page is never edited again; removed after the event)</div>
+<header>
+ <div class="top">
+  <div class="brand">OCS <small id="ver"></small></div>
+  <div><div class="dim" style="font-size:10px">RUN</div><div class="ladder" id="rl"></div></div>
+  <div><div class="dim" style="font-size:10px">VEHICLE</div><div class="ladder" id="vl"></div></div>
+  <div class="next" id="next" data-tip="the playbook's next step for the current state (as op-tui's next: line)">…</div>
+  <button class="b danger" id="stopallbtn" data-tip="STOP EVERYTHING: every stack down in order, the OCS last - refused while a task runs; type stop">⏻ STOP ALL</button>
+  <button class="b" id="resetallbtn" data-tip="RESET EVERYTHING: a clean start (RESET SIM with a simulator; else reset on both ends + the fake judge) - the stacks stay up; type reset">↺ RESET ALL</button>
+  <button class="b danger big" id="homebtn" data-tip="GO HOME (the override): abort whatever runs, drive slowly (0.3 m/s) to the saved point HOME (else the control origin), stop and hold - any AUTO state, with or without a run. In MANUAL the boat is yours">⌂ HOME</button>
+  <span class="chip" id="warnbadge">warnings</span>
+  <span class="chip" id="links"></span>
+  <span class="chip" id="flavour" data-tip="the flavour: preset · judge · net · FCU · boat profile · CV (from the launcher's record; ? = started by hand)">?</span>
+ </div>
+ <nav id="nav"></nav>
+</header>
+<main>
+ <section class="tab" id="t-MAIN">
+  <div class="grid g-main">
+   <div class="grid">
+    <div class="card"><h2>RUN CHECKLIST <span class="r">hover a line: how to fix it · red on a bold line = not clear for the run · declaration lines: the RunDeclaration checks</span></h2><div class="ck" id="ck"></div>
+      <div class="nextbar"><button class="b big primary" id="nextbtn" data-tip="runs the next step of the hand-over (the playbook's verdict decides)">…</button><span id="nextwhy" class="dim"></span>
+      <span style="flex:1"></span><button class="b big go" id="clearbtn" data-tip="the whole chain unattended once every bold line is green: declare → enable_auto → wait for the judge's RunStart (R5). Each step shows in CONSOLE">clear for run ▶</button></div></div>
+    <div class="grid g2">
+     <div class="card"><h2>RUN<span class="r" id="run-r"></span></h2><div class="kv" id="run"></div></div>
+     <div class="card"><h2>VEHICLE<span class="r" id="veh-age"></span></h2><div class="kv" id="veh"></div></div>
+    </div>
+    <div class="card"><h2>MISSION<span class="r"><a class="acc" href="#MISSION">details →</a></span></h2><div id="mis"></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><select id="qsel" data-tip="pick a mission: its options below, then preselect (start on start_task / RunStart) or start now"></select></div>
+      <div class="qform" id="qopts"></div><div class="cmdprev" id="qprev" style="margin:6px 0"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="b" id="qpre">preselect</button><button class="b primary" id="qgo">start now</button><span class="vrd" id="qvrd"></span></div>
+      <div class="mctl" id="qctl"></div></div>
+    <div class="card"><h2>FLOW <span class="r">where the hand-over stands</span></h2><div class="flow" id="flow"></div></div>
+    <div class="card"><h2>WARNINGS<span class="r" id="warn-n"></span></h2><div class="warn-list" id="warns"></div></div>
+   </div>
+   <div class="grid">
+    <div class="card minicard"><h2>MAP <span class="r">the course, the boat, HOME, the points, the path · click = the MAP tab</span></h2>
+      <iframe id="minimap" title="mini-map" data-tip="the mini-map (v0.1.35): the same map as the MAP tab, no controls - click it to open the MAP tab"></iframe></div>
+    <div class="card"><h2>ROBOCOMMAND <span class="r" id="rc-br"></span></h2><div class="answer" id="rc-ans">…</div><div class="kv" id="rc-kv"></div>
+      <h2 style="margin-top:8px">RUN TIMELINE <span class="r">as the judges see it: Declared → Held → Started → Ended</span></h2><div class="tl" id="rc-tl"><span class="dim">no run yet</span></div>
+      <h2 style="margin-top:8px">TASKS <span class="r">tier · challenge activated by (current_task in our heartbeat) · reported by us</span></h2><div id="rc-tasks"></div>
+      <h2 style="margin-top:8px">VEHICLES <span class="r">the judges' card: state · task · heading · speed · HAE · phase · heartbeat age</span></h2><div id="rc-veh"></div>
+      <h2 style="margin-top:8px">JUDGE FEED <span class="r"><span class="acc">→ judge</span> · <span style="color:var(--mag)">← judge</span> · <a class="acc" id="rc-link" target="_blank">judge page →</a></span></h2><div class="feed" id="rc-feed"></div></div>
+    <div class="card"><h2>COMMANDS <span class="r">grey = not allowed now (hover: why) · op-tui stays the main console</span></h2><div class="groups" id="cmds"></div>
+      <div class="pop" id="pop"></div></div>
+    <div class="card"><h2>CONSOLE <span class="r">op-tui's grammar · ↑ history</span></h2>
+      <div class="console"><input id="cli" list="words" autocomplete="off" placeholder="type a command, e.g. declare · start_task m0t4sim --scan-x 30"><button class="b primary" id="send">send</button></div>
+      <datalist id="words"></datalist><div class="usage" id="usage"></div><div class="results" id="results"></div></div>
+   </div>
+  </div>
+  <div class="card" style="margin-top:12px"><h2>EVENTS<span class="r"><a class="acc" href="#LOG">all →</a></span></h2><div class="log" id="ev" style="max-height:220px"></div></div>
+ </section>
+
+ <section class="tab" id="t-CONTROL">
+  <div class="grid" style="grid-template-columns:minmax(0,3fr) minmax(0,2fr)">
+   <div class="grid">
+    <div class="card"><h2>MISSION CONTROL <span class="r" id="c-r"></span></h2>
+      <div class="cword" id="cw">…</div><div id="cwhy" class="mono"></div><div id="chint" class="dim"></div>
+      <div class="cbtns">
+        <button class="b big go" id="c-start" data-tip="START the picked mission with its options (start_task …) · needs: ARMED (judged missions: RunStart too) · then: RUNNING">▶ START</button>
+        <button class="b big" id="c-hold" data-tip="HOLD: pause the task (AUTO_SAFE_HOLD, the task kept) · then: HELD; resume goes on">❚❚ HOLD</button>
+        <button class="b big" id="c-resume" data-tip="RESUME: leave the safe hold (with --step: the next stage)">⏵ RESUME</button>
+        <button class="b big danger" id="c-abort" data-tip="ABORT: drop the task · then: ARMED (AUTO_HOLD)">■ ABORT</button>
+        <button class="b big" id="c-restart" data-tip="RESTART: abort, then start the same mission with the same options">↻ RESTART</button>
+        <button class="b big danger" id="c-home" data-tip="⌂ HOME: the go-home override (any AUTO state)">⌂ HOME</button>
+        <button class="b big primary" id="c-rearm" data-tip="RE-ARM: enable_auto - back to AUTO_HOLD after a kill (confirm_safe first) or a takeover; the run, if any, is kept" hidden>RE-ARM</button>
+      </div><div id="c-res" class="mono dim"></div></div>
+    <div class="card"><h2>THE MISSION <span class="r">primitives · test missions · judged missions</span></h2>
+      <select id="csel" data-tip="pick the mission: primitives first (go to a waypoint, a path through points, sway A→B, orbit), then the test missions, then the judged ones"></select>
+      <div id="c-host"></div></div>
+   </div>
+   <div class="grid">
+    <div class="card"><h2>STAGES <span class="r" id="c-elapsed"></span></h2><div class="chain" id="c-chain"></div></div>
+   </div>
+  </div>
+ </section>
+
+ <section class="tab" id="t-MISSION">
+  <div class="grid" style="grid-template-columns:minmax(220px,1fr) minmax(0,3fr)">
+   <div class="card"><h2>MISSIONS</h2><div class="mlist" id="mlist"></div></div>
+   <div class="card" id="mdet"></div>
+  </div>
+ </section>
+
+ <section class="tab" id="t-BOAT"><div class="grid g3">
+  <div class="card"><h2>VEHICLE (status)</h2><div class="kv" id="b-st"></div></div>
+  <div class="card"><h2>MISSION MANAGER (local, boat broker)</h2><div class="kv" id="b-loc"></div></div>
+  <div class="card"><h2>PERCEPTION &amp; MAP</h2><div class="kv" id="b-per"></div></div>
+ </div></section>
+
+ <section class="tab" id="t-NETWORK"><div class="grid g2">
+  <div class="card"><h2>HUB 1882 (this Mac)</h2><div id="n-hub"></div></div>
+  <div class="card"><h2>BOAT 1884 (Orin NX)</h2><div id="n-boat"></div></div>
+  <div class="card"><h2>BROKER COUNTERS</h2><div class="kv" id="n-sys"></div></div>
+ </div></section>
+
+ <section class="tab" id="t-JUDGE"><div class="grid g2">
+  <div class="card"><h2>THE OCS'S JUDGE VIEW <span class="r"><a class="acc" id="jlink" target="_blank">the judge's own page →</a></span></h2><div class="kv" id="j-view"></div></div>
+  <div class="card"><h2>FAKE JUDGE (rc/sim/stats)</h2><div class="kv" id="j-stats"></div></div>
+  <div class="card" style="grid-column:1/-1"><h2>JUDGE TRAFFIC</h2><div class="log" id="j-log"></div></div>
+ </div></section>
+
+ <section class="tab" id="t-SYSTEM">
+  <div class="banner" id="drybanner" style="display:none">DRY RUN (OCS_WEB_DRYRUN=1): the commands are shown, nothing runs.</div>
+  <div class="card" style="margin-bottom:12px"><h2>NOW</h2><div class="kv" id="s-now"></div></div>
+  <div class="sys" id="sys"></div>
+  <div class="card" style="margin-top:12px"><h2>JOBS <span class="r">the last 10 · logs/ocs/system_actions.jsonl</span></h2><div class="log" id="jobs"></div></div>
+ </section>
+
+ <section class="tab" id="t-MAP"><iframe id="mapf" title="map"></iframe></section>
+
+ <section class="tab" id="t-CAMERA"><div class="card"><h2>CAMERA <span class="r mono" id="c-url"></span></h2>
+  <div class="camctl">
+   <label class="sw" data-tip="on = the page shows the AGX stream (MJPEG); off = the page drops the connection (saves the Wi-Fi)"><input type="checkbox" id="c-on"> stream</label>
+   <label data-tip="with the toggle: start the stream program on the AGX (scripts/agx_cam.sh start, over ssh) when switching on, stop it when switching off.&#10;Unticked = only this page connects / disconnects"><input type="checkbox" id="c-agx" checked> start / stop it on the AGX too</label>
+   <label data-tip="what the AGX streams when started from here:&#10;auto = the camera itself when no detector runs, else the detectors' previews&#10;dir = the detectors' preview frames: BLANK until a buoy / dock observer runs&#10;zed = the ZED itself (holds the camera: stop the stream before starting a detector; refused while a task runs)&#10;test = a moving pattern">source <select id="c-src"><option value="auto">auto (camera if free)</option><option value="dir">dir (detector previews; blank without one)</option><option value="zed">zed (the camera itself)</option><option value="test">test pattern</option></select></label>
+   <a class="b" id="c-snap" target="_blank" data-tip="the latest frame as a JPEG, in a new tab" style="text-decoration:none">snapshot ↗</a>
+   <span class="mono dim" id="c-st"></span></div>
+  <div class="camview"><img id="c-img" alt="" hidden><div class="off" id="c-off">stream off</div></div>
+ </div></section>
+
+ <section class="tab" id="t-SETTINGS">
+  <div class="banner" id="xdrybanner" style="display:none">DRY RUN (OCS_WEB_DRYRUN=1): the commands are shown, nothing runs.</div>
+  <div class="card" style="margin-bottom:12px"><h2>THEME <span class="r">this page and its maps (the judge page has its own switch)</span></h2>
+    <select id="themesel" data-tip="dark (default) · light (sunlight on a laptop) · high contrast (white on black, bold lines)"><option value="dark">dark</option><option value="light">light</option><option value="contrast">high contrast</option></select></div>
+  <div class="card" style="margin-bottom:12px"><h2>EVERYTHING <span class="r">STOP = every stack down, the OCS last (refused while a task runs) · RESET = a clean start, the stacks stay up · type the word</span></h2><div id="x-every"></div></div>
+  <div class="card" style="margin-bottom:12px"><h2>QUICK STOPS <span class="r">type <b>stop</b> to confirm · the boat and the AGX refuse while the vehicle needs them</span></h2><div class="stops" id="stops"></div></div>
+  <div class="grid g2" style="margin-bottom:12px">
+   <div class="card"><h2>SIM SCENARIO <span class="r">the fake CV's world (bench)</span></h2><div id="x-sim"></div><div id="x-simreset" style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px"></div></div>
+   <div class="card"><h2>CAMERA <span class="r"><a class="acc" href="#CAMERA">view →</a></span></h2><div id="x-cam"></div>
+    <h2 style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">RECORDER <span class="r" data-tip="v0.1.40 (WP9b): the ZED clips for CV_TRAIN - our buoy observer with --record on the AGX (scripts/agx_record.sh); bring home on the Mac: scripts/agx_pull_clips.sh">ZED clips · agx_record.sh</span></h2><div id="x-rec"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px"><h2>CONNECTIONS</h2><div class="kv" id="x-conn"></div></div>
+  <h2 style="font-size:11.5px;letter-spacing:.08em;color:var(--acc);margin:4px 0 8px">RESTARTS &amp; REBOOTS <span class="dim" style="font-weight:400;letter-spacing:0">(the same as SYSTEM)</span></h2>
+  <div class="sys" id="xsys"></div>
+  <div class="card" style="margin-top:12px"><h2>JOBS <span class="r">the last 10 · logs/ocs/system_actions.jsonl</span></h2><div class="log" id="xjobs"></div></div>
+ </section>
+
+ <section class="tab" id="t-LOG"><div class="card">
+  <div class="filters" id="lf"></div><div class="log" id="logall" style="max-height:calc(100vh - 220px)"></div></div></section>
+
+ <section class="tab" id="t-HELP"><div class="grid">
+  <div class="card"><h2>THE TEN WORDS <span class="r">all a run needs - typed in op-tui / ocs_cli, or the buttons named on MAIN and CONTROL</span></h2><div id="h-ten" style="overflow-x:auto"></div></div>
+  <div class="card"><h2>THE PLAYBOOK (every intent)</h2><div id="h-pb" style="overflow-x:auto"></div></div>
+  <div class="grid g2"><div class="card"><h2>RUN STATES</h2><div class="kv" id="h-r"></div></div><div class="card"><h2>VEHICLE STATES</h2><div class="kv" id="h-v"></div></div></div>
+ </div></section>
+</main>
+<div class="modal" id="modal"><div class="box"><div id="m-body"></div>
+ <input id="m-in" autocomplete="off"><div style="display:flex;gap:8px;justify-content:flex-end"><button class="b" id="m-no">cancel</button><button class="b danger" id="m-yes">do it</button></div></div></div>
+<div id="tip"></div>
+<script>
+"use strict";
+try{document.documentElement.dataset.theme=localStorage.getItem("ocs.theme")||"dark"}catch(e){}       // v0.1.37: dark / light / contrast
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const f=(x,d=1)=>x==null||x===""?"-":(typeof x==="number"?(Number.isInteger(x)?String(x):x.toFixed(d)):x);
+const hms=t=>new Date(t*1000).toTimeString().slice(0,8);
+const TABS=["MAIN","CONTROL","MISSION","BOAT","NETWORK","JUDGE","SYSTEM","MAP","CAMERA","LOG","HELP","SETTINGS"];
+let curTab="MAIN", CAM=null, META=null, S=null, selMission=null, hist=[], hidx=-1, logKinds=new Set();
+
+// ---- v0.1.35 (WP10c): every button has a title - what · needs · then (the playbook's own texts where there is one) ----------------
+const TAB_TIP={CONTROL:"MISSION CONTROL: one state word (NOT READY / ARMED / RUNNING / HELD), the mission picker, START · HOLD · RESUME · ABORT · RESTART · HOME (+ RE-ARM)",MAIN:"the run at a glance: the checklist, run / vehicle, the mission picker, the mini-map, RoboCommand, the commands",
+  MISSION:"the mission catalogue: each mission's stages, options and start lines",BOAT:"the boat as the OCS sees it: FCU, health, RC, the perception map",
+  NETWORK:"the brokers, the bridge and every node's presence",JUDGE:"what went to and came from the judge (RoboCommand or the fake)",
+  SYSTEM:"restart / stop / reboot the stacks on the three hosts (typed confirmations)",MAP:"the full map: course, geofence, buoys, path, points; add / move / delete objects; teleport (sim)",
+  CAMERA:"the boat's camera stream (the AGX, or the simulator's)",LOG:"every event and alert; the problems-only filter",HELP:"the playbook: every intent, the run and vehicle states"};
+const ID_TIP={qpre:"preselect the picked mission: it starts on start_task or on the judge's RunStart · needs: a run (R2+) · then: the MISSION box shows it",
+  qgo:"start the picked mission now (start_task with the options) · needs: AUTO_HOLD, R5 for judged missions · then: AUTO_TASK, the stages tick",
+  send:"send the typed line (op-tui's grammar) · then: the verdict and the vehicle's ack appear below",
+  "m-no":"cancel: nothing is sent","m-yes":"do it: sends the action shown (needs the typed word when asked)",
+  pgo:"send this command with the options above · then: the verdict and the ack in the console",pno:"close this form, nothing sent",
+  mpre:"preselect this mission (mission …) · then: start_task / RunStart starts it",mgo:"start this mission now (start_task …) · needs: AUTO_HOLD, the run where judged",
+  qdrop:"drop a named point on the MAP tab (save_point NAME --lat --lon) · then: it appears in the picker"};
+function titleFor(b){
+  if(b.dataset.tip)return b.dataset.tip.replace(/<[^>]*>/g,"");
+  if(ID_TIP[b.id])return ID_TIP[b.id];
+  if(b.dataset.t)return TAB_TIP[b.dataset.t]||`the ${b.dataset.t} tab`;
+  const w=b.dataset.w||b.dataset.qw;
+  if(w&&META){const act=(META.word_to_action||{})[w],e=act&&(META.entries||{})[act],u=(META.usage||[]).find(x=>x.word===w);
+    if(e)return `${w}: ${e.does}${e.needs?" · needs: "+e.needs:""}${e.then?" · then: "+e.then:""}`;if(u)return `${w}: ${u.does} (${u.usage.trim()})`;return `${w}: type or click to run it`}
+  const m=b.id&&b.id.match(/^x?s[bp]-(.+)$/);if(m&&META){const a=(META.system||[]).find(x=>x.id===m[1]);if(a)return `${a.title}: ${a.what}${a.confirm?" · type "+a.confirm+" to confirm":""}`}
+  return "";
+}
+function fillTitles(){for(const b of document.querySelectorAll("button:not([title])")){const t=titleFor(b);if(t)b.title=t}}
+new MutationObserver(()=>fillTitles()).observe(document.body,{childList:true,subtree:true});
+// ---- tooltips ([data-tip], richer and faster than title) --------------------------------------------------------------
+const tip=$("tip");
+document.addEventListener("mouseover",e=>{const el=e.target.closest("[data-tip]");if(!el){tip.style.display="none";return}
+  tip.innerHTML=el.dataset.tip;tip.style.display="block"});
+document.addEventListener("mousemove",e=>{if(tip.style.display!=="block")return;const w=tip.offsetWidth,h=tip.offsetHeight;
+  tip.style.left=Math.min(e.clientX+14,innerWidth-w-8)+"px";tip.style.top=(e.clientY+h+24>innerHeight?e.clientY-h-12:e.clientY+16)+"px"});
+
+// ---- tabs -----------------------------------------------------------------------------------------------------------
+// v0.1.37 (WP10d): MISSION CONTROL - the MAIN picker's options / points / controls move here while the tab is open (one picker)
+const PRIM=["goto","m0t2","m0t3","m0t6"],TESTM=["m0t0","m0t1","m0t4"];
+const judged=c=>/^m[1-4]t/.test(c);
+function cOrder(){const ms=META.missions;const g=(c)=>PRIM.includes(c)?0:TESTM.includes(c)?1:judged(c)?2:3;return [...ms].sort((a,b)=>g(a.code)-g(b.code)||a.code.localeCompare(b.code))}
+function cBuild(){$("csel").innerHTML=cOrder().map(m=>`<option value="${m.code}">${PRIM.includes(m.code)?"primitive":TESTM.includes(m.code)?"test":judged(m.code)?"judged":"other"} · ${m.code} · ${esc(m.title)}${m.status==="planned"?" (planned)":""}</option>`).join("");
+  $("csel").value=$("qsel").value;$("csel").onchange=()=>{$("qsel").value=$("csel").value;$("qsel").onchange()};
+  $("c-start").onclick=()=>{const w=S&&S.control;if(w&&cWord().word!=="ARMED"){$("c-res").innerHTML=`<span class="warn">${esc(cWord().why)}</span> - ${esc(cWord().hint)}`;return}send(qLine("start_task"))};
+  $("c-hold").onclick=()=>send("hold");$("c-resume").onclick=()=>send("resume");$("c-abort").onclick=()=>send("abort");$("c-rearm").onclick=()=>send("enable_auto");
+  $("c-home").onclick=()=>$("homebtn").click();
+  $("c-restart").onclick=async()=>{const line=qLine("start_task");await send("abort");for(let i=0;i<20;i++){await new Promise(r=>setTimeout(r,500));if(S&&S.status&&S.status.state!=="AUTO_TASK")break}send(line)}}
+function cPlace(name){const card=$("qsel").parentElement.parentElement;     // the MAIN mission card
+  if(name==="CONTROL"){for(const id of ["qopts","qprev","qctl"])$("c-host").appendChild($(id))}
+  else if($("qopts").parentElement===$("c-host")){card.appendChild($("qopts"));card.appendChild($("qprev"));card.appendChild($("qpre").parentElement);card.appendChild($("qctl"))}}
+function cWord(){const w=Object.assign({},S&&S.control||{word:"NOT READY",why:"no state yet",hint:""});const m=qM();
+  if(w.word==="ARMED"&&judged(m.code)&&!w.judged_ready)Object.assign(w,{word:"NOT READY",why:`${m.code} is judged: it needs the judge's RunStart (now ${w.r||"?"})`,hint:"clear for run ▶ on MAIN (declare → enable_auto → RunStart)"});
+  {const d=((S&&S.mission_declaration)||{})[m.code];   // v0.1.41 (WP9c): the RunDeclaration checks for the picked mission
+   if(d&&d.block&&w.word==="ARMED")Object.assign(w,{word:"NOT READY",why:`declaration: ${m.code} would be refused`,hint:d.text});
+   else if(d&&w.word==="ARMED")w.hint=(w.hint?w.hint+" · ":"")+"check: "+d.text}
+  return w}
+function cRender(){if(!S||!META)return;const w=cWord();$("cw").textContent=w.word;$("cw").className="cword "+w.word.split(" ")[0];
+  $("cwhy").textContent=w.why||"";$("chint").textContent=w.hint?("→ "+w.hint):"";$("c-r").textContent=`${w.r||"?"} · test mode ${w.test_mode?"on":"off"}`;
+  $("c-rearm").hidden=!w.rearm;$("c-start").classList.toggle("no",w.word!=="ARMED");$("c-hold").classList.toggle("no",w.word!=="RUNNING");
+  $("c-resume").classList.toggle("no",w.word!=="HELD");$("c-abort").classList.toggle("no",!["RUNNING","HELD"].includes(w.word));
+  const m=qM(),cur=(S.status||{}).task_state,names=(m.stages||[]).map(x=>x.name);let past=true;
+  $("c-chain").innerHTML=names.map(n=>{const on=n===cur&&w.word!=="ARMED";const cls=on?"on":(past&&cur&&names.includes(cur)&&w.word!=="ARMED"?"done":"");if(on)past=false;
+    return `<div class="${cls}" title="${esc((m.stages.find(x=>x.name===n)||{}).meaning||"")}">${esc(n)}</div>`}).join("")||'<span class="dim">no stages listed</span>';
+  $("c-elapsed").textContent=w.elapsed_s!=null?`${w.elapsed_s} s`:"";if($("csel").value!==$("qsel").value)$("csel").value=$("qsel").value}
+function showTab(name){if(!TABS.includes(name))name="MAIN";
+  for(const t of TABS){$("t-"+t).classList.toggle("on",t===name);const b=document.querySelector(`nav button[data-t="${t}"]`);b&&b.classList.toggle("on",t===name)}
+  if(name==="MAP"&&!$("mapf").src&&META){const q=`host=${META.ws.host}&port=${META.ws.port}`+(META.cam_url?`&cam=${encodeURIComponent(META.cam_url)}`:"");$("mapf").src="/map.html?"+q}
+  curTab=name;camApply();if(META)cPlace(name);
+  if(location.hash!=="#"+name)history.replaceState(null,"","#"+name)}
+window.addEventListener("hashchange",()=>showTab(location.hash.slice(1)));
+
+// ---- POST -----------------------------------------------------------------------------------------------------------
+async function post(path,body){const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-OCS-Web":"1"},body:JSON.stringify(body)});return r.json()}
+async function send(line){if(!line.trim())return;hist.unshift(line);hidx=-1;$("results").insertAdjacentHTML("afterbegin",`<div class="r1"><span class="line">&gt; ${esc(line)}</span> <span class="dim">sending…</span></div>`);
+  try{await post("/cmd",{line})}catch(e){} tick()}
+
+// ---- modal ------------------------------------------------------------------------------------------------------------
+function ask(html,word,onyes){$("m-body").innerHTML=html;const inp=$("m-in");inp.value="";inp.style.display=word?"block":"none";inp.placeholder=word?`type ${word}`:"";
+  $("modal").classList.add("on");if(word)setTimeout(()=>inp.focus(),30);
+  $("m-yes").onclick=()=>{$("modal").classList.remove("on");onyes(inp.value)};$("m-no").onclick=()=>$("modal").classList.remove("on")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.remove("on")});
+
+// ---- static build from /meta.json -----------------------------------------------------------------------------------------
+const RISKY={end_run:"end the run (STOP_RUN to every vehicle; R6)",reset:"reset BOTH ends (abort, manual, the run forgotten)",abort:"drop the running task",
+  disable_auto:"vehicle back to MANUAL",manual:"abort any task, then disable_auto"};
+const ARGS={goto:[["--x","N m","10"],["--y","E m","0"],["--speed","m/s","0.6"]],
+  inject:[["what","","assistance",["run_start","course","assistance","keep_out","all_clear","moving","confirm"]],["--lat","lat",""],["--lon","lon",""],["--cseq","cseq",""]],
+  select_target:[["colour","","red",["red","green","blue"]]],fcu:[["pause","seconds","4"]],teleport:[["lat","lat","1.2811"],["lon","lon","103.8551"],["hdg","deg","0"]],
+  kill:[["on|off","","on",["on","off"]]],rc6:[["on|off","","on",["on","off"]]],estop:[["on|off","","on",["on","off"]]],ekf:[["on|off","","off",["on","off"]]],armed:[["on|off","","on",["on","off"]]]};
+function entryTip(word){const u=META.usage.find(x=>x.word===word)||{};const a=META.word_to_action[word];const e=a&&META.entries[a];
+  let t=`<b>${esc(u.usage||word)}</b>`;if(e){t+=`\n${esc(e.does)}`;if(e.needs)t+=`\nneeds: ${esc(e.needs)}`;if(e.then)t+=`\nthen: ${esc(e.then)}`;if(e.next)t+=`\nnext: ${esc(e.next)}`}
+  else if(u.does)t+=`\n${esc(u.does)}`;return t}
+function build(){
+  $("ver").textContent="v"+META.version+(META.net_profile?" · net "+META.net_profile:"");
+  $("nav").innerHTML=TABS.filter(t=>t!=="SETTINGS").map(t=>`<button data-t="${t}">${t}</button>`).join("")+`<span class="sp"></span>`+
+    `<button data-t="SETTINGS" class="gear" data-tip="settings: the sim scenario, the camera, quick stops, every restart / reboot, the connections">⚙ SETTINGS</button>`;
+  for(const b of $("nav").querySelectorAll("button"))b.onclick=()=>showTab(b.dataset.t);
+  $("rl").innerHTML=META.r_order.map(r=>`<span id="r-${r}" data-tip="<b>${r}</b> ${esc(META.r_meaning[r]||"")}">${r}</span>`).join("");
+  $("vl").innerHTML=META.v_order.map((v,i)=>`<span id="v-${v}" data-tip="<b>V${i} ${v}</b> ${esc(META.v_meaning[v]||"")}">V${i}</span>`).join("");
+  $("words").innerHTML=META.usage.map(u=>`<option value="${esc(u.word)}">${esc(u.does)}</option>`).join("");
+  // commands, op-tui's groups; the TUI group is the page's own
+  const groups=META.groups.filter(g=>g[0]!=="TUI").map(([g,ws])=>[g,g==="JUDGE"?["inject"]:ws.map(w=>w.split(" ")[0])]);
+  $("cmds").innerHTML=groups.map(([g,ws])=>`<div class="grp"><div class="gl" data-tip="${g==="PLANT"?"the fake FCU on THIS machine (bench only): what the transmitter / the plant would do":g==="JUDGE"?"bench only: messages a judge would send":g}">${g}</div><div class="btns">`+
+    ws.map(w=>`<button class="b" data-w="${w}">${w}</button>`).join("")+`</div></div>`).join("");
+  for(const b of $("cmds").querySelectorAll("button"))b.onclick=()=>clickWord(b.dataset.w);
+  // missions
+  $("mlist").innerHTML=META.missions.map(m=>`<div class="mitem" data-c="${m.code}" data-tip="${esc(m.what.join(" "))}"><span class="code">${m.code}</span><span class="badge ${m.status}">${m.status}</span>`+
+    `<div class="dim" style="font-size:11.5px">${esc(m.task)} · ${esc(m.title)}</div></div>`).join("");
+  for(const d of $("mlist").querySelectorAll(".mitem"))d.onclick=()=>selectMission(d.dataset.c);
+  selectMission(META.missions[0].code);
+  $("minimap").src=`/map.html?host=${META.ws.host}&port=${META.ws.port}&mini=1`;          // v0.1.35: the mini-map on MAIN
+  // system
+  for(const b of ["drybanner","xdrybanner"])$(b).style.display=META.system_dry?"block":"none";
+  const grp=g=>META.system.filter(a=>(a.group||"system")===g);
+  $("sys").innerHTML=grp("system").map(a=>sysCard(a,"")).join("");
+  $("xsys").innerHTML=grp("system").map(a=>sysCard(a,"x")).join("");
+  $("x-sim").innerHTML=grp("settings").filter(a=>a.id==="simworld").map(a=>sysCard(a,"x",true)).join("");
+  $("x-simreset").innerHTML=grp("settings").filter(a=>a.id==="simreset").map(a=>sysCard(a,"x",true)).join("");
+  $("x-cam").innerHTML=grp("settings").filter(a=>a.id==="cam").map(a=>sysCard(a,"x",true)).join("");
+  $("x-rec").innerHTML=grp("settings").filter(a=>a.id==="rec").map(a=>sysCard(a,"x",true)).join("");      // v0.1.40 (WP9b)
+  $("stops").innerHTML=grp("stop").map(a=>`<div class="stop"><div><span class="host ${a.host}">${a.host.toUpperCase()}</span><b>${esc(a.title)}</b></div>`+
+    `<div class="what">${esc(a.what)}</div><button class="b danger" id="xsb-${a.id}">stop…</button><div class="dim mono" id="xsp-${a.id}"></div><div class="refused" id="xsr-${a.id}"></div></div>`).join("");
+  $("x-every").innerHTML=grp("everything").map(a=>sysCard(a,"x",true)).join("<hr style='border:0;border-top:1px solid var(--line)'>");
+  SYSC=[];for(const a of META.system){const ps=a.group==="stop"||a.group==="settings"||a.group==="everything"?["x"]:["","x"];
+    for(const p of ps){SYSC.push([a,p]);const upd=()=>{$(p+"sb-"+a.id).textContent=sysLabel(a,sysOpts(a,p))};
+      for(const o of a.options)$(`${p}so-${a.id}-${o.name}`).onchange=upd;upd();$(p+"sb-"+a.id).onclick=()=>runSystem(a,p)}}
+  // v0.1.29: MAIN's mission picker, the RoboCommand link, the run checklist buttons
+  $("qsel").innerHTML=META.missions.map(m=>`<option value="${m.code}">${m.code} · ${esc(m.title)}${m.status==="planned"?" (planned)":""}</option>`).join("");
+  let q0=null;try{q0=localStorage.getItem("ocs.qsel")}catch(e){}
+  if(q0&&META.missions.some(m=>m.code===q0))$("qsel").value=q0;
+  $("qsel").onchange=()=>{try{localStorage.setItem("ocs.qsel",$("qsel").value)}catch(e){}qBuild()};qBuild();
+  $("qpre").onclick=()=>send(qLine("mission"));$("qgo").onclick=()=>{const v=S&&S.verdicts.START_TASK;if((v&&!v.ok)||qNeed()){qVrd();return}send(qLine("start_task"))};
+  for(const [b,id] of [["stopallbtn","stopall"],["resetallbtn","resetall"]]){const act=META.system.find(x=>x.id===id);   // v0.1.37
+    $(b).onclick=()=>{const why=S&&S.system.refused[id];if(why){$("nextwhy").innerHTML=`<span class="warn">${esc(act.title)}: ${esc(why)}</span>`;showTab("MAIN");return}runSystem(act,"x")}}
+  cBuild();
+  try{$("themesel").value=localStorage.getItem("ocs.theme")||"dark"}catch(e){}
+  $("themesel").onchange=()=>{const t=$("themesel").value;document.documentElement.dataset.theme=t;try{localStorage.setItem("ocs.theme",t)}catch(e){}
+    for(const f of ["mapf","minimap"]){try{const d=$(f).contentDocument;if(d)d.documentElement.dataset.theme=t}catch(e){}}};
+  $("rc-link").href=META.judge_url;
+  $("homebtn").onclick=()=>{const v=S&&S.verdicts.HOME;if(v&&!v.ok){$("nextwhy").innerHTML=`<span class="warn">HOME: ${esc(v.why)}</span> ${esc(v.hint||"")}`;showTab("MAIN");return}
+    const tgt=(S&&(S.points||[]).some(p=>p.name==="HOME"))?"the saved point HOME":"the control origin (no saved point HOME)";
+    ask(`<b>⌂ GO HOME now?</b><div style="margin-top:6px">aborts ${esc(curVeh().task_name||"nothing running")}, then drives at 0.3 m/s to <b>${esc(tgt)}</b>, stops and holds.</div><div class="dim" style="margin-top:6px">the transmitter still wins; save a point named HOME at the pontoon to set it</div>`,"",()=>send("home"))};
+  $("clearbtn").onclick=async()=>{const r=await post("/clear",{});$("nextwhy").innerHTML=r.ok?`<span class="ok">${esc(r.why)}</span>`:`<span class="warn">${esc(r.why)}</span>`;tick()};
+  // camera
+  $("c-url").textContent=META.cam_url?META.cam_url+"stream":"no camera address (AGX_HOST in network*.env, or CAM_URL)";
+  if(META.cam_url)$("c-snap").href=META.cam_url+"snapshot.jpg";else{$("c-on").disabled=true;$("c-snap").style.display="none"}
+  $("c-on").onchange=camToggle;
+  // help
+  const TEN=["ready","start_task","hold","resume","abort","manual","end_run","reset","save_point","home"];   // v0.1.42 (WP9d)
+  $("h-ten").innerHTML=`<table><tr><th>word</th><th>typed</th><th>does</th></tr>`+TEN.map(w=>{const u=(META.usage||[]).find(x=>x.word===w)||{usage:w,does:""};
+    return `<tr><td><b>${esc(w)}</b></td><td><code>${esc(u.usage)}</code></td><td>${esc(u.does)}</td></tr>`}).join("")+`</table>`;
+  $("h-pb").innerHTML=`<table><tr><th>intent</th><th>key</th><th>typed</th><th>does</th><th>needs</th><th>then</th><th>next</th></tr>`+
+    Object.values(META.entries).map(e=>`<tr><td class="mono">${e.action}</td><td class="mono">${esc(e.key)}</td><td class="mono">${esc(e.cli)}</td><td>${esc(e.does)}</td><td class="dim">${esc(e.needs)}</td><td class="dim">${esc(e.then)}</td><td class="dim">${esc(e.next)}</td></tr>`).join("")+`</table>`;
+  $("h-r").innerHTML=Object.entries(META.r_meaning).map(([k,v])=>`<div class="k mono">${k}</div><div>${esc(v)}</div>`).join("");
+  $("h-v").innerHTML=META.v_order.map((k,i)=>`<div class="k mono">V${i} ${k}</div><div>${esc(META.v_meaning[k]||"")}</div>`).join("");
+  $("jlink").href=META.judge_url;
+}
+
+// ---- commands -------------------------------------------------------------------------------------------------------------
+function verdictOf(word){const a=META.word_to_action[word];return a&&S&&S.verdicts?S.verdicts[a]:null}
+function clickWord(w){const v=verdictOf(w);
+  if(w==="start_task"||w==="mission"){showTab("MISSION");return}
+  if(v&&!v.ok){$("usage").innerHTML=`<span class="warn">${esc(w)}: ${esc(v.why)}</span>${v.hint?" · "+esc(v.hint):""}`;return}
+  if(ARGS[w]){openPop(w);return}
+  if(RISKY[w]){ask(`<b>${esc(w)}</b>: ${esc(RISKY[w])}?`,"",()=>send(w));return}
+  send(w)}
+function openPop(w){const p=$("pop");const fs=ARGS[w];
+  p.innerHTML=`<div class="form">`+fs.map(([flag,lab,def,ch],i)=>`<label>${esc(lab||flag)}</label>`+(ch?`<select id="pa${i}">${ch.map(c=>`<option ${c===def?"selected":""}>${c}</option>`).join("")}</select>`:`<input id="pa${i}" value="${esc(def)}">`)).join("")+
+    `</div><div style="margin-top:8px;display:flex;gap:6px"><button class="b primary" id="pgo">${esc(w)}</button><button class="b" id="pno">close</button><span class="dim mono" id="pprev"></span></div>`;
+  p.classList.add("on");
+  const line=()=>{let s=w;fs.forEach(([flag,,],i)=>{const v=$("pa"+i).value.trim();if(!v)return;s+=flag.startsWith("--")?` ${flag} ${v}`:(flag==="pause"?` pause ${v}`:` ${v}`)});return s};
+  const upd=()=>$("pprev").textContent=line();fs.forEach((_,i)=>$("pa"+i).oninput=upd);upd();
+  $("pgo").onclick=()=>{send(line());p.classList.remove("on")};$("pno").onclick=()=>p.classList.remove("on")}
+$("send").onclick=()=>{send($("cli").value);$("cli").value="";usageFor("")};
+$("cli").addEventListener("keydown",e=>{if(e.key==="Enter"){$("send").click()}else if(e.key==="ArrowUp"&&hist.length){hidx=Math.min(hidx+1,hist.length-1);$("cli").value=hist[hidx];e.preventDefault()}
+  else if(e.key==="ArrowDown"){hidx=Math.max(hidx-1,-1);$("cli").value=hidx<0?"":hist[hidx];e.preventDefault()}});
+$("cli").addEventListener("input",e=>usageFor(e.target.value));
+function usageFor(line){const w=(line.trim().split(/\s+/)[0]||"").toLowerCase();if(!w){$("usage").textContent="";return}
+  const ex=META.usage.filter(u=>u.word===w),pre=META.usage.filter(u=>u.word.startsWith(w));const u=ex[0]||(pre.length===1?pre[0]:null);
+  if(u){const v=verdictOf(u.word);$("usage").innerHTML=`usage: ${esc(u.usage)}`+(v?(v.ok?` · <span class="ok">allowed now</span>`:` · <span class="warn">${esc(v.why)}</span>`):"")}
+  else $("usage").textContent=pre.length?"commands: "+pre.map(x=>x.word).join("  "):"unknown command"}
+
+// ---- missions ---------------------------------------------------------------------------------------------------------------
+function selectMission(code){selMission=META.missions.find(m=>m.code===code);for(const d of $("mlist").querySelectorAll(".mitem"))d.classList.toggle("sel",d.dataset.c===code);
+  const m=selMission;
+  $("mdet").innerHTML=`<h2>${m.code} · ${esc(m.task)} <span class="badge ${m.status}">${m.status}</span><span class="r">${esc(m.tier)}</span></h2>`+
+   `<div class="big" style="font-size:15px">${esc(m.title)}</div><div style="margin:4px 0 8px">${esc(m.what.join(" "))}</div>`+
+   `<div class="grid g2"><div><div class="kv"><div class="k">starts</div><div>${esc(m.starts)}</div><div class="k">ends</div><div>${esc(m.ends)}</div>`+
+   `<div class="k">judge in</div><div>${esc(m.judge_in)}</div><div class="k">judge out</div><div>${esc(m.judge_out)}</div><div class="k">config</div><div class="dim">${esc(m.config)}</div>`+
+   (m.note?`<div class="k">note</div><div class="dim">${esc(m.note)}</div>`:"")+`</div></div>`+
+   `<div><h2>OPTIONS</h2><div class="form" id="mopts">`+(m.sim?`<label data-tip="the same mission + a guard: the vehicle refuses it unless usv_ui holds the FAKE FCU">simulation</label><span><input type="checkbox" id="mo-sim" style="width:auto"> sim (fake FCU only)</span>`:"")+
+   m.options.map((o,i)=>`<label data-tip="${esc(o.help)}">${esc(o.label)}</label>`+(o.check?`<span><input type="checkbox" id="mo${i}" style="width:auto" data-tip="${esc(o.help)}"></span>`:
+     o.choices?`<select id="mo${i}" data-tip="${esc(o.help)}">${o.choices.map(c=>`<option value="${esc(c)}">${c===""?"(default)":esc(c)}</option>`).join("")}</select>`:
+     `<input id="mo${i}" placeholder="${esc(o.text||"")}" ${o.number?'inputmode="decimal"':""} data-tip="${esc(o.help)}">`)).join("")+
+   `</div><label style="display:block;margin-top:8px"><input type="checkbox" id="mo-auto"> preselect with --auto (start on RunStart)</label></div></div>`+
+   `<div class="cmdprev" id="mprev"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="b" id="mpre">preselect (mission …)</button><button class="b primary" id="mgo">start now (start_task …)</button></div>`+
+   `<div class="vrd" id="mvrd"></div><h2 style="margin-top:12px">STAGES</h2><table id="mstages"><tr><th>stage</th><th>what</th><th>behaviour</th><th>leaves on</th><th>judge</th></tr>`+
+   m.stages.map(s=>`<tr data-s="${esc(s.name)}"><td class="mono">${esc(s.name)}</td><td>${esc(s.meaning)}</td><td class="dim">${esc(s.behaviour)}</td><td class="dim">${esc(s.leaves_on)}</td><td class="dim">${esc(s.judge)}</td></tr>`).join("")+`</table>`;
+  for(const el of $("mdet").querySelectorAll("input,select"))el.addEventListener("input",mprev);mprev();
+  $("mpre").onclick=()=>send(mline("mission"));$("mgo").onclick=()=>{const v=S&&S.verdicts.START_TASK;if(v&&!v.ok){mvrd();return}send(mline("start_task"))};mvrd()}
+function mline(cmd){const m=selMission;let s=`${cmd} ${m.code}${$("mo-sim")&&$("mo-sim").checked?"sim":""}`;
+  m.options.forEach((o,i)=>{const el=$("mo"+i);if(o.check){if(el.checked)s+=" "+o.flag}else{const v=el.value.trim();if(v)s+=` ${o.flag} ${/\s/.test(v)?JSON.stringify(v):v}`}});
+  if(cmd==="mission"&&$("mo-auto").checked)s+=" --auto";return s}
+function mprev(){if(!selMission)return;$("mprev").textContent=mline("start_task");$("mpre").textContent=mline("mission");$("mgo").textContent=mline("start_task")}
+function mvrd(){if(!S||!$("mvrd"))return;const a=S.verdicts.START_TASK,b=S.verdicts.MISSION;
+  $("mvrd").innerHTML=`start now: ${a.ok?'<span class="ok">allowed</span>':`<span class="warn">${esc(a.why)}</span> ${esc(a.hint)}`}`+
+    (b?` · preselect: ${b.ok?'<span class="ok">allowed</span>':`<span class="warn">${esc(b.why)}</span>`}`:"");
+  const veh=curVeh();for(const tr of $("mstages").querySelectorAll("tr[data-s]"))tr.style.background=(veh.task_name===selMission.task&&veh.task_state===tr.dataset.s)?"#1f6feb33":""}
+
+// ---- system -----------------------------------------------------------------------------------------------------------------
+let SYSC=[];
+function sysCard(a,p,bare){return `<div class="${bare?"":"sysc"}" id="${p}sa-${a.id}">`+(bare?"":`<h3><span class="host ${a.host}">${a.host.toUpperCase()}</span>${esc(a.title)}</h3>`)+
+    `<div class="dim" style="font-size:12px">${esc(a.what)}</div><div class="cur-info" id="${p}si-${a.id}"></div><div class="form">`+
+    a.options.map(o=>`<label data-tip="${esc(o.help)}">${esc(o.label)}</label>`+(o.free?`<input id="${p}so-${a.id}-${o.name}" value="${esc(o.default)}" pattern="${esc(o.free)}" autocomplete="off" data-tip="${esc(o.help)}">`:   // v0.1.40: a typed field
+      `<select id="${p}so-${a.id}-${o.name}" data-tip="${esc(o.help)}">`+o.choices.map(c=>`<option ${c===o.default?"selected":""}>${c}</option>`).join("")+`</select>`)).join("")+
+    `</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center"><button class="b ${a.confirm?"danger":"go"}" id="${p}sb-${a.id}">run</button><span class="dim mono" id="${p}sp-${a.id}"></span></div>`+
+    `<div class="refused" id="${p}sr-${a.id}"></div></div>`}
+function sysLabel(a,o){return a.group==="stop"?"stop…":a.confirm?"reboot…":({stop:"stop",start:"start",status:"status"}[o.do]||(a.id==="simworld"?(o.world==="off"?"stop the fake CV":"load this world"):"restart"))}
+function sysOpts(a,p=""){const o={};for(const x of a.options)o[x.name]=$(`${p}so-${a.id}-${x.name}`).value;return o}
+async function sysPost(a,o,word,p=""){const sp=$(p+"sp-"+a.id);if(sp)sp.textContent="sending…";const r=await post("/system",{action:a.id,options:o,confirm:word||""});
+  if(sp)sp.textContent=r.ok?`job ${r.job} started`:r.why;tick();return r}
+function runSystem(a,p=""){const refused=S&&S.system.refused[a.id];if(refused){$(p+"sr-"+a.id).textContent="refused: "+refused;return}
+  const o=sysOpts(a,p);const desc=Object.entries(o).map(([k,v])=>`${k} <b>${esc(v)}</b>`).join(" · ");
+  ask(`<div><span class="host ${a.host}">${a.host.toUpperCase()}</span><b>${esc(a.title)}</b></div><div class="dim" style="margin:6px 0">${esc(a.what)}</div><div>${desc||""}</div>`+
+      (a.confirm?`<div class="warn" style="margin-top:8px">type <b>${esc(a.confirm)}</b> to confirm</div>`:""),a.confirm,
+      word=>sysPost(a,o,word,p))}
+
+// ---- camera -----------------------------------------------------------------------------------------------------------------
+// the <img> holds the MJPEG connection: it streams only while the toggle is on AND this tab is open ("data:," closes it)
+const camURL=()=>(CAM&&CAM.ok&&CAM.url)||META.cam_url;      // v0.1.29.2: the address that answered (the LAN one first)
+function camApply(){const img=$("c-img");if(!img||!META)return;const want=$("c-on").checked&&curTab==="CAMERA"&&META.cam_url;
+  if(want&&img.hidden){img.hidden=false;$("c-off").hidden=true;img.src=camURL()+"stream?t="+Date.now()}
+  else if(!want&&!img.hidden){img.src="data:,";img.hidden=true;$("c-off").hidden=false;$("c-off").textContent=$("c-on").checked?"paused (another tab is open)":"stream off"}}
+async function camToggle(){const on=$("c-on").checked,a=META.system.find(x=>x.id==="cam");
+  if($("c-agx").checked&&a){const r=await sysPost(a,{do:on?"start":"stop",source:$("c-src").value},"");
+    $("c-st").textContent=r.ok?`AGX: ${on?"starting":"stopping"} the stream (job ${r.job})`:`AGX: ${r.why}`;if(on&&r.ok)setTimeout(()=>{const i=$("c-img");if(!i.hidden)i.src=camURL()+"stream?t="+Date.now()},2500)}
+  camApply()}
+async function camPoll(){if(!META||!META.cam_url||!["CAMERA","SETTINGS"].includes(curTab))return;
+  try{CAM=await (await fetch("/cam.json",{cache:"no-store"})).json()}catch(e){CAM={ok:false,why:"ocs_web not reachable"}}
+  const st=CAM.status||{};if(CAM.ok){$("c-url").textContent=CAM.url+"stream";$("c-snap").href=CAM.url+"snapshot.jpg"}
+  $("c-st").innerHTML=CAM.ok?`<span class="ok">up</span> · ${esc(CAM.url.replace(/^http:\/\//,"").replace(/\/$/,""))} · source ${esc(st.source)} · ${f(st.frames)} frames · last ${st.age_s==null?"-":f(st.age_s,1)+" s ago"} · ${f(st.clients)} viewer(s)`:`<span class="warn">${esc(CAM.why)}</span>`}
+$("c-img").onerror=()=>{if(!$("c-img").hidden&&$("c-img").src!=="data:,")setTimeout(()=>{const i=$("c-img");if(!i.hidden)i.src=camURL()+"stream?t="+Date.now()},3000)};
+
+// ---- MAIN: mission picker + its own controls (v0.1.29) ----------------------------------------------------------------------
+let qNames=[],qPtsKey="";
+const qM=()=>META.missions.find(m=>m.code===$("qsel").value)||META.missions[0];
+function qBuild(){const m=qM();qNames=[];qPtsKey="";
+  $("qopts").innerHTML=(m.sim?`<label data-tip="the same mission + a guard: refused unless usv_ui holds the FAKE FCU">sim</label><span><input type="checkbox" id="q-sim" style="width:auto"> fake FCU only</span>`:"")+
+    m.options.map((o,i)=>`<label data-tip="${esc(o.help)}">${esc(o.label)}</label>`+(o.check?`<span><input type="checkbox" id="q${i}" style="width:auto"></span>`:
+      o.choices?`<select id="q${i}" data-tip="${esc(o.help)}">${o.choices.map(c=>`<option value="${esc(c)}">${c===""?"(default)":esc(c)}</option>`).join("")}</select>`:
+      `<input id="q${i}" placeholder="${esc(o.text||"")}" data-tip="${esc(o.help)}">`)).join("")+
+    `<label data-tip="preselect only: start it by itself when the judge's RunStart arrives">--auto</label><span><input type="checkbox" id="q-auto" style="width:auto"> start on RunStart</span>`;
+  for(const el of $("qopts").querySelectorAll("input,select"))el.addEventListener("input",qPrev);
+  $("qctl").innerHTML=qCtlHtml(m);qWire(m);qPrev()}
+function qLine(cmd){const m=qM();let s=`${cmd} ${m.code}${$("q-sim")&&$("q-sim").checked?"sim":""}`;
+  m.options.forEach((o,i)=>{const el=$("q"+i);if(!el)return;if(o.check){if(el.checked)s+=" "+o.flag}else{const v=el.value.trim();if(v)s+=` ${o.flag} ${/\s/.test(v)?JSON.stringify(v):v}`}});
+  if(cmd==="mission"&&$("q-auto")&&$("q-auto").checked)s+=" --auto";return s}
+function qPrev(){$("qprev").textContent=qLine("start_task");$("qpre").textContent="preselect: "+qLine("mission");qVrd()}
+function qNeed(){const m=qM(),el=qNamesInput(),v=el?el.value.trim():"";        // v0.1.30 (the pool: m0t2 started without points)
+  if(m.code==="m0t2"&&!v&&!((S&&S.map&&S.map.gates)||0))return "tick the points (no gate in the map to build a path from)";
+  if(m.code==="m0t6"&&!v)return "tick the centre point (or type --centre)";
+  return ""}
+function qVrd(){if(!S)return;const a=S.verdicts.START_TASK,b=S.verdicts.MISSION,need=qNeed();
+  $("qgo").classList.toggle("no",!a.ok||!!need);
+  $("qvrd").innerHTML=`start now: ${need?`<span class="warn">${esc(need)}</span>`:a.ok?'<span class="ok">allowed</span>':`<span class="warn">${esc(a.why)}</span>`}`+(b&&!b.ok?` · preselect: <span class="warn">${esc(b.why)}</span>`:"")}
+const QB=(w,label,tip,cls="")=>`<button class="b ${cls}" data-qw="${esc(w)}" data-tip="${esc(tip)}">${esc(label)}</button>`;
+function qCtlHtml(m){let h="";
+  if(["m0t2","m0t3","m0t6"].includes(m.code))h+=`<h3>POINTS <span class="dim" style="font-weight:400">${m.code==="m0t6"?"tick ONE = the centre (--centre)":"tick them in order = --names · "+(m.code==="m0t3"?"two points (A, B)":"the path through them")}</span></h3>`+
+    `<div class="pts" id="qpts"><span class="dim">no saved points on the boat's map yet</span></div>`+
+    `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input id="qpname" placeholder="name, e.g. G1" style="width:110px;background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 6px">`+
+    `<button class="b go" id="qsave" data-tip="save_point NAME: the boat's own GPS fix now (3D fix needed) into points.json on the NX">save boat position</button>`+
+    `<button class="b" id="qdrop" data-tip="opens MAP in drop mode: click where the point is (lat/lon from the map) - no driving">drop on map…</button></div>`;
+  if(m.code==="m0t4")h+=`<h3>TARGET (until ALIGN)</h3><div class="btns">${["red","green","blue"].map(c=>QB("select_target "+c,c,"select_target "+c+": override the vehicle's GREEN rule")).join("")}</div>`;
+  if(["m0t0","m0t1"].includes(m.code))h+=`<h3>STEP</h3><div class="btns">${QB("step","step","advance the test mission one stage (m0t1: skip its timer)")}</div>`;
+  h+=`<h3>WHILE IT RUNS</h3><div class="btns">${QB("hold","hold","pause: AUTO_SAFE_HOLD, the task kept")}${QB("resume","resume / next stage","leave SAFE_HOLD; with --step: enter the next stage")}${QB("abort","abort","drop the task -> AUTO_HOLD","danger")}</div>`;
+  return h}
+function qWire(m){for(const b of $("qctl").querySelectorAll("[data-qw]"))b.onclick=()=>{const w=b.dataset.qw;if(w==="abort"){ask("<b>abort</b>: drop the running task?","",()=>send(w));return}send(w)};
+  if($("qsave"))$("qsave").onclick=()=>{const n=$("qpname").value.trim();if(!n){$("qpname").focus();return}send("save_point "+n)};
+  if($("qdrop"))$("qdrop").onclick=()=>{showTab("MAP");setTimeout(()=>{const f=$("mapf");f.contentWindow&&f.contentWindow.postMessage({type:"ocs-drop-mode",on:true},"*")},600)}}
+function qNamesInput(){const m=qM();const i=m.options.findIndex(o=>o.flag==="--names"||o.flag==="--centre");return i>=0?$("q"+i):null}
+function qPoints(){const box=$("qpts");if(!box)return;const pts=S.points||[];const key=pts.map(p=>p.name).join(",");
+  if(key!==qPtsKey){qPtsKey=key;qNames=qNames.filter(n=>pts.some(p=>p.name===n));
+    box.innerHTML=pts.length?pts.map(p=>`<label data-tip="${esc(p.name)}: N ${f(p.x_n)} E ${f(p.y_e)} m${p.lat!=null?` · ${p.lat.toFixed(7)} ${p.lon.toFixed(7)}`:""}${p.from?" · from "+esc(p.from):""}${p.utc?" · "+esc(p.utc):""}">`+
+      `<input type="checkbox" data-pn="${esc(p.name)}" ${qNames.includes(p.name)?"checked":""}> <b>${esc(p.name)}</b> <span class="dim">N ${f(p.x_n)} E ${f(p.y_e)}</span>`+
+      `<span class="x" data-pd="${esc(p.name)}" data-tip="del_point ${esc(p.name)}">✕</span></label>`).join(""):'<span class="dim">no saved points on the boat\'s map yet</span>';
+    for(const c of box.querySelectorAll("[data-pn]"))c.onchange=()=>{const n=c.dataset.pn;
+      if(qM().code==="m0t6"){qNames=c.checked?[n]:[];for(const o of box.querySelectorAll("[data-pn]"))if(o!==c)o.checked=false}   // one centre
+      else qNames=c.checked?qNames.concat([n]):qNames.filter(x=>x!==n);
+      const el=qNamesInput();if(el){el.value=qNames.join(",");qPrev()}};
+    for(const x of box.querySelectorAll("[data-pd]"))x.onclick=e=>{e.preventDefault();ask(`delete point <b>${esc(x.dataset.pd)}</b> on the boat?`,"",()=>send("del_point "+x.dataset.pd))}}}
+window.addEventListener("message",e=>{const d=e.data||{};if(d.type==="ocs-show-map")showTab("MAP")});   // v0.1.35: the mini-map
+window.addEventListener("message",e=>{const d=e.data||{};if(d.type!=="ocs-clear-map")return;
+  ask(`<b>clear the boat's map?</b><div class="dim" style="margin-top:6px">the mission manager forgets every detected buoy / dock; the camera fills it again within seconds. Refused while a task runs. Saved points stay.</div>`,"",()=>send("clear_map"))});
+window.addEventListener("message",e=>{const d=e.data||{};if(d.type!=="ocs-drop-point")return;
+  ask(`<b>drop a point</b> at ${d.lat} ${d.lon}<div class="dim">N ${d.x_n} E ${d.y_e} m on the boat's map · saved in points.json on the NX</div><div style="margin-top:6px">name (1-16 letters / digits / _ -):</div>`,"name",
+    name=>{name=(name||"").trim();if(name)send(`save_point ${name} --lat ${d.lat} --lon ${d.lon}`)})});
+
+// ---- live state ---------------------------------------------------------------------------------------------------------
+function curVeh(){const vid="USV1";const o=(S.ocs&&S.ocs.vehicles||{})[vid]||{};const st=S.status||{};return Object.assign({},st,o)}
+function kv(el,rows){$(el).innerHTML=rows.filter(Boolean).map(([k,v,c,t])=>`<div class="k"${t?` data-tip="${esc(t)}"`:""}>${esc(k)}</div><div class="${c||""}">${v}</div>`).join("")}
+function render(){
+  cRender();
+  const o=S.ocs||{},st=S.status||{},veh=curVeh(),loc=S.local||{};
+  for(const r of META.r_order)$("r-"+r).className=o.r===r?"cur":"";
+  for(const v of META.v_order)$("v-"+v).className=st.state===v?(["KILLED","FAULT"].includes(v)?"badcur":"cur"):"";
+  $("next").innerHTML="<b>next:</b> "+esc(S.next||"-");
+  const nW=S.warnings.length,bad=S.warnings.some(w=>w.style==="bad");
+  $("warnbadge").className="chip "+(nW?(bad?"bad":"warn"):"ok");$("warnbadge").textContent=nW?`${nW} WARNING${nW>1?"S":""}`:"no warnings";
+  $("warnbadge").dataset.tip=nW?S.warnings.map(w=>esc(w.text)).join("\n"):"nothing to look at";$("warnbadge").onclick=()=>showTab("MAIN");
+  if(S.flavour){$("flavour").textContent=S.flavour.text;$("flavour").className="chip "+(S.flavour.preset==="?"?"":"ok")}   // v0.1.42 (WP9d)
+  const L=(n,u)=>`<span class="${u?"ok":"bad"}">${n}</span>`;$("links").innerHTML=`${L("hub",S.hub_up)} · ${L("boat",S.boat_up)} · ${L("bridge",S.bridge!==false&&S.bridge!==null)} · ${L("judge",o.judge_connected)}`;
+  // MAIN
+  $("run-r").textContent=o.r?`${o.r} ${META.r_meaning[o.r]||""}`:"no ocs/state";
+  kv("run",[["run",f(o.run_id),"big"],["declaration",f(o.declaration_seq)],["judge",`${esc(o.judge||"-")} ${o.judge_connected?'<span class="ok">connected</span>':'<span class="bad">down</span>'}`],
+    ["course",esc(o.course_id||"-")],["heartbeats",esc(JSON.stringify(o.heartbeats_sent||{}))],["reports",esc(f(o.reports_sent))],o.stalled?["stall",'<span class="bad">no RunStart yet</span>']:null,
+    ["ocs/state age",S.ocs_age==null?'<span class="bad">never</span>':`${S.ocs_age} s`]]);
+  $("veh-age").textContent=S.status_age==null?"no status":`status ${S.status_age} s`;
+  const fcuH=S.ui_active===true?'<span class="warn">usv_ui (ACTIVE)</span>':S.ui_active===false?'<span class="ok">mission manager</span>':'<span class="dim">unknown</span>';
+  kv("veh",[["state",`<b>${esc(st.state||"-")}</b>`,["KILLED","FAULT"].includes(st.state)?"bad":"big"],["task",`${esc(veh.task_name||"-")} <span class="acc">${esc(veh.task_state||"")}</span>`],
+    S.stage_meaning?["stage",esc(S.stage_meaning),"dim"]:null,veh.hold_reason?["hold",esc(veh.hold_reason),"warn"]:null,st.fault?["fault",esc(st.fault),"bad"]:null,
+    ["FCU",`${esc(st.mode||"-")} · ${st.armed?'<span class="warn">ARMED</span>':"disarmed"}${st.kill?' · <span class="bad">KILL</span>':""}${st.estop?' · <span class="bad">E-STOP</span>':""}`],
+    ["FCU link",esc(st.fcu_link||"-"),"","fake = the bench plant held by usv_ui; real = the Pixhawk"],["commands the FCU",fcuH,"","usv_ui ACTIVE = enable_auto refused until `handover` there"],
+    ["position",st.local?`N ${f(st.local.x_n)} E ${f(st.local.y_e)} · ${f(st.hdg_deg,0)}° · ${f(st.sog_mps,2)} m/s`:"-"]]);
+  const mi=o.mission||{};const chainM=META.missions.find(m=>m.task===veh.task_name)||META.missions.find(m=>m.code===mi.code);
+  let ch="";if(chainM){const names=chainM.stages.map(s=>s.name);const ci=names.indexOf(veh.task_state);
+    ch=`<div class="chain">`+names.map((n,i)=>`<span class="${i===ci?"cur":(ci>=0&&i<ci?"done":"")}" data-tip="${esc(chainM.stages[i].meaning)}">${esc(n)}</span>`).join("")+`</div>`}
+  $("mis").innerHTML=`<div class="kv"><div class="k">preselected</div><div>${esc(mi.code||mi.task||"none")}${mi.auto?' <span class="badge">--auto</span>':""}</div>`+
+    `<div class="k">running</div><div>${veh.task_name?`<b>${esc(chainM?chainM.code:veh.task_name)}</b> (${esc(veh.task_name)})`:"-"}</div></div>${ch}`;
+  $("flow").innerHTML=META.flow.map(([n,d],i)=>`<span class="${S.flow_stage===i?"cur":""}" data-tip="<b>${esc(n)}</b>\n${esc(d)}">${esc(n)}<br><small class="${S.flow_stage===i?"":"dim"}">${esc(META.flow_caption[i]||"")}</small></span>`).join("");
+  $("warn-n").textContent=nW?nW:"";
+  $("warns").innerHTML=nW?S.warnings.map(w=>`<div><span class="age">${f(w.age,0)} s</span><span class="${w.style}">${esc(w.text)}</span></div>`).join(""):'<span class="ok">none</span>';
+  for(const b of $("cmds").querySelectorAll("button")){const w=b.dataset.w,v=verdictOf(w);b.classList.toggle("no",!!(v&&!v.ok));b.classList.toggle("go",!!(v&&v.ok));
+    b.dataset.tip=entryTip(w)+(v?(v.ok?`\n<span class="ok">allowed now</span>${v.sent_as?" → "+esc(v.sent_as):""}`:`\n<span class="warn">not now: ${esc(v.why)}</span>${v.hint?"\n"+esc(v.hint):""}`):"")}
+  $("results").innerHTML=S.results.slice().reverse().map(r=>`<div class="r1 ${r.ok?"":"sev-bad"}"><span class="line">&gt; ${esc(r.line)}</span> ${r.ok?'<span class="ok">ok</span>':'<span class="bad">✗ failed</span>'}<br>${r.lines.map(esc).join("<br>")}</div>`).join("");
+  const logLine=x=>`<div class="${x.sev?"sev-"+x.sev:""}"><span class="t">${hms(x.t)}</span> <span class="kind">${esc(x.kind)}</span>${esc(x.text)}</div>`;
+  // v0.1.29: the run checklist and its next step
+  const C=S.clearance;
+  $("ck").innerHTML=C.checks.map(c=>`<div data-tip="<b>${esc(c.label)}</b>: ${esc(c.detail)}\nfix: ${esc(c.fix)}"><span class="dot ${c.ok===null?"na":c.ok?"ok":(c.hard?"bad":"soft")}"></span>`+
+    `<span style="${c.hard?"font-weight:700":""}">${esc(c.label)}</span> <span class="dim">${esc(c.detail)}</span></div>`).join("");
+  const nv=C.next?verdictOf(C.next):null;$("nextbtn").textContent=C.next?("next: "+C.next+(nv&&!nv.ok?" · blocked":"")):"next: —";
+  if(nv&&!nv.ok&&!$("nextwhy").dataset.sticky)$("nextwhy").innerHTML=`<span class="warn">${esc(nv.why)}</span>`;   // v0.1.42: why, without a click
+  const hv=S.verdicts.HOME;$("homebtn").classList.toggle("no",!!(hv&&!hv.ok));$("homebtn").dataset.tip=hv&&!hv.ok?`HOME not now: ${esc(hv.why)}`:"GO HOME: abort, 0.3 m/s to the saved point HOME (else the origin), hold";$("nextbtn").classList.toggle("no",!C.next||!!(nv&&!nv.ok));
+  $("nextbtn").onclick=()=>{if(!C.next)return;if(nv&&!nv.ok){$("nextwhy").innerHTML=`<span class="warn">${esc(nv.why)}</span> ${esc(nv.hint||"")}`;return}send(C.next)};
+  if(!S.clearing)$("nextwhy").innerHTML=C.next?(nv&&!nv.ok?`<span class="warn">${esc(nv.why)}</span>`:'<span class="ok">allowed now</span>'):esc(C.why);else $("nextwhy").innerHTML='<span class="warn">clearing… (CONSOLE)</span>';
+  $("clearbtn").classList.toggle("no",!C.clear||S.clearing);$("clearbtn").dataset.tip=C.clear?"declare → enable_auto → wait for RunStart, unattended":"not clear: "+C.blocked.join("; ");
+  // v0.1.29: the RoboCommand peek
+  const J=S.judge;$("rc-br").innerHTML=`${esc(J.broker)} ${J.connected?'<span class="ok">listening</span>':'<span class="bad">not connected</span>'}`;
+  $("rc-ans").className="answer "+(J.answer_style||"");$("rc-ans").textContent=J.answer;
+  {const T=S.timeline||{events:[]};$("rc-tl").innerHTML=T.events.length?T.events.map(e=>`<div class="${e.style||""}">${new Date(e.t*1000).toTimeString().slice(0,8)} · ${esc(e.text)}</div>`).join(""):'<span class="dim">no run yet</span>';
+   const stv=S.status||{},ages=(J.heartbeat_age)||{};const vid=Object.keys((S.ocs||{}).vehicles||{USV1:1})[0]||"USV1";const age=ages[vid];
+   {const tiers=(S.ocs||{}).tiers||{},cur=(S.status||{}).current_task||"TASK_NONE",TN={T1:["TASK_SAFE_PASSAGE","Safe Passage"],T2:["TASK_PIPELINE","Infrastructure Survey"],T3:["TASK_LOGISTICS","Coordinated Logistics"],T4:["TASK_DYNAMIC_INCIDENT","Dynamic Incident Response"]};
+    const reps=(J.reports||[]).map(r=>r.kind);
+    $("rc-tasks").innerHTML='<table class="mono" style="font-size:12px">'+Object.entries(TN).map(([k,[w,n]])=>`<tr><td>${k} ${n}</td><td>${esc(tiers[k]||"not declared")}</td><td class="${cur===w?"ok":"dim"}">${cur===w?"activated (current_task)":"-"}</td><td>${esc(reps.filter(x=>(k==="T1"&&x==="safe_passage")||(k==="T3"&&["docking","firefighting"].includes(x))||(k==="T4"&&["incident_ack","readiness"].includes(x))).join(", ")||"-")}</td></tr>`).join("")+"</table>"}
+   $("rc-veh").innerHTML=`<span class="vcard"><b>${esc(vid)}</b> · ${esc(stv.robot_state||stv.state||"?")} · task ${esc(stv.current_task||"TASK_NONE")} · ${stv.hdg_deg==null?"-":Math.round(stv.hdg_deg)+"°"} ${stv.sog_mps==null?"":(+stv.sog_mps).toFixed(1)+" m/s"} · ${stv.altitude_hae_m==null?"HAE -":(+stv.altitude_hae_m).toFixed(0)+" m HAE"} · ${esc(stv.flight_phase||"-")} · <span class="age ${age==null||age>3?"bad":""}">${age==null?"no heartbeat at the judge":"heartbeat "+age+" s"}</span></span>`}
+  kv("rc-kv",[["course",J.course?`<b>${esc(J.course.id)}</b> <span class="dim">${f(J.course.ago_s,0)} s ago</span>`:'<span class="warn">none seen</span>'],
+    ["our declaration",J.declaration?`seq ${esc(J.declaration.seq)} · ${esc((J.declaration.vehicles||[]).join(", "))} <span class="dim">${f(J.declaration.ago_s,0)} s ago</span>`:'<span class="dim">none</span>'],
+    ["RunStart",J.run_start?`run <b>${esc(J.run_start.run_id)}</b> (decl ${esc(J.run_start.seq)}) <span class="dim">${f(J.run_start.ago_s,0)} s ago</span>`:'<span class="dim">not yet</span>'],
+    ["heartbeats at the judge",Object.entries(J.heartbeat_age||{}).map(([v,a])=>`${esc(v)} <span class="${a<2?"ok":"bad"}">${f(a)} s</span>`).join(" · ")||'<span class="dim">none</span>'],
+    ["last reports",(J.reports||[]).map(r=>`${esc(r.kind)} <span class="dim">${f(r.ago_s,0)} s</span>`).join(" · ")||'<span class="dim">none</span>']]);
+  const fd=$("rc-feed"),fEnd=fd.scrollTop+fd.clientHeight>=fd.scrollHeight-4;
+  fd.innerHTML=(J.feed||[]).map(x=>`<div class="${x.sev?"sev-"+x.sev:""}"><span class="t dim">${hms(x.t)}</span> <span class="${x.dir}">${x.dir==="to"?"→":"←"}</span> ${esc(x.text)}</div>`).join("")||'<span class="dim">nothing on the judge wire yet</span>';if(fEnd)fd.scrollTop=fd.scrollHeight;
+  qPoints();qVrd();
+  const ev=$("ev"),atEnd=ev.scrollTop+ev.clientHeight>=ev.scrollHeight-4;ev.innerHTML=S.log.slice(-60).map(logLine).join("");if(atEnd)ev.scrollTop=ev.scrollHeight;
+  mvrd();
+  // BOAT
+  const hl=st.health?Object.assign({},st.health,{perception_age_s:st.health.perception_age_s==null?"never":st.health.perception_age_s}):null;   // v0.1.29.3 (F5)
+  kv("b-st",Object.entries(st).filter(([k])=>!["health","run","local"].includes(k)).map(([k,v])=>[k,esc(typeof v==="object"?JSON.stringify(v):f(v,2))]).concat(hl?[["health",esc(JSON.stringify(hl))],
+    ["RC",`${hl.rc_ok?'<span class="ok">rc ok</span>':'<span class="bad">rc NO</span>'} <span class="dim">${esc(hl.rc_detail||"")}</span>`]]:[]));
+  kv("b-loc",loc&&Object.keys(loc).length?[["age",`${S.local_age} s`],["profile",esc(loc.profile||"-")+(loc.lab?' <span class="warn">LAB</span>':"")],["link loss",esc(loc.link_loss_action||"-")],
+    ["usv_ui active",String(loc.ui_active)],["fcu",esc(JSON.stringify(loc.fcu||{}).slice(0,400)),"dim"]]:[["boat broker",'<span class="dim">not visible from here</span>']]);
+  const p=S.perception||{},mp=S.map||{};
+  kv("b-per",[["detector",p.detector?`${esc(p.detector)} ${p.ok?'<span class="ok">ok</span>':'<span class="bad">not ok</span>'}`:'<span class="dim">no health beat</span>'],["source",esc(p.source||"-")],
+    ["health age",S.perception_age==null?"never":`${S.perception_age} s`],["map from",esc(mp.source||"-")],["map age",mp.age==null?"-":`${mp.age} s`],["entities",esc(Object.entries(mp.kinds||{}).map(([k,n])=>`${n} ${k}`).join(" · ")||"-")],
+    META.cam_url?["camera",`<a class="acc" target="_blank" href="${esc(META.cam_url)}">${esc(META.cam_url)}</a>`]:null]);
+  // NETWORK
+  for(const br of ["hub","boat"])$("n-"+br).innerHTML=`<table><tr><th>node</th><th>up</th><th>beat</th><th>where</th></tr>`+(S.nodes[br]||[]).map(n=>`<tr><td class="mono">${esc(n.node)}</td><td class="${n.up?"ok":"bad"}">${n.up?"up":"DOWN"}</td><td class="dim">${f(n.age,0)} s</td><td class="dim mono">${esc(n.body.host||n.body.broker||n.body.fcu_link||"")}</td></tr>`).join("")+`</table>`;
+  kv("n-sys",Object.entries(S.sys||{}).sort().map(([k,v])=>[k,esc(v)]));
+  // JUDGE
+  const jv=o.judge_view||{};kv("j-view",Object.entries(jv).map(([k,v])=>[k,esc(typeof v==="object"?JSON.stringify(v):v)]));
+  kv("j-stats",S.stats?Object.entries(S.stats).map(([k,v])=>[k,esc(typeof v==="object"?JSON.stringify(v).slice(0,300):v)]):[["fake judge","not seen (the real wire, or no judge)"]]);
+  $("j-log").innerHTML=S.judge_log.slice(-120).map(x=>`<div class="${x.sev?"sev-"+x.sev:""}"><span class="t">${hms(x.t)}</span> ${esc(x.text)}</div>`).join("");
+  // SYSTEM
+  const nodesUp=b=>(S.nodes[b]||[]).filter(n=>n.up).map(n=>n.node).join(", ")||"-";
+  kv("s-now",[["vehicle",`${esc(st.state||"-")} ${st.armed?'<span class="warn">ARMED</span>':""}`],["run",esc(o.r||"-")],["FCU",`${esc(st.fcu_link||"-")} · mode ${esc(st.mode||"-")}`],
+    ["boat profile",esc(loc.profile||"-")+(loc.lab?' <span class="warn">LAB</span>':"")],["perception",`${esc(p.source||"-")} ${S.perception_age==null?"":`(${S.perception_age} s)`}`],["boat nodes",esc(nodesUp("boat"))],["hub nodes",esc(nodesUp("hub"))]]);
+  const info={ocs:`now: judge ${o.judge||"-"} · ${o.r||"-"}`,nx:`now: FCU ${st.fcu_link||"?"} · profile ${loc.profile||"?"}`,agx:`now: ${p.source||"no perception"} ${S.perception_age==null?"":`· ${S.perception_age} s`}`,
+    fcu:`now: ${st.mode||"?"} · ${st.armed?"ARMED":"disarmed"} · ${st.fcu_link||"?"}`,nx_reboot:`boat nodes: ${nodesUp("boat")}`,agx_reboot:"",rctest:""};
+  info.simworld=`now: perception ${p.source||"-"}${p.world?" · world "+p.world:""}${S.perception_age==null?"":` · ${S.perception_age} s`}`;
+  info.cam=CAM?(CAM.ok?`now: up · source ${(CAM.status||{}).source}`:"now: down / unreachable"):(META.cam_url?"":"no camera address");
+  const rj=(S.system.jobs||[]).filter(j=>j.action==="rec").slice(-1)[0];          // v0.1.40: the recorder's last answer (status: why it stopped, disk)
+  info.rec=rj?`last ${rj.options.do}: ${rj.done?(rj.lines.slice(-2).join(" · ")||"(no output)"):"running…"}`:"run status to see the recorder, the newest clip and the free disk";
+  for(const [a,px] of SYSC){const si=$(px+"si-"+a.id);if(si)si.textContent=info[a.id]||"";const why=S.system.refused[a.id];$(px+"sr-"+a.id).textContent=why?"not now: "+why:"";$(px+"sb-"+a.id).classList.toggle("no",!!why)}
+  kv("x-conn",[["version",esc(META.version)],["network",esc(META.net_profile||"(network.env)")],["hub websocket (map)",`ws://${esc(META.ws.host)}:${esc(META.ws.port)}`],
+    ["hub / boat",`${S.hub_up?'<span class="ok">hub up</span>':'<span class="bad">hub down</span>'} · ${S.boat_up?'<span class="ok">boat up</span>':'<span class="bad">boat not visible</span>'}`],
+    ["judge page",`<a class="acc" target="_blank" href="${esc(META.judge_url)}">${esc(META.judge_url)}</a>`],["camera",META.cam_url?`<a class="acc" target="_blank" href="${esc(META.cam_url)}">${esc(META.cam_url)}</a>`:'<span class="dim">no address</span>'],
+    ["simulator",`<a class="acc" target="_blank" href="${esc(META.sim_url)}">${esc(META.sim_url)}</a> <span class="dim">(its own window: scripts/run_sim.sh)</span>`],
+    ["SYSTEM runs",META.system_dry?'<span class="warn">DRY RUN</span>':"for real"]]);
+  $("xjobs").innerHTML=$("jobs").innerHTML=S.system.jobs.slice().reverse().map(j=>`<div><span class="t">${hms(j.t0)}</span> <b>${esc(j.action)}</b> ${j.done?(j.rc===0?'<span class="ok">done</span>':`<span class="bad">rc ${j.rc}</span>`):'<span class="warn">running</span>'} <span class="dim">${esc(j.cmd)}</span>`+
+    (j.lines.length?`<br>${j.lines.slice(-8).map(esc).join("<br>")}`:"")+`</div>`).join("")||'<span class="dim">none yet</span>';
+  // LOG
+  for(const x of S.log)if(!logKinds.has(x.kind)){logKinds.add(x.kind);$("lf").insertAdjacentHTML("beforeend",`<label><input type="checkbox" checked data-k="${esc(x.kind)}"> ${esc(x.kind)}</label>`)}
+  if(!$("lq"))$("lf").insertAdjacentHTML("afterbegin",`<input type="text" id="lq" placeholder="filter text"><label data-tip="only the red / amber lines"><input type="checkbox" id="lprob"> problems only</label>`);
+  const on=new Set([...$("lf").querySelectorAll("input[data-k]")].filter(i=>i.checked).map(i=>i.dataset.k)),q=($("lq").value||"").toLowerCase(),prob=$("lprob").checked;
+  const la=$("logall"),end2=la.scrollTop+la.clientHeight>=la.scrollHeight-4;la.innerHTML=S.log.filter(x=>on.has(x.kind)&&(!q||x.text.toLowerCase().includes(q))&&(!prob||x.sev==="bad"||x.sev==="warn")).map(logLine).join("");if(end2)la.scrollTop=la.scrollHeight;
+}
+let failing=0;
+async function tick(){try{S=await (await fetch("/state.json",{cache:"no-store"})).json();failing=0;render()}
+  catch(e){failing++;$("next").innerHTML=`<span class="bad">ocs_web not reachable${failing>3?" (restarting? the page keeps trying)":""}</span>`}}
+(async()=>{for(;;){try{META=await (await fetch("/meta.json",{cache:"no-store"})).json();break}catch(e){await new Promise(r=>setTimeout(r,1500))}}
+  build();showTab(location.hash.slice(1)||"MAIN");tick();setInterval(tick,1000);setInterval(camPoll,2000)})();
+</script></body></html>

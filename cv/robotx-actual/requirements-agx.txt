@@ -1,0 +1,31 @@
+# cv/requirements-agx.txt - what the students' actual_buoy/.venv holds (manifest read on 2026-10-29 from the Mac copy:
+# Python 3.10.12, venv with include-system-site-packages = true, JetPack 6.2.3 / CUDA 12.6 / TensorRT 10.3).
+# This is the recipe for OUR venv (cv/.venv), gated step - see cv/README.md "Own venv". Until then the launchers use
+# the students' venv read-only (network.env AGX_BUOY_VENV).
+#
+# 1. python3.10 -m venv --system-site-packages cv/.venv        # TensorRT / CUDA python bindings come from the system
+# 2. torch / torchvision: NOT from PyPI - the NVIDIA Jetson wheels for JP6 / cu126 (cp310, linux_aarch64):
+#      cv/.venv/bin/pip install torch==2.8.0 torchvision==0.23.0 --index-url https://pypi.jetson-ai-lab.io/jp6/cu126
+#    (index to be confirmed on the AGX: the students' install source is not recorded; `pip download` dry-run first)
+# 3. pyzed: built by the ZED SDK installer, not pip-resolvable:  python3 /usr/local/zed/get_python_api.py
+#    produces pyzed-5.4-cp310-cp310-linux_aarch64.whl (sha256 14c3b6ea... in their venv) -> pip install that wheel
+# 4. the rest, pinned as in their venv:
+ultralytics==8.4.124
+ultralytics-thop==2.2.3
+opencv-python==4.11.0.86
+numpy==1.26.4
+pymavlink==2.4.49
+nvidia-ml-py==13.615.71
+polars==2.0.0
+sympy==1.14.0
+networkx==3.4.2
+filelock==4.1.0
+fsspec==2026.9.0
+lxml==6.1.3
+mpmath==1.3.0
+typing_extensions==4.16.0
+cffi==2.1.1
+pycparser==3.11
+fastcrc==0.5.0
+# 5. ours:
+paho-mqtt>=2,<3

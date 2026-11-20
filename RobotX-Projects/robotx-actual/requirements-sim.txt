@@ -1,0 +1,8 @@
+# The simulator only (ROADMAP WP10, v0.1.32): the Python renderer of optiprimex/sim/render.py and the sim server.
+# Not needed on the Jetsons or for the mission manager; `make venv-sim` (or: .venv/bin/pip install -r requirements-sim.txt).
+numpy==2.2.6
+pillow==12.3.0
+# v0.1.48 (WP10j-b, M3T1_SIM_PLAN decision 5): `--detector model` (a CV_TRAIN model, e.g. cvt-v2-l) in the kit's venv on the Mac.
+# Pinned to what the Mac's venv holds (CV_TRAIN trained with 8.4.124: same contract). The Jetsons do not install it (the AGX has it).
+ultralytics==8.4.123
+torch==2.14.1

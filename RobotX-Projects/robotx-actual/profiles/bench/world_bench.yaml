@@ -1,0 +1,34 @@
+# Bench world for sim/fake_perception.py (decision 27, stage 1): objects in the local frame of the control origin
+# (x_n north, y_e east, metres). The fake FCU starts at the origin heading north, so the first gate is dead ahead.
+origin: {lat: 1.2810202, lon: 103.8550097}          # Course Alpha's centre, Marina Bay (v0.1.33; was 1.3000 / 103.8000)
+start: {x_n: 0.0, y_e: 0.0, hdg_deg: 0.0}
+teleports:                                 # v0.1.33
+  - {name: before gate 1, x_n: 8.0,  y_e: 0.0, hdg: 0.0}
+  - {name: dock approach, x_n: 40.0, y_e: 10.0, hdg: 0.0}
+
+camera:
+  name: zed2i_left
+  fov_deg: 100            # v0.1.34: kept WIDE on purpose - this is the integration tests' layout (a side buoy, the dock to starboard,
+                          # mapped while driving straight); the worlds that model a course use the boat's camera (intrinsics: zed2i_hd2k)
+  min_range_m: 0.5
+  max_range_m: 25.0
+  hz: 5                   # observation rate
+  noise_range_m: 0.15     # 1-sigma range noise
+  noise_bearing_deg: 1.0  # 1-sigma bearing noise
+  dropout: 0.05           # probability that a visible object is missed in a frame
+  conf: 0.85
+
+objects:
+  # Task 1 style channel: three red/green gates 4 m wide, 12 m apart, running north
+  - {id: 1, kind: buoy, colour: green, x_n: 12.0, y_e: -2.0}
+  - {id: 2, kind: buoy, colour: red,   x_n: 12.0, y_e:  2.0}
+  - {id: 3, kind: buoy, colour: green, x_n: 24.0, y_e: -2.5}
+  - {id: 4, kind: buoy, colour: red,   x_n: 24.0, y_e:  1.5}
+  - {id: 5, kind: buoy, colour: green, x_n: 36.0, y_e: -1.5}
+  - {id: 6, kind: buoy, colour: red,   x_n: 36.0, y_e:  2.5}
+  # a stray white buoy off the channel
+  - {id: 7, kind: buoy, colour: white, x_n: 18.0, y_e: 9.0}
+  # Task 3 style dock: three box faces on a line at x_n = 50, spanning y_e 6..14 (line heading east)
+  - {id: 10, kind: dock, colour: white, x_n: 50.0, y_e: 6.0}
+  - {id: 11, kind: dock, colour: white, x_n: 50.0, y_e: 10.0}
+  - {id: 12, kind: dock, colour: white, x_n: 50.0, y_e: 14.0}

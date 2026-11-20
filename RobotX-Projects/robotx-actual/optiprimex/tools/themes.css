@@ -1,0 +1,29 @@
+/* themes.css - the five palettes of docs/mock/README.md (v0.1.43, OCS_V2_SPEC §3): one file for the OCS page, its maps, the judge page,
+   the launcher and boat-web. html[data-theme=dark|light|hc-dark|hc-light|fun]; dark is the default. The old names (--ink --bad --chip
+   --cur) are aliases. --ok / --mag are not in the mock: the pages' existing ok dots and markers (colour only for abnormal comes in v0.1.44).
+   tests/test_v0143.py checks the contrast rule: text 4.5:1 on bg / panel, chips 3:1, warn / alarm / accent differ in lightness.
+   v0.1.47: --up = what is running / answering (the launcher's PROGRESS, the liveness dot's light): green-ish per theme, 3:1 on the panel and
+   >= 8 L* away from warn / alarm / accent (tests/test_v0147_ab.py). */
+:root,:root[data-theme="dark"]{--bg:#0e1318;--panel:#151c24;--panel2:#1b242e;--line:#2f3b49;--line2:#1f2a35;--text:#e6ebf0;--muted:#9aa6b3;--dim:#6b7785;--acc:#4bb9d2;--accText:#a4e6f4;--accBg:#12252c;--warn:#ffc239;--warnBg:#2a230f;--warnText:#f6cf6b;--alarm:#f94d4e;--alarmBg:#331416;--alarmText:#ff8a8a;--chipBg:#1b242e;--chipText:#cfd7df;--btnBg:#1b242e;--btnLine:#3a4756;--grid:#151d27;--mapBg:#0b1016;--ok:#3fb950;--mag:#d2a8ff;--up:#b0f5c0;--ink:var(--text);--bad:var(--alarm);--chip:var(--chipBg);--cur:var(--acc)}
+:root[data-theme="light"]{--bg:#eef1f4;--panel:#ffffff;--panel2:#e4e9ee;--line:#b9c3cd;--line2:#d7dee5;--text:#111820;--muted:#4f5b67;--dim:#74808c;--acc:#007a97;--accText:#075a70;--accBg:#dff3f8;--warn:#bb7725;--warnBg:#fff0c7;--warnText:#7a4800;--alarm:#b9000f;--alarmBg:#fde0e0;--alarmText:#a00a12;--chipBg:#f3f5f7;--chipText:#1f2a35;--btnBg:#ffffff;--btnLine:#aab5c0;--grid:#e1e6eb;--mapBg:#f8fafb;--ok:#1a7f37;--mag:#8250df;--up:#0a4f1d;--ink:var(--text);--bad:var(--alarm);--chip:var(--chipBg);--cur:var(--acc)}
+:root[data-theme="hc-dark"]{--bg:#000000;--panel:#000000;--panel2:#141414;--line:#777777;--line2:#444444;--text:#ffffff;--muted:#e0e0e0;--dim:#bdbdbd;--acc:#2fc8d7;--accText:#a8f7ff;--accBg:#00343b;--warn:#ffda14;--warnBg:#332b00;--warnText:#ffe24d;--alarm:#ff3c3b;--alarmBg:#3b0000;--alarmText:#ff7a7a;--chipBg:#0a0a0a;--chipText:#ffffff;--btnBg:#000000;--btnLine:#9a9a9a;--grid:#1c1c1c;--mapBg:#000000;--ok:#00ff66;--mag:#ff7bff;--up:#00b84a;--ink:var(--text);--bad:var(--alarm);--chip:var(--chipBg);--cur:var(--acc)}
+:root[data-theme="hc-light"]{--bg:#ffffff;--panel:#ffffff;--panel2:#f0f0f0;--line:#000000;--line2:#8a8a8a;--text:#000000;--muted:#222222;--dim:#444444;--acc:#13677b;--accText:#003f4d;--accBg:#d9f3f8;--warn:#a26c27;--warnBg:#ffe8a3;--warnText:#5a3600;--alarm:#9a0000;--alarmBg:#ffd6d6;--alarmText:#8a0000;--chipBg:#f4f4f4;--chipText:#000000;--btnBg:#ffffff;--btnLine:#000000;--grid:#e6e6e6;--mapBg:#ffffff;--ok:#006b1f;--mag:#6a1b9a;--up:#003d0e;--ink:var(--text);--bad:var(--alarm);--chip:var(--chipBg);--cur:var(--acc)}
+:root[data-theme="fun"]{--bg:#130c1f;--panel:#1c1230;--panel2:#261a40;--line:#4a3570;--line2:#32245a;--text:#efe9ff;--muted:#b7a6e0;--dim:#8b7bb5;--acc:#3ee07c;--accText:#8cf5b4;--accBg:#0f3a24;--warn:#ff8c42;--warnBg:#3a1f0c;--warnText:#ffb27f;--alarm:#ff4d6d;--alarmBg:#3d0f1c;--alarmText:#ff8fa3;--chipBg:#261a40;--chipText:#e3dbf7;--btnBg:#261a40;--btnLine:#5d47a0;--grid:#1e1536;--mapBg:#0f0a19;--ok:#9be564;--mag:#c084fc;--up:#b5f07c;--ink:var(--text);--bad:var(--alarm);--chip:var(--chipBg);--cur:var(--acc)}
+:root[data-theme="hc-dark"] button,:root[data-theme="hc-light"] button{font-weight:700}
+/* v0.1.47 (UI_QOL item 12): the ONE live control - --action fill, --actionLine outline, --actionText. Light / hc-light: Dmitrii's yellow
+   fill + red outline + bold; dark / hc-dark: the same pair at a dark theme's lightness (polled 2026-11-07: darker amber, red outline);
+   fun: green fill + orange outline (never the chip colours). A button differs from a warning chip by shape (outline, bold, 36 px). */
+:root,:root[data-theme="dark"]{--action:#7a5a00;--actionLine:#ff5a5a;--actionText:#ffffff}
+:root[data-theme="light"]{--action:#ffd60a;--actionLine:#c20d16;--actionText:#111111}
+:root[data-theme="hc-dark"]{--action:#8a6600;--actionLine:#ff3b3b;--actionText:#ffffff}
+:root[data-theme="hc-light"]{--action:#ffd60a;--actionLine:#a80000;--actionText:#000000}
+:root[data-theme="fun"]{--action:#187a42;--actionLine:#ff8c42;--actionText:#ffffff}
+/* v0.1.47 (UI_QOL item 12): the fun theme's buttons no longer reuse the chip colours (.btn vs .chip audit) */
+:root[data-theme="fun"]{--btnBg:#33245c;--btnLine:#8c74d9}
+/* v0.1.50 (Dmitrii: "the same design for other buttons, a paler tint for the less important"): the important buttons = a pale fill
+   of --action with its outline; danger = a pale alarm fill; the one live control keeps the full --action */
+:root,:root[data-theme="dark"]{--actionPale:#3a2f0e;--alarmPale:#3a1618}
+:root[data-theme="light"]{--actionPale:#fff4c4;--alarmPale:#fde4e4}
+:root[data-theme="hc-dark"]{--actionPale:#2e2400;--alarmPale:#3b0000}
+:root[data-theme="hc-light"]{--actionPale:#fff1a8;--alarmPale:#ffe0e0}
+:root[data-theme="fun"]{--actionPale:#16331f;--alarmPale:#3d0f1c}

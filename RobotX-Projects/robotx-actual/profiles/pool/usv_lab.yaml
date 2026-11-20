@@ -1,0 +1,139 @@
+# USV mission manager, LAB profile = the POOL profile with the vehicle guards relaxed for a REAL Pixhawk on the bench:
+# indoors there is no GPS (EKF_BAD would park the vehicle in V6 FAULT), the transmitter may be off (RC_LOST) and the boat
+# stays disarmed (props off / ESC power off). Here ENABLE_AUTO is accepted disarmed and without EKF, and EKF_BAD / RC_LOST are
+# reported in status.health.faults but never force FAULT, so the state machine (handover, enable_auto, hold, abort, end_run)
+# can be exercised with mode changes only. NEVER at the pool: scripts/run_usv.sh --lab selects it and prints a banner.
+# The FCU's own RC failsafe (HOLD, CRITICAL) and the kill are untouched - those are ArduPilot parameters (apply_params.py).
+# usv_ui holds the Pixhawk UART and re-shares it on udp 14551; the mission manager connects to the share, so both
+# run at once and the local/usv/tui/active beat decides who commands (usv_ui 'handover' / 'takeover').
+#   scripts/run_usv.sh          starts the boat broker, this mission manager, the boat logger and usv_ui (tmux 'usv')
+vehicle_id: USV1
+vehicle: usv
+node: mission_manager
+log_dir: ./logs
+
+mavlink:
+  endpoint: udpin:127.0.0.1:14551      # usv_ui's share (its default --share udpout:127.0.0.1:14551; rc.sh shares the same way)
+  sysid: 200                           # = CMAN_SYSID: the only system id mode 20 accepts control frames from
+  compid: 191                          # usv_ui is 190 -> COMMAND_ACKs are addressed to the one that asked
+  target_sysid: 1
+
+mqtt:
+  host: 127.0.0.1
+  port: 1884                           # the boat broker (config/mosquitto/boat_pool.conf.in); AGX publishes here too
+  client_id: usv-mm
+  bridge_name: ocs                     # $SYS/broker/connection/ocs/state tells the health monitor if the hub bridge is up
+
+timeouts:
+  fcu_s: 2.0
+  rc_s: 2.0
+  perception_s: 0.0                    # the detector is optional at the pool: no PERCEPTION_LOST fault when it is off
+  cmd_ack_s: 0.5
+  hold_reassert_s: 5.0
+  tui_active_s: 2.0                    # a tui/active beat younger than this = usv_ui has the FCU (V2 override)
+
+limits:
+  max_amp: 0.5                         # mode-20 amplitude cap for the companion controller (pool: keep it gentle)
+  max_speed_mps: 0.8
+  goto_arrive_r_m: 1.5
+  goto_settle_r_m: 3.0
+  goto_timeout_s: 180
+
+rates:
+  tick_hz: 10
+  status_hz: 2
+  local_hz: 5
+  map_hz: 2
+
+guards:
+  require_armed_for_auto: false        # LAB: AUTO_HOLD with the boat disarmed (the companion still never arms)
+  require_ekf_for_auto: false          # LAB: no GPS indoors
+  require_prepare_for_auto: false     # v0.1.90.8 (Dmitrii: "uniform rule everywhere"): ENABLE AUTO, then DECLARE
+  require_run_for_task: true
+  test_mode: true                      # v0.1.37 (WP10d): run-free tasks without a run (pool / lab / bench)
+  v1_exit_requires_confirm: true
+  v6_exit_requires_confirm: true
+  allow_goto_task: true                # accepted, but without a fix GOTO cannot arrive: abort it (hold / abort / end_run are the lab legs)
+  ignore_faults: [EKF_BAD, RC_LOST]    # LAB: still shown in status.health.faults, never a FAULT
+  link_loss_action: continue           # the hub bridge drops during a task: continue (events queue, QoS 1) | safe_hold (V5 after
+  link_loss_s: 5.0                     # link_loss_s; the hold clears when the link is back and the operator resumes) - MODULES S6
+  cmd_max_age_s: 10.0                  # v0.1.43 (OCS_V2_SPEC §6): a cmd sent longer ago than this is REJECTED stale (a queued QoS-1 replay
+                                       # after a link loss); clocks within 1 s; 0 = not checked
+
+frames:
+  cam_forward_m: 0.0                   # camera offset from the GPS/EKF reference; same values as usv_ui --cam-*
+  cam_right_m: 0.0
+  cam_yaw_deg: 0.0
+  origin_lat: null                     # control origin: null = first good fix. For one shared frame with usv_ui put
+  origin_lon: null                     #   usv_ui's co.json lat/lon here (usv_ui shows "CO same / DIFFERS").
+
+ocs_gateway:
+  enabled: true
+  port: 9102
+
+t1:                                    # m1t1 Safe Passage (v0.1.21; decided 2026-11-02): planner simple | s6 (START_TASK args.planner wins)
+  planner: simple
+  circle_r_m: 3.0                      # entry (clockwise) / exit (counter-clockwise) circles
+  circle_v: 0.5
+  transit_v: 0.6                       # GUIDED carrot speed through the gates
+  gate_d_m: 2.0                        # pre / post points before and after each gate line
+  s6_d_m: 3.0                          # s6: pre / post distance (pathing_sim spec d)
+  rmin_m: 1.83                         # s6: Dubins turn radius (the spec's best tuning, cfg 31)
+  min_obs: 5                           # a buoy seen fewer times is not used (ghosts)
+  scan_rate_dps: 20.0                  # SEARCH_ENTRY / SCAN turn rate; one full turn, then AUTO_SAFE_HOLD
+  clear_m: 0.60                        # v0.1.54 (Dmitrii): hull edge >= this from every mapped course object (buoys of any colour, box /
+                                       # dock faces) - gatepath.planner.Clearance; a narrower gate is crossed on its centre line, logged
+  track_m: 0.45                        # v0.1.54: the tracker's allowance on top (carrot cut + overshoot, measured in the fast SIL)
+  hull_len_m: 1.19                     # v0.1.54: the BlueBoat footprint
+  hull_beam_m: 0.76
+  # search_lat: 1.2812309              # v0.1.54: where Task 1 is (a point before the entry, from the course map) - the scan's last lead
+  # search_lon: 103.8546383            #   when nothing is in view (Course Extra's start area is ~50 m from Task 1); START_TASK args win
+t3:                                    # m3t1 dock + fire (v0.1.22; decided 2026-11-03): START_TASK args override (bay, fire_s ...)
+  standoff_m: null                     # the sway line off the dock face; v0.1.56 (D6): null = finger_m + hull_len_m/2 + clear_m +
+                                       #   standoff_margin_m (5.70 m today); a number here (or the TUNE knob) is the override
+  standoff2_m: null                    # the second search pass (null = ... + standoff2_margin_m: 5.00 m)
+  finger_m: 3.5                        # v0.1.56: the pontoon finger length from the bay line toward the water (measure the real dock)
+  standoff_margin_m: 1.0               # v0.1.56: beyond the finger tips + half the hull + the 0.60 m rule (t1.clear_m)
+  standoff2_margin_m: 0.3
+  stop_m: 1.5                          # bow-in stops this far off the face (v0.1.39, WP10h: 1.0 -> 1.5 - at 1.0 m the windows
+                                       # 0.6 m each side of the bay centre are outside the 51 deg camera: 1 of 12 seeds fired on GREEN, 12 of 12 at 1.5)
+  fire_s: 30.0                         # water until a window is seen GREEN, at most this long
+  sway_v: 0.25                         # sway command along the standoff line (mode 20)
+  enter_v: 0.15                        # bow-in surge cap
+  undock: astern
+  undock_v: 0.2
+box_inspect:                           # m0t4 box survey (v0.1.27, WP8; decided 2026-11-04): START_TASK args override
+  stop_range_m: 1.0                    # stop this far off the chosen face
+  align_range_m: 15.0                  # the align point on the face normal (VALIDATE happens there)
+  strafe_len_m: 6.0                    # the search sways at most this far (then on with the target, or HOLD)
+  strafe_side: starboard               # starboard | port
+  require_blink: false                 # Task 3 bay indicators are steady; true = blinking targets only
+test_path:                             # m0t2 path test (v0.1.21)
+  points_file: usv_ui/points.json      # usv_ui's saved points (and its pathgen output) for START_TASK args.names
+  speed_mps: 0.6
+t4:
+  confirm_timeout_s: 120
+  transit_timeout_s: 300
+
+home:                                  # v0.1.30 (WP8c): the go-home override (OCS ⌂ HOME / `home`) - decided 2026-11-04
+  speed_mps: 0.3                       # slowly, GUIDED, to the saved point HOME (else the control origin), then stop and hold
+  arrive_r_m: 1.5
+orbit:                                 # v0.1.30 (WP8c): m0t6 TEST_ORBIT defaults (START_TASK args override)
+  r_m: 3.0
+  direction: cw
+  turns: 1
+  speed_mps: 0.5
+
+perception:                            # v0.1.31 (WP9a): the map's ghost filter (pool 2026-11-04: 1-3 sighting ghosts beside two 270+ tracks)
+  min_obs: 3                           # entities seen fewer times stay internal: not in the digest, the map, gates, markers, tasks
+  forget_s: 5.0                        # such a young entity not seen again for this long is dropped
+
+free_run:                              # v0.1.68 (WP17): `mission_manager --free-run` (run_usv.sh --lab --free-run) - the stages against an
+  allowed: true                        #   in-process ghost plant, MODE REQUESTS ONLY to the FCU (no frames / targets / velocities); this
+  start: {lat: 1.2810202, lon: 103.8550097, hdg_deg: 0.0}   # block is the lab profile's only: no other profile accepts --free-run.
+  armed: refuse                        # refuse: START_TASK refused while the FCU is armed, arming mid-task aborts to AUTO_SAFE_HOLD |
+                                       # warn: one event + the FREE RUN · FCU ARMED banner, the task goes on (the kill test, ESC power off)
+
+station_keep:                          # v0.1.81 (WP37): the autonomous station keep (AUTO_HOLD and every stage that holds); the safe hold stays HOLD
+  mode: hold                           # hold = FCU HOLD (motors neutral, drifting) | loiter = FCU LOITER (a real position hold). Dmitrii 2026-11-11:
+                                       # hold until the LOITER drift check on the water passes (Test Guide W1), then `ocs_cli station_keep loiter`

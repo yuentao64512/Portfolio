@@ -15,6 +15,7 @@ This folder centralizes the computer-vision training and dataset-preparation cod
 | `pipe-cone-detection` | `/home/robotx/pipe_cones` | Pipe/cone dataset preparation, review, validation and YOLO26 training |
 | `air-purifier-segmentation` | `/home/robotx/air_purifier_yolo` | Image collection, annotation, negative mining and YOLO11 segmentation training |
 | `misc-5060-training` | Several small 5060 locations | Root-level cone, generic YOLO and Isaac Sim image-training helpers |
+| `robotx-actual` | AGX Orin `/home/optiprime-agxorin/Desktop/dm3/MASTER_SCRIPTS/cv` | Actual RobotX buoy, docking, cannon, publishing and camera-streaming deployment source |
 
 ## How to use the scripts
 

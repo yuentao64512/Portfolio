@@ -1,0 +1,4 @@
+pymavlink>=2.4.40
+rich>=13.7.0
+textual>=0.47.0
+opencv-python-headless>=4.9.0

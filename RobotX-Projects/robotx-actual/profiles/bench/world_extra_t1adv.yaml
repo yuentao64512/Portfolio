@@ -1,0 +1,104 @@
+# v0.1.66 (WP16, D23 of docs/OVERNIGHT_2026-11-07_UAV.md): world_extra with the Task 1 buoys COLOURED ONLY FROM ABOVE (colour_from_above:
+# true on the entry, the six gate buoys and the exit; the two black obstacles as they are) - the renderer draws them as one grey hull without
+# a beacon, the geometric fake perception reports colour unknown: the boat is colour-blind for them, the UAV (sim/fake_uav.py) sees the truth.
+# m1t2's acceptance world; world_extra itself is unchanged.
+# Course Extra (v0.1.53; Dmitrii 2026-11-06: "a bigger course Extra (to be default) ... we fit our course elements to it"): our
+# synthetic full-size course at Marina Bay, 120 x 80 m on Course Alpha's axis (032.08 deg), sharing Alpha's south corner and so
+# containing it (optiprimex/sim/courses.py EXTRA). Open water (walls: false). Every task element is laid out in the COURSE FRAME:
+#   u = metres along the course's axis (032 = "up the course"), v = metres to starboard of it (122 = toward the shore side),
+#   from the course's centre; face_rel_deg / hdg_rel = relative to the axis (180 = facing back down the course, 212 deg).
+# world.load() resolves them to x_n / y_e (the origin is the course's centre); the SIM page's "move" re-anchors the whole layout to
+# another course (world.move_to_course). Distances (handbook/RobotX-2026_Team-Handbook-20261023.md; numbers the handbook does not
+# give are ours and marked "ours"):
+#   start area   u -60..-30, v +15..+40 (Course Alpha's footprint): the boat's start, and open water for Task 4 - the fake judge's
+#                default AssistanceRequest (1.28113 103.85503) falls at u -33.4 v +22.9
+#   Task 1       ten buoys (1376): flashing BLUE entry, 3 RED / GREEN gates (GREEN to port, RED to starboard going up the course,
+#                1386-1388), two BLACK obstacles, steady BLUE exit; gates 3.0 m wide (the PoR's 6-10 ft, 991 - ours for T1), 9 m
+#                apart (ours), the field u -40..-5 on the port side (v -20): ~4 m round the entry / exit to circle them (1404-1408)
+#   Task 2       the pipeline (1457) 20 m (ours) at v -32 with the two buoys near its ends (1459: colour indicator + pinger; GREEN =
+#                the active one), the two 2 m delivery platforms (1461; shared with Task 3, 1582) mid-course - truth only (sensed:
+#                false: the USV's perception has no class for them; the renderer draws the buoys)
+#   Task 3       three bays 3.5 m wide (the pool's, v0.1.27) left to right facing them (1578), the faces at u +50 looking back down the
+#                course, two 25 cm windows each (1578), pontoon fingers 3.5 m - 10 m of water behind them to the boundary
+#   boxes        our m0t4 box faces (world_boxes), 6 m apart at u +50 on the port side, 20 m from the dock
+#   UAV          the launch / landing platform (2352: 2 x 2 m) in the course's transit area beyond the shore-side edge (u -40 v +48)
+# Every element is >= 5 m inside the boundary except the UAV pad (outside it, in the transit area, as the handbook has it).
+name: world_extra
+anchor: {course: EXTRA}
+origin: {lat: 1.2814932, lon: 103.8550149}          # Course Extra's centre (load() sets it from the catalogue)
+start: {u: -52.0, v: 30.0, hdg_rel: 0.0}
+teleports:                                 # the SIM page's / the OCS MAP tab's buttons: one start point per mission
+  - {name: "T1: before the entry", u: -47.0, v: -20.0, hdg_rel: 0.0}
+  - {name: "T1: after the exit",   u: 0.0,   v: -20.0, hdg_rel: 0.0}
+  - {name: "T2: the GREEN buoy",   u: 12.0,  v: -32.0, hdg_rel: 0.0}
+  - {name: "T3: before the dock",  u: 38.0,  v: 20.0,  hdg_rel: 0.0}
+  - {name: "T3: abeam bay 2",      u: 41.0,  v: 20.0,  hdg_rel: 0.0}       # 9 m off: the real camera (51 deg) sees two bays
+  - {name: "boxes: scan point",    u: 40.0,  v: -10.0, hdg_rel: 0.0}
+  - {name: "T4: the incident area", u: -38.0, v: 23.0, hdg_rel: 0.0}
+walls: false
+course: EXTRA                              # the fake judge's course with --course world (sim/courses.py)
+course_id: EXTRA
+bounds: course                             # the course's corners (drawn on the maps; not walls)
+
+camera:
+  name: zed2i_left
+  intrinsics: zed2i_hd2k          # the field of view from optiprimex/sim/zed.py (50.9 deg)
+  min_range_m: 0.5
+  max_range_m: 25.0
+  hz: 5
+  noise_range_abc: [0.02, 0.0, 0.0015]
+  noise_bearing_deg: 0.25
+  p_drop_max: 0.7
+  p_miscolour_max: 0.5
+  conf: 0.85
+  window_max_range_m: 8.0
+
+lights: {period_s: 2.0, on_s: 1.0}
+
+objects:
+  # ---- Task 1: Safe Passage (10 buoys) ------------------------------------------------------------------------------------
+  - {id: 1,  kind: buoy, colour: blue,  light: flash, body: black, role: entry, u: -40.0, v: -20.0, colour_from_above: true}
+  - {id: 2,  kind: buoy, colour: green, light: flash, body: black, gate: 1, u: -32.0, v: -21.5, colour_from_above: true}
+  - {id: 3,  kind: buoy, colour: red,   light: flash, body: black, gate: 1, u: -32.0, v: -18.5, colour_from_above: true}
+  - {id: 4,  kind: buoy, colour: green, light: flash, body: black, gate: 2, u: -23.0, v: -20.0, colour_from_above: true}
+  - {id: 5,  kind: buoy, colour: red,   light: flash, body: black, gate: 2, u: -23.0, v: -17.0, colour_from_above: true}
+  - {id: 6,  kind: buoy, colour: green, light: flash, body: black, gate: 3, u: -14.0, v: -22.5, colour_from_above: true}
+  - {id: 7,  kind: buoy, colour: red,   light: flash, body: black, gate: 3, u: -14.0, v: -19.5, colour_from_above: true}
+  - {id: 8,  kind: buoy, colour: black, light: off,   role: obstacle, u: -27.5, v: -24.5}
+  - {id: 9,  kind: buoy, colour: black, light: off,   role: obstacle, u: -18.5, v: -14.5}
+  - {id: 10, kind: buoy, colour: blue,  light: steady, role: exit, u: -5.0, v: -21.0, colour_from_above: true}
+  # ---- Task 2: Infrastructure Survey and Repair (truth: the USV does not report them) --------------------------------------
+  - {id: 51, kind: buoy, colour: green, light: off, role: t2_indicator, task: T2, pinger: true, sensed: false, u: 18.0, v: -32.0}
+  - {id: 52, kind: buoy, colour: red,   light: off, role: t2_indicator, task: T2, pinger: false, sensed: false, u: 42.0, v: -32.0}
+  - {id: 53, kind: pipeline, task: T2, sensed: false, segments: 5, u: 20.0, v: -32.0, u2: 40.0, v2: -32.0}
+  - {id: 61, kind: platform, task: T2/T3, sensed: false, size_m: 2.0, u: 5.0, v: -5.0}
+  - {id: 62, kind: platform, task: T2/T3, sensed: false, size_m: 2.0, u: 15.0, v: 10.0}
+  # ---- Task 3: Coordinated Logistics dock (bays 3.5 m, faces on u = 50 looking back down the course) -----------------------
+  - {id: 21, kind: dock, colour: red,   bay: 1, face_rel_deg: 180.0, u: 50.0, v: 16.5}
+  - {id: 22, kind: dock, colour: green, bay: 2, face_rel_deg: 180.0, u: 50.0, v: 20.0}
+  - {id: 23, kind: dock, colour: red,   bay: 3, face_rel_deg: 180.0, u: 50.0, v: 23.5}
+  - {id: 31, kind: window, colour: black, lit: false, bay: 1, window: 1, u: 50.0, v: 15.9}
+  - {id: 32, kind: window, colour: black, lit: false, bay: 1, window: 2, u: 50.0, v: 17.1}
+  - {id: 33, kind: window, colour: black, lit: false, bay: 2, window: 1, u: 50.0, v: 19.4}
+  - {id: 34, kind: window, colour: black, lit: false, bay: 2, window: 2, u: 50.0, v: 20.6}
+  - {id: 35, kind: window, colour: black, lit: false, bay: 3, window: 1, u: 50.0, v: 22.9}
+  - {id: 36, kind: window, colour: black, lit: false, bay: 3, window: 2, u: 50.0, v: 24.1}
+  - {id: 41, kind: pontoon, sensed: false, u: 46.5, v: 14.75, u2: 50.0, v2: 14.75}
+  - {id: 42, kind: pontoon, sensed: false, u: 46.5, v: 18.25, u2: 50.0, v2: 18.25}
+  - {id: 43, kind: pontoon, sensed: false, u: 46.5, v: 21.75, u2: 50.0, v2: 21.75}
+  - {id: 44, kind: pontoon, sensed: false, u: 46.5, v: 25.25, u2: 50.0, v2: 25.25}
+  # ---- our box faces (m0t4) -----------------------------------------------------------------------------------------------
+  - {id: 101, kind: box, colour: red,   light: steady, face_rel_deg: 180.0, width_m: 2.0, u: 50.0, v: -16.0}
+  - {id: 102, kind: box, colour: green, light: steady, face_rel_deg: 180.0, width_m: 2.0, u: 50.0, v: -10.0}
+  - {id: 103, kind: box, colour: blue,  light: steady, face_rel_deg: 180.0, width_m: 2.0, u: 50.0, v: -4.0}
+  # ---- the UAV launch / landing platform (in the transit area, outside the course) -----------------------------------------
+  - {id: 71, kind: uav_pad, sensed: false, size_m: 2.0, u: -40.0, v: 48.0}
+
+dock:                                      # fake_dock's defaults (as world_pool.yaml)
+  green_bay: 2
+  auto: false
+  docked_dwell_s: 3.0
+  bay_depth_m: 3.5
+  bay_width_m: 3.5
+  fire_on_target_s: 4.0
+  green_hold_s: 5.0

@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "optiprimex/bodies",
+  "title": "Message bodies per kind",
+  "$defs": {
+    "cmd": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "PREPARE",
+            "START_RUN",
+            "STOP_RUN",
+            "RESET",
+            "ENABLE_AUTO",
+            "DISABLE_AUTO",
+            "START_TASK",
+            "SELECT_TARGET",
+            "SAVE_POINT",
+            "DELETE_POINT",
+            "CLEAR_MAP",
+            "HOME",
+            "HOLD",
+            "RESUME",
+            "ABORT_TASK",
+            "STEP",
+            "SKIP",
+            "CONFIRM_SAFE",
+            "INCIDENT",
+            "COURSE",
+            "GOTO",
+            "SET_TUNING",
+            "SET_SPEED_K",
+            "FCU_MODE",
+            "FCU_ARM",
+            "SET_RC6",
+            "SET_STATION_KEEP",
+            "FENCE_APPLY",
+            "FENCE_ENABLE",
+            "UAV_READY",
+            "UAV_TASK",
+            "FENCE_REJECTED",
+            "FENCE_CHANGE_RESULT",
+            "BRIDGE_NOTICE",
+            "RC_FORWARD",
+            "RESEND_COURSE"
+          ]
+        },
+        "task": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "T1",
+            "T3",
+            "T4",
+            "GOTO",
+            "TEST_MANUAL",
+            "TEST_AUTO",
+            "TEST_PATH",
+            "TEST_SWAY",
+            "BOX_INSPECT",
+            "RETURN_HOME",
+            "TEST_ORBIT",
+            "SCOUT",
+            "TEST_DETECT",
+            "TEST_GUARD",
+            "TEST_YAW",
+            null
+          ]
+        },
+        "args": {
+          "type": "object",
+          "description": "free-form per action; documented keys for START_TASK: tier, sim, planner, names, bay, step (v0.1.26: park in AUTO_SAFE_HOLD at every stage boundary), from (v0.1.26: start at an entry stage of the task); m0t4 (v0.1.27): target_colour, scan_x_n, scan_y_e, expected_boxes; SELECT_TARGET: target_colour; SAVE_POINT (v0.1.29): name, optional lat / lon (else the boat's fix); DELETE_POINT: name; HOME (v0.1.30): speed_mps optional; m0t6 TEST_ORBIT: names [centre] or lat / lon, r_m, direction, turns, speed_mps; SET_TUNING (v0.1.49): key, value (companion/tuning.KNOBS) or save: true",
+          "properties": {
+            "step": {
+              "type": "boolean"
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^[A-Z_]+$"
+            },
+            "sim": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ack": {
+      "type": "object",
+      "required": [
+        "ack_of",
+        "result"
+      ],
+      "properties": {
+        "ack_of": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "ACCEPTED",
+            "REJECTED",
+            "DONE",
+            "FAILED"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "state",
+        "current_task"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "BOOT",
+            "KILLED",
+            "MANUAL",
+            "AUTO_HOLD",
+            "AUTO_TASK",
+            "AUTO_SAFE_HOLD",
+            "FAULT",
+            "OFFLINE"
+          ]
+        },
+        "robot_state": {
+          "type": "string",
+          "enum": [
+            "STATE_KILLED",
+            "STATE_MANUAL",
+            "STATE_AUTO",
+            "STATE_UNKNOWN"
+          ]
+        },
+        "current_task": {
+          "type": "string"
+        },
+        "task_state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "armed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kill": {
+          "type": "boolean"
+        },
+        "estop": {
+          "type": "boolean"
+        },
+        "lat": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "lon": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "hdg_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "sog_mps": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "altitude_hae_m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flight_phase": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "health": {
+          "type": "object"
+        },
+        "fault": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "run": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "event"
+      ],
+      "properties": {
+        "event": {
+          "type": "string",
+          "enum": [
+            "task_state",
+            "safe_passage",
+            "docking",
+            "firefighting",
+            "resource_request",
+            "incident",
+            "alert",
+            "box_survey",
+            "box_mission_complete",
+            "fence_change",
+            "uav_report",
+            "scout",
+            "detect",
+            "guard_test"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "intent": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "task": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "args": {
+          "type": "object"
+        },
+        "operator": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

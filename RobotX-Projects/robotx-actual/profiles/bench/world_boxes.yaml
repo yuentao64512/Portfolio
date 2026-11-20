@@ -1,0 +1,35 @@
+# Box-inspection mission world.  Three 2 m front faces sit 50 m north of the
+# starting scan point.  The fake perception node publishes the same body-polar
+# left/mid/right face contract expected from the AGX ZED/YOLO pipeline.
+# v0.1.27 (WP8): the faces are Task 3 bays, so the indicators are steady (handbook 3.3.4; `light: flash` still works with
+# box_inspect.require_blink: true), and the camera sees 25 m like the ZED 2i (60 m hid the PREFLIGHT deadlock, review §4.2).
+name: world_boxes
+origin: {lat: 1.2810202, lon: 103.8550097}          # Course Alpha's centre, Marina Bay (v0.1.33; was 1.3000 / 103.8000)
+start: {x_n: 0.0, y_e: 0.0, hdg_deg: 0.0}
+teleports:                                 # v0.1.33: the m0t4 scan point, facing the three faces
+  - {name: scan point, x_n: 40.0, y_e: 0.0, hdg: 0.0}
+bounds:
+  - [-5.0, -15.0]
+  - [57.0, -15.0]
+  - [57.0, 15.0]
+  - [-5.0, 15.0]
+
+camera:
+  name: zed2i_left
+  intrinsics: zed2i_hd2k          # the field of view from optiprimex/sim/zed.py (50.9 deg, v0.1.34; was 72)
+  min_range_m: 0.5
+  max_range_m: 25.0
+  hz: 5
+  noise_range_abc: [0.02, 0.0, 0.0005]
+  noise_bearing_deg: 0.15
+  p_drop_max: 0.15
+  p_miscolour_max: 0.05
+  conf: 0.9
+
+lights: {period_s: 2.0, on_s: 1.0}
+
+objects:
+  - {id: 101, kind: box, colour: red,   light: steady, x_n: 50.0, y_e: -6.0, width_m: 2.0, face_hdg_deg: 90.0}
+  - {id: 102, kind: box, colour: green, light: steady, x_n: 50.0, y_e:  0.0, width_m: 2.0, face_hdg_deg: 90.0}
+  - {id: 103, kind: box, colour: blue,  light: steady, x_n: 50.0, y_e:  6.0, width_m: 2.0, face_hdg_deg: 90.0}
+

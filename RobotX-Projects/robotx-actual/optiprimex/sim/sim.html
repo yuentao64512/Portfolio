@@ -1,0 +1,284 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SIM · OptiPrime</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--ink:#e6edf3;--dim:#8b949e;--ok:#3fb950;--bad:#f85149;--warn:#d29922;--acc:#58a6ff;--chip:#21262d}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.mono,select,input{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}.dim{color:var(--dim)}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px}.chip{padding:2px 8px;border-radius:10px;background:var(--chip);font-size:11.5px;white-space:nowrap}
+button.b{background:var(--panel2,#1c2330);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:4px 10px;font:12px ui-monospace,Menlo,monospace;cursor:pointer}
+button.b:hover{border-color:var(--acc)}button.b.on{background:var(--acc);border-color:var(--acc);color:var(--bg)}button.b.danger.on{background:var(--alarmBg,#8e1519);border-color:var(--alarm,#da3633);color:var(--alarmText,#fff)}
+button.b{font-weight:600}button.b.danger{background:var(--alarmPale);border:2px solid var(--alarm,#da3633);color:var(--alarmText,#da3633);font-weight:700}   /* v0.1.50 */
+button.b.on{background:var(--action);border:2px solid var(--actionLine);color:var(--actionText);font-weight:800}button.b.danger.on{background:var(--alarm);border:2px solid var(--alarm);color:var(--bg)}
+.grp{display:flex;gap:4px;align-items:center}.grp .lab{color:var(--dim);font-size:11px;margin-right:2px}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:12px 14px}@media(max-width:1100px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.card h2{margin:0 0 8px;font-size:11.5px;letter-spacing:.08em;color:var(--acc);display:flex;gap:8px;align-items:center}.card h2 .r{margin-left:auto;font-weight:400;letter-spacing:0;color:var(--dim)}
+img.view{width:100%;display:block;border-radius:6px;background:#000;aspect-ratio:16/9;object-fit:contain}
+canvas{width:100%;display:block;border-radius:6px;background:#0a2440;cursor:crosshair}
+.keys{display:grid;grid-template-columns:repeat(3,34px);gap:3px;justify-content:start}.keys span{display:flex;align-items:center;justify-content:center;height:30px;border:1px solid var(--line);border-radius:5px;background:var(--chip);font-family:ui-monospace,monospace}
+.keys span.on{background:var(--acc);color:var(--bg)}
+.tool{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}
+select,input{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+#msg{min-height:18px}
+/* v0.1.52: the transmitter as status chips (no switch from this page); on = the switch is active, alarm = kill / E-stop */
+.chip.st{border:1px solid var(--line)}.chip.st.on{background:var(--action,var(--acc));color:var(--actionText,var(--bg));font-weight:700}
+.chip.st.alarm{background:var(--alarm,#da3633);color:var(--bg);font-weight:700}.chip.st.unk{opacity:.55}
+#veh.latched{border:2px solid var(--warn);font-weight:700}#veh.fault{border:2px solid var(--alarm,#da3633)}
+/* v0.1.53: the course banner (the judge's course differs from the world's) */
+#crsbanner{margin:10px 14px 0;padding:8px 12px;border:2px solid var(--warn);border-radius:8px;background:var(--panel);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#crsbanner b{color:var(--warn)}#crsbanner[hidden]{display:none}
+#navctl{position:absolute;right:8px;top:8px;z-index:4;display:grid;grid-template-columns:repeat(4,28px);gap:3px}#navctl button{width:28px;height:26px;padding:0;font:14px ui-monospace,Menlo,monospace;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px;cursor:pointer}#navctl button.on{background:var(--actionPale);border-color:var(--actionLine)}
+#boxsel{position:absolute;display:none;border:2px dashed var(--acc);pointer-events:none;z-index:3}   /* v0.1.54 */
+</style><link rel="stylesheet" href="/themes.css"></head><body>
+<header>
+ <span class="brand">SIM <span class="dim" id="wname"></span></span>
+ <span class="chip mono" id="fcu">FCU …</span>
+ <span class="chip mono" id="veh" title="v0.1.52: the mission manager's state (local/usv/mm/state). A FAULT / KILLED stays latched after its cause is gone: confirm_safe (the OCS page's RE-ARM, or ocs_cli confirm_safe), then enable_auto">vehicle …</span>
+ <div class="grp" id="txgrp" title="v0.1.52: the transmitter, status only - the FCU's mode, armed, the kill, the RC5 E-stop, the RC6 override as the fake FCU has them. Nothing here switches them: the mode / ARM from the OCS page's FCU bar or usv_ui (mode, arm); the kill / RC6 by the fault tools (fault_timing, sim_day: POST /fcu)">
+  <span class="lab">transmitter</span><span class="chip st unk" id="c-mode">mode ?</span><span class="chip st unk" id="c-arm">armed ?</span><span class="chip st unk" id="c-kill">kill ?</span><span class="chip st unk" id="c-estop">E-stop ?</span><span class="chip st unk" id="c-rc6">RC6 ?</span></div>
+ <div class="grp" title="the plant's faults - what the real boat would feel">
+  <span class="lab" style="margin-left:6px">faults</span><button class="b danger" id="gps" title="fault: GPS fix lost (toggle)">GPS lost</button><button class="b" id="pause" title="fault: the FCU stream pauses 4 s">FCU pause 4 s</button></div>
+ <div class="grp" title="RESET SIM (v0.1.33): the boat to the world's start, the mockups back to the file, every fault off, the mode switch HOLD, clear_map, reset on both ends, the fake judge's counters - type reset to confirm">
+  <button class="b danger" id="rst" title="RESET SIM: the world, the boat and the faults back to the start (asks first)">RESET SIM…</button><span id="rstbox" hidden><input id="rstword" placeholder="type reset" style="width:90px"><button class="b danger" id="rstgo" title="yes, reset the simulator">go</button><button class="b" id="rstno" title="cancel the reset">cancel</button></span></div>
+ <span style="flex:1"></span><a class="dim" href="http://127.0.0.1:8096/" target="_blank" title="the OCS page (run_ocs.sh / run_sim.sh)">OCS page ↗</a>
+ <select id="themebar" style="margin-left:auto" title="theme - the same on every page (the OCS page's /prefs; the launcher sets it)"><option value="dark">dark</option><option value="light">light</option><option value="hc-dark">HC dark</option><option value="hc-light">HC light</option><option value="fun">fun</option></select>
+</header>
+<div id="crsbanner" hidden title="v0.1.53: the judge's course (RxCourse, or the OCS's COURSE to the boat) is not the course this world is laid out on"><b id="crsbtxt">course received</b>
+ <button class="b" id="crsmove" title="move: the world re-anchored to the received course (its own world when the catalogue has one), fake perception + fake dock restarted on it, the boat to its start">move the world there</button>
+ <button class="b" id="crsign" title="ignore: keep the current world (a trial run) - the banner comes back when another course is received">ignore</button></div>
+<main>
+ <div style="display:grid;gap:12px">
+  <div class="card"><h2>CHASE VIEW <span class="r">9 m behind, 5 m up</span></h2><img class="view" id="chase" alt=""></div>
+  <div class="card"><h2>THE BOAT'S CAMERA <span class="r mono" id="camst"></span></h2><img class="view" id="cam" alt="">
+   <div class="dim" style="margin-top:6px">the same stream the OCS page's CAMERA tab shows (CAM_URL = this server). The detector in the loop: WP10e.</div></div>
+ </div>
+ <div style="display:grid;gap:12px;align-content:start">
+  <div class="card"><h2>DRIVE <span class="r" id="drivehint"></span></h2>
+   <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+    <div class="keys"><span></span><span id="k-up">↑</span><span></span><span id="k-left">←</span><span id="k-down">↓</span><span id="k-right">→</span></div>
+    <div class="dim">↑ ↓ surge · ← → yaw · <span class="mono">A</span> / <span class="mono">D</span> sway · <span class="mono">Shift</span> = full stick<br>
+      the boat moves in <b>MANUAL</b> only (the mode switch), armed, no kill — as with the real transmitter.<br>
+      releasing the keys = sticks centred (the fake FCU zeroes them after 0.5 s anyway)</div>
+   </div><div class="mono" id="sticks" style="margin-top:6px"></div></div>
+  <div class="card"><h2>TELEPORT <span class="r">the world's places · HOME and the saved points · by click (snaps within 2 m)</span></h2>
+   <div class="tool" id="tps"></div>
+   <div class="tool"><button class="b" id="tpclick" title="then click the map below: the boat goes there (onto HOME / a saved point when the click is within 2 m of it)">teleport by click</button>
+    <span class="dim">or</span><input id="tpll" placeholder="lat lon [hdg]" style="width:220px" title="e.g. 1.2810202 103.8550097 32"><button class="b" id="tpgo" title="teleport to the typed lat lon [hdg]">go</button></div></div>
+  <div class="card"><h2>COURSE · WORLD <span class="r" id="crsinfo"></span></h2>
+   <div class="tool"><span class="dim">course</span><select id="crssel" title="a course of the catalogue (sim/courses.py), or the one received from the judge"></select>
+    <span class="dim">world</span><select id="wsel" title="the world to lay on it: the course's own (the catalogue's), the current one (kept, re-anchored), or a named world"></select>
+    <button class="b" id="crsgo" title="move: the world re-anchored to the course (origin + rotation; the elements keep their distances), fp + dock restarted on it, the boat to its start">move</button>
+    <label class="dim" title="move it even when elements fall outside the course"><input type="checkbox" id="crsforce"> force</label>
+    <button class="b" id="wgo" title="load the picked world as it is (no course move)">load world</button></div>
+   <div class="mono dim" id="crsmsg"></div></div>
+  <div class="card"><h2>WORLD <span class="r">drag = move · double-click = add · shift-click = boat here · Delete = remove the selected</span></h2>
+   <div class="tool"><span class="dim">add</span><select id="addkind" title="what a double-click adds: a buoy / box face / dock bay (the simulator's world, in memory), a waypoint (save_point on the boat, through the OCS), a marker (a note on the OCS map)"><option value="buoy">buoy</option><option value="box">box face</option><option value="dock">dock bay</option><option value="waypoint">waypoint</option><option value="marker">marker</option></select>
+    <select id="addcol"><option>white</option><option>red</option><option>green</option><option>blue</option><option>yellow</option><option>black</option><option>orange</option></select>
+    <select id="addlight"><option value="off">no light</option><option value="steady">light steady</option><option value="flash">light flashing</option></select>
+    <span class="dim">size m</span><input id="addsize" value="0.5" style="width:56px" title="a buoy's diameter, metres">
+    <span class="dim">bay</span><input id="addbay" value="1" style="width:36px" title="a dock bay's number (1..3 left to right facing it)">
+    <input id="addname" placeholder="name" style="width:90px" title="the name of a waypoint or a marker">
+    <button class="b" id="legend" title="the legend: what the symbols on this map mean">?</button></div>
+   <div class="mono dim" id="legendbox" hidden style="margin:4px 0">● buoy (white ring = a light) · ▬ box face / dock bay · ✚ saved point (HOME orange) · ◆ marker (OCS only) · ⩍ the boat (the BlueBoat catamaran to scale, ≥ 22 px) + its camera cone · grey line = the pool walls · hover = N / E, lat / lon, range / bearing from the boat; a click copies lat lon</div>
+   <div style="position:relative"><canvas id="map" width="720" height="560"></canvas><div id="navctl"><button id="nv-u" title="pan north (up)">↑</button><button id="nv-l" title="pan west (left)">←</button><button id="nv-r" title="pan east (right)">→</button><button id="nv-d" title="pan south (down)">↓</button><button id="nv-in" title="zoom in">＋</button><button id="nv-out" title="zoom out">−</button><button id="nv-box" title="box zoom: drag a rectangle (Esc = cancel)">⬚</button><button id="nv-fit" title="fit the world">⤢</button></div><div id="boxsel"></div><div id="hover" class="mono" style="position:absolute;right:6px;bottom:6px;background:#0d1117e0;border:1px solid var(--line);border-radius:4px;padding:2px 6px;white-space:pre;pointer-events:none" hidden></div></div><div class="mono dim" id="sel" style="margin-top:6px"></div><div id="msg" class="mono"></div></div>
+ </div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let W=null,sel=null,drag=null,view={s:6,cx:15,cy:0,fitted:false};
+// v0.1.47 (UI_QOL item 6): the theme follows the OCS page's /prefs (proxied by simview: another port); this select writes it back
+try{const t0=localStorage.getItem("sim.theme");if(t0)document.documentElement.dataset.theme=t0}catch(e){}
+async function followTheme(){try{const d=await (await fetch("/prefs.json",{cache:"no-store"})).json();const t=(d.prefs||{}).theme;
+  if(t&&t!==document.documentElement.dataset.theme){document.documentElement.dataset.theme=t;try{localStorage.setItem("sim.theme",t)}catch(e){}}
+  const sel=document.getElementById("themebar");if(sel&&document.activeElement!==sel)sel.value=document.documentElement.dataset.theme||"dark"}catch(e){}}
+followTheme();setInterval(followTheme,2000);
+document.addEventListener("DOMContentLoaded",()=>{const sel=document.getElementById("themebar");if(sel)sel.onchange=()=>{document.documentElement.dataset.theme=sel.value;post("/prefs",{theme:sel.value})}});
+async function post(path,body){try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-Sim-Web":"1"},body:JSON.stringify(body)});return r.json()}catch(e){return {ok:false,why:"simview not reachable"}}}
+function say(t,c){$("msg").innerHTML=`<span class="${c||""}">${t}</span>`}
+// ---- the chase view: one frame after the other
+const ch=$("chase");function nextChase(){ch.src="/chase.jpg?t="+Date.now()}ch.onload=()=>setTimeout(nextChase,120);ch.onerror=()=>setTimeout(nextChase,800);nextChase();
+// v0.1.50: the boat's camera by /snapshot.jpg in a loop (as the chase view) - no held MJPEG stream, so other pages' streams can never
+// starve this one (a browser keeps ~6 connections per address); paused while the page is hidden
+let CAMT=null;const camGo=()=>{if(!document.hidden)$("cam").src="/snapshot.jpg?t="+Date.now()};
+$("cam").onload=()=>{CAMT=setTimeout(camGo,100)};$("cam").onerror=()=>{CAMT=setTimeout(camGo,1500)};camGo();
+// v0.1.47 (UI_QOL item 16): release the stream while this tab is hidden - background tabs' MJPEG streams used up the browser's
+// ~6 connections to this server and the visible page's camera stayed blank
+document.addEventListener("visibilitychange",()=>{clearTimeout(CAMT);if(!document.hidden)camGo()});
+// ---- transmitter / faults
+// v0.1.52 (Dmitrii): the transmitter's switches are status chips (txChips) - only the faults are buttons here
+const FCUSET=s=>post("/fcu",{set:s}).then(r=>{if(!r.ok)say(r.why||"refused","bad");tick()});
+$("gps").onclick=()=>FCUSET({gps_fix:(W&&W.fcu.gps_fix>=3)?0:3}).then(()=>{if(W&&W.fcu.gps_fix>=3)say("GPS back: the fix and the EKF position return by themselves; a FAULT EKF_BAD stays latched until confirm_safe (OCS page RE-ARM / ocs_cli confirm_safe), then enable_auto","warn")});
+$("pause").onclick=()=>post("/fcu",{pause_stream:4}).then(()=>say("FCU stream paused 4 s (the mission manager sees FCU_LOST)","warn"));
+// ---- arrow keys -> sticks (10 Hz while held, one zero on release)
+const K={};let sending=false;
+function sticks(){const f=K.Shift?1:0.6;return{surge:((K.ArrowUp?1:0)-(K.ArrowDown?1:0))*f,yaw:((K.ArrowRight?1:0)-(K.ArrowLeft?1:0))*f,sway:((K.d?1:0)-(K.a?1:0))*f}}
+function held(){return K.ArrowUp||K.ArrowDown||K.ArrowLeft||K.ArrowRight||K.a||K.d}
+function showKeys(){for(const [id,k] of [["k-up","ArrowUp"],["k-down","ArrowDown"],["k-left","ArrowLeft"],["k-right","ArrowRight"]])$(id).classList.toggle("on",!!K[k]);
+  const s=sticks();$("sticks").textContent=`sticks: surge ${s.surge.toFixed(1)} · yaw ${s.yaw.toFixed(1)} · sway ${s.sway.toFixed(1)}`}
+setInterval(async()=>{if(held()){sending=true;await post("/sticks",sticks())}else if(sending){sending=false;await post("/sticks",{surge:0,yaw:0,sway:0})}},100);
+document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","a","d","Shift"].includes(k)){K[k]=true;e.preventDefault();showKeys()}
+  if((k==="Delete"||k==="Backspace")&&sel!=null)removeSel()});
+document.addEventListener("keyup",e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;delete K[k];showKeys()});
+window.addEventListener("blur",()=>{for(const k in K)delete K[k];showKeys()});
+// ---- v0.1.35 (WP10c): every button says what · needs · then
+const SIM_TIP={
+  gps:"GPS lost (on / off): no fix, no EKF position · then: FAULT (EKF_BAD); back on → the fix and the EKF position return by themselves, the FAULT stays latched → confirm_safe, enable_auto",
+  pause:"the FCU's stream paused 4 s · then: FAULT FCU_LOST until it is back and confirm_safe",
+  rst:"RESET SIM: the boat to the world's start, the mockups from the file, every fault off, HOLD, reset on both ends · needs: type reset",
+  rstgo:"go: the reset (only with the word typed)",rstno:"cancel the reset, nothing changes",
+  tpgo:"teleport to the typed lat lon [hdg] · then: the boat is there, stopped"};
+for(const b of document.querySelectorAll("button:not([title])"))if(SIM_TIP[b.id])b.title=SIM_TIP[b.id];
+// ---- RESET SIM, teleports (v0.1.33)
+$("rst").onclick=()=>{$("rstbox").hidden=false;$("rstword").value="";$("rstword").focus()};$("rstno").onclick=()=>{$("rstbox").hidden=true};
+async function doReset(){const w=$("rstword").value.trim();if(w!=="reset"){say("type reset to confirm","warn");return}$("rstbox").hidden=true;say("RESET SIM: working…","warn");
+  const r=await post("/reset",{confirm:w});say(r.ok?"RESET SIM done: "+r.steps.join(" · "):(r.why||"refused"),r.ok?"ok":"bad");view.fitted=false;tick()}
+$("rstgo").onclick=doReset;$("rstword").addEventListener("keydown",e=>{if(e.key==="Enter")doReset()});
+let tpArm=false;$("tpclick").onclick=()=>{tpArm=!tpArm;$("tpclick").classList.toggle("on",tpArm);if(tpArm)say("click the map: the boat goes there","warn")};
+const tpSay=r=>say(r.ok?`boat teleported to ${r.to}${r.snapped?" (snapped)":""} · ${r.lat}, ${r.lon} · ${r.hdg}°`:(r.why||"refused"),r.ok?"ok":"bad");
+async function tp(body){const r=await post("/teleport",body);tpSay(r);tick();return r}
+$("tpgo").onclick=()=>{const f=$("tpll").value.trim().split(/[\s,]+/).map(Number);if(f.length<2||f.some(isNaN)){say("lat lon [hdg]","bad");return}tp({lat:f[0],lon:f[1],hdg:f.length>2?f[2]:null})};
+function tpButtons(){if(!W)return;const items=(W.teleports||[]).map(t=>[t.name,`N ${t.x_n} E ${t.y_e} · ${t.hdg}°`]).concat((W.points||[]).map(p=>[p.name,`saved point · N ${p.x_n} E ${p.y_e}`]));
+  const key=items.map(i=>i[0]).join("|");if($("tps").dataset.k===key)return;$("tps").dataset.k=key;
+  $("tps").innerHTML=items.map(([n,t])=>`<button class="b" title="${t}" data-tp="${n}">${n}</button>`).join("")||'<span class="dim">no teleports in this world</span>';
+  $("tps").querySelectorAll("button").forEach(b=>b.onclick=()=>tp({name:b.dataset.tp}))}
+// ---- the top-down map
+// v0.1.52: the BlueBoat top view, the same polygons as map.html's catamaran() ([forward, starboard] metres about the reference point)
+const BOAT={L:1.19,B:0.76,hull_w:0.20,min_px:22};
+function catamaran(){const L=BOAT.L/2,w=BOAT.hull_w/2,yc=(BOAT.B-BOAT.hull_w)/2,bow=0.18;
+  const hull=sg=>[[L,sg*yc],[L-bow,sg*yc+w],[-L,sg*yc+w],[-L,sg*yc-w],[L-bow,sg*yc-w]];
+  return [hull(-1),hull(1),[[0.10,-yc+w],[0.10,yc-w],[-0.10,yc-w],[-0.10,-yc+w]]]}
+function boatPxPerM(scale){return Math.max(scale,BOAT.min_px/BOAT.L)}
+function themeVar(n,d){try{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||d}catch(e){return d}}
+const C=$("map"),ctx=C.getContext("2d");
+const COL={white:"#eeeeea",red:"#e04040",green:"#2fb15a",blue:"#4a7be0",yellow:"#e8c828",black:"#333",orange:"#f08a1e"};
+const toPx=(x,y)=>[C.width/2+(y-view.cy)*view.s,C.height/2-(x-view.cx)*view.s];
+const toW=(px,py)=>[view.cx+(C.height/2-py)/view.s,view.cy+(px-C.width/2)/view.s];
+function fit(){if(!W)return;const pts=(W.bounds||[]).concat((W.objects||[]).map(o=>[o.x_n,o.y_e]),(W.course&&W.course.corners_xy)||[]);pts.push([W.boat.x_n,W.boat.y_e]);
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  view.cx=(x0+x1)/2;view.cy=(y0+y1)/2;view.s=Math.min(C.height/(x1-x0+6),C.width/(y1-y0+6));view.fitted=true}
+function draw(){if(!W)return;if(!view.fitted)fit();ctx.clearRect(0,0,C.width,C.height);
+  ctx.strokeStyle="#ffffff10";ctx.lineWidth=1;for(let g=-200;g<=200;g+=5){let [a,b]=toPx(g,-200),[c,d]=toPx(g,200);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();[a,b]=toPx(-200,g);[c,d]=toPx(200,g);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke()}
+  for(const p of W.points||[]){const [px,py]=toPx(p.x_n,p.y_e);ctx.strokeStyle=p.name==="HOME"?"#f0b429":"#c9a0ff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px-6,py);ctx.lineTo(px+6,py);ctx.moveTo(px,py-6);ctx.lineTo(px,py+6);ctx.stroke();
+    ctx.fillStyle=ctx.strokeStyle;ctx.font="11px ui-monospace,monospace";ctx.fillText(p.name,px+7,py-5)}
+  const b=W.bounds||[];if(b.length>2){ctx.strokeStyle="#c8c8c4";ctx.lineWidth=3;ctx.beginPath();b.forEach((p,i)=>{const [px,py]=toPx(p[0],p[1]);i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.closePath();ctx.stroke()}
+  // v0.1.53: the world's course (dashed accent), its UAV transit area, and a received course that differs (dashed warn)
+  const ring=(pts,col,dash)=>{if(!pts||pts.length<3)return;ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.setLineDash(dash);ctx.beginPath();pts.forEach((p,i)=>{const [px,py]=toPx(p[0],p[1]);i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.closePath();ctx.stroke();ctx.restore()};
+  if(W.course){ring(W.course.corners_xy,themeVar("--acc","#58a6ff"),[8,5]);ring(W.course.transit_xy,themeVar("--dim","#8b949e"),[3,4])}
+  if(W.received&&W.received.differs)ring(W.received.corners_xy,themeVar("--warn","#d29922"),[4,4]);
+  for(const o of W.objects){const [px,py]=toPx(o.x_n,o.y_e);ctx.fillStyle=COL[o.colour]||"#999";
+    if(o.kind==="buoy"){const r=Math.max(3,(o.size_m||0.5)/2*view.s);ctx.beginPath();ctx.arc(px,py,r,0,6.283);ctx.fill();if(o.light&&o.light!=="off"){ctx.strokeStyle="#fff";ctx.lineWidth=1;ctx.stroke()}}
+    else{const w=(o.width_m||(o.kind==="box"?2:1))*view.s,hd=((o.face_hdg_deg||90)+90)*Math.PI/180;ctx.save();ctx.translate(px,py);ctx.rotate(hd);ctx.fillRect(-w/2,-3,w,6);ctx.restore()}
+    if(sel&&sel.type==="sim"&&o.id===sel.key){ctx.strokeStyle="#58a6ff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,10,0,6.283);ctx.stroke()}}
+  for(const [n,k] of Object.entries(MARKERS)){const [x,y]=llToW(k.lat,k.lon),[px,py]=toPx(x,y);ctx.fillStyle="#ffa657";ctx.beginPath();ctx.moveTo(px,py-7);ctx.lineTo(px+6,py);ctx.lineTo(px,py+7);ctx.lineTo(px-6,py);ctx.closePath();ctx.fill();
+    ctx.font="11px ui-monospace,monospace";ctx.fillText(n,px+8,py+4);if(sel&&sel.type==="marker"&&sel.key===n){ctx.strokeStyle="#58a6ff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,10,0,6.283);ctx.stroke()}}
+  const [bx,by]=toPx(W.boat.x_n,W.boat.y_e),h=W.boat.hdg_deg*Math.PI/180;ctx.save();ctx.translate(bx,by);ctx.rotate(h);
+  // v0.1.52: the BlueBoat catamaran as on map.html (two hulls + the cross beam, to scale, >= BOAT.min_px long), the theme's text colour
+  const fg=themeVar("--text","#e6ebf0"),k=boatPxPerM(view.s),Q=(f,s)=>[s*k,-f*k];ctx.fillStyle=fg+"33";ctx.strokeStyle=fg;ctx.lineWidth=1.5;
+  for(const poly of catamaran()){ctx.beginPath();poly.forEach((q,i)=>i?ctx.lineTo(...Q(...q)):ctx.moveTo(...Q(...q)));ctx.closePath();ctx.fill();ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(...Q(BOAT.L/2,0));ctx.lineTo(0,-(BOAT.L/2*k+Math.max(14,BOAT.L/2*k)));ctx.stroke();
+  ctx.strokeStyle="#ffb3504d";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-Math.tan(50*Math.PI/180)*60,-60);ctx.moveTo(0,0);ctx.lineTo(Math.tan(50*Math.PI/180)*60,-60);ctx.stroke();ctx.restore()}
+// v0.1.35 (WP10c): one selection for sim objects, markers (OCS-side notes) and saved points; hover readout
+let MARKERS={};
+async function pollMarkers(){try{MARKERS=(await (await fetch("/markers.json",{cache:"no-store"})).json()).markers||{}}catch(e){}}
+pollMarkers();setInterval(pollMarkers,3000);
+const RK=6378137*Math.PI/180;
+function llToW(lat,lon){const o=W.origin||{lat:0,lon:0};return[(lat-o.lat)*RK,(lon-o.lon)*RK*Math.cos(o.lat*Math.PI/180)]}
+function wToLL(x,y){const o=W.origin||{lat:0,lon:0};return[o.lat+x/RK,o.lon+y/(RK*Math.cos(o.lat*Math.PI/180))]}
+function items(){const out=[];for(const o of (W&&W.objects)||[])out.push({type:"sim",key:o.id,x:o.x_n,y:o.y_e,label:`#${o.id} ${o.kind} ${o.colour||""}`,o});
+  for(const [n,k] of Object.entries(MARKERS)){const [x,y]=llToW(k.lat,k.lon);out.push({type:"marker",key:n,x,y,label:`marker ${n}`})}
+  for(const p of (W&&W.points)||[])out.push({type:"point",key:p.name,x:p.x_n,y:p.y_e,label:`point ${p.name}`});return out}
+function hit(px,py){let best=null,bd=12;for(const it of items()){const [ox,oy]=toPx(it.x,it.y);const d=Math.hypot(ox-px,oy-py);if(d<bd){bd=d;best=it}}return best}
+async function removeSel(){const it=sel;if(!it)return;let r;
+  if(it.type==="sim")r=await post("/objects",{op:"del",id:it.key});else if(it.type==="marker")r=await post("/markers",{op:"del",name:it.key});
+  else{if(!confirm(`delete the saved point ${it.key} on the boat (del_point)?`))return;r=await post("/waypoint",{op:"del",name:it.key})}
+  say(r.ok?`removed ${it.label}`:(r.why||"refused"),r.ok?"ok":"bad");sel=null;pollMarkers();tick()}
+async function moveItem(it,x,y){let r;
+  if(it.type==="sim")r=await post("/objects",{op:"move",id:it.key,x_n:x,y_e:y});else if(it.type==="marker")r=await post("/markers",{op:"move",name:it.key,x_n:x,y_e:y});
+  else r=await post("/waypoint",{name:it.key,x_n:x,y_e:y});if(!r.ok)say(r.why||"refused","bad");pollMarkers();tick()}
+function hoverText(px,py){const [x,y]=toW(px,py),[lat,lon]=wToLL(x,y);let s=`${lat.toFixed(7)}, ${lon.toFixed(7)}   N ${x.toFixed(1)} E ${y.toFixed(1)}`;const it=hit(px,py);
+  if(it&&W.boat){const dx=it.x-W.boat.x_n,dy=it.y-W.boat.y_e,az=(Math.atan2(dy,dx)*180/Math.PI+360)%360,rel=((az-W.boat.hdg_deg+540)%360)-180;
+    s+=`\n${it.label}: ${Math.hypot(dx,dy).toFixed(1)} m · ${az.toFixed(0)}° (${rel>=0?"+":""}${rel.toFixed(0)}° off the bow)`}return s}
+$("legend").onclick=()=>{$("legendbox").hidden=!$("legendbox").hidden;$("legend").classList.toggle("on",!$("legendbox").hidden)};
+C.addEventListener("mouseleave",()=>{$("hover").hidden=true});
+function pos(e){const r=C.getBoundingClientRect();return[(e.clientX-r.left)*C.width/r.width,(e.clientY-r.top)*C.height/r.height]}
+C.addEventListener("mousedown",e=>{const [px,py]=pos(e);
+  if(tpArm){tpArm=false;$("tpclick").classList.remove("on");const [x,y]=toW(px,py);tp({x_n:x,y_e:y,snap:true});return}
+  if(e.shiftKey){const [x,y]=toW(px,py);post("/fcu",{teleport:{x_n:x,y_e:y}}).then(r=>say(r.ok?`boat teleported to N ${x.toFixed(1)} E ${y.toFixed(1)}`:r.why,r.ok?"ok":"bad"));return}
+  const it=hit(px,py);sel=it?{type:it.type,key:it.key,label:it.label}:null;$("sel").textContent=it?`selected ${it.label} N ${it.x.toFixed(1)} E ${it.y.toFixed(1)}${it.o&&it.o.light&&it.o.light!=="off"?" light "+it.o.light:""} · Delete removes`:"";
+  drag=it?{it,x:null,y:null}:null;down=[px,py];draw()});
+let down=null;
+C.addEventListener("mousemove",e=>{if(!W)return;const [px,py]=pos(e);$("hover").hidden=false;$("hover").textContent=hoverText(px,py);
+  if(!drag)return;const [x,y]=toW(px,py);drag.x=x;drag.y=y;if(drag.it.type==="sim"){const o=W.objects.find(q=>q.id===drag.it.key);if(o){o.x_n=x;o.y_e=y}}draw()});
+window.addEventListener("mouseup",e=>{if(drag&&drag.x!=null)moveItem(drag.it,drag.x,drag.y);
+  else if(down&&!drag&&e.target===C&&W){const [px,py]=pos(e);if(Math.hypot(px-down[0],py-down[1])<3&&navigator.clipboard){const [lat,lon]=wToLL(...toW(px,py));navigator.clipboard.writeText(`${lat.toFixed(7)} ${lon.toFixed(7)}`).then(()=>say(`copied ${lat.toFixed(7)} ${lon.toFixed(7)}`,"ok"),()=>{})}}
+  drag=null;down=null});
+C.addEventListener("dblclick",async e=>{const [px,py]=pos(e);const [x,y]=toW(px,py);const kind=$("addkind").value,name=$("addname").value.trim();let r;
+  if(kind==="waypoint"||kind==="marker"){if(!name){say(`add ${kind}: type its name first`,"bad");return}
+    r=kind==="waypoint"?await post("/waypoint",{name,x_n:x,y_e:y}):await post("/markers",{op:"add",name,x_n:x,y_e:y});pollMarkers()}
+  else r=await post("/objects",{op:"add",kind,colour:$("addcol").value,light:$("addlight").value,bay:parseInt($("addbay").value)||1,x_n:x,y_e:y,size_m:kind==="buoy"?parseFloat($("addsize").value)||0.5:null,width_m:kind==="box"?2:null});
+  say(r.ok?`added ${kind}${name&&(kind==="waypoint"||kind==="marker")?" "+name:" #"+r.id} at N ${x.toFixed(1)} E ${y.toFixed(1)}`:(r.why||"refused"),r.ok?"ok":"bad");tick()});
+C.addEventListener("wheel",e=>{e.preventDefault();view.s*=e.deltaY<0?1.15:1/1.15;draw()},{passive:false});
+// v0.1.54: the map controls (as map.html): pan 20 %, zoom ×1.4, box zoom, fit
+const NAV={box:false,b0:null};const navPan=(dx,dy)=>{view.cx+=dy*0.2*C.height/view.s;view.cy+=dx*0.2*C.width/view.s;view.fitted=true;draw()};
+const navZoom=f=>{view.s=Math.max(0.3,Math.min(200,view.s*f));view.fitted=true;draw()};
+function navBox(on){NAV.box=on;NAV.b0=null;$("nv-box").className=on?"on":"";C.style.cursor=on?"crosshair":"";$("boxsel").style.display="none"}
+$("nv-u").onclick=()=>navPan(0,1);$("nv-d").onclick=()=>navPan(0,-1);$("nv-l").onclick=()=>navPan(-1,0);$("nv-r").onclick=()=>navPan(1,0);
+$("nv-in").onclick=()=>navZoom(1.4);$("nv-out").onclick=()=>navZoom(1/1.4);$("nv-fit").onclick=()=>{fit();draw()};$("nv-box").onclick=()=>navBox(!NAV.box);
+const cssXY=e=>{const r=C.getBoundingClientRect();return [(e.clientX-r.left),(e.clientY-r.top),C.width/r.width,C.height/r.height]};
+C.addEventListener("mousedown",e=>{if(!NAV.box)return;e.stopImmediatePropagation();e.preventDefault();NAV.b0=cssXY(e)},true);
+window.addEventListener("mousemove",e=>{if(!NAV.box||!NAV.b0)return;const [x,y]=cssXY(e),b=$("boxsel");b.style.display="block";
+  b.style.left=Math.min(x,NAV.b0[0])+"px";b.style.top=Math.min(y,NAV.b0[1])+"px";b.style.width=Math.abs(x-NAV.b0[0])+"px";b.style.height=Math.abs(y-NAV.b0[1])+"px"},true);
+window.addEventListener("mouseup",e=>{if(!NAV.box||!NAV.b0)return;const [x,y,kx,ky]=cssXY(e),[x0,y0]=NAV.b0;
+  if(Math.abs(x-x0)>8&&Math.abs(y-y0)>8){const [ax,ay]=toW(Math.min(x,x0)*kx,Math.min(y,y0)*ky),[bx,by]=toW(Math.max(x,x0)*kx,Math.max(y,y0)*ky);
+    view.cx=(ax+bx)/2;view.cy=(ay+by)/2;view.s=Math.max(0.3,Math.min(200,Math.min(C.width/Math.abs(by-ay),C.height/Math.abs(ax-bx))));view.fitted=true;draw()}
+  navBox(false)},true);
+window.addEventListener("keydown",e=>{if(e.key==="Escape"&&NAV.box)navBox(false)});
+
+// ---- v0.1.52: the transmitter as status (mode, armed, kill, E-stop RC5, RC6) and the vehicle's state with its latched fault
+function chip(id,text,cls,tip){const e=$(id);e.textContent=text;e.className="chip st"+(cls?" "+cls:"");if(tip)e.title=tip}
+function txChips(f){const k=f.mode==null;if(k){for(const id of ["c-mode","c-arm","c-kill","c-estop","c-rc6"])chip(id,$(id).textContent.replace(/ .*/,"")+" ?","unk");return}
+  const es=!!f.estop||(f.rc5||0)>=1700,r6=(f.rc6||0)>=1700;
+  chip("c-mode",`mode ${f.mode_name||f.mode}`,f.mode===0?"on":"","the FCU's mode (the transmitter's mode switch / a GCS / the mission manager) - status only");
+  chip("c-arm",f.armed?"ARMED":"disarmed",f.armed?"on":"","armed - status only: ARM / DISARM from the OCS page's FCU bar or usv_ui");
+  chip("c-kill",f.kill?"KILL":"kill off",f.kill?"alarm":"","the transmitter's SF kill - status only");
+  chip("c-estop",es?"E-STOP":"E-stop off",es?"alarm":"","the RC5 E-stop - status only");
+  chip("c-rc6",r6?"RC6 OVERRIDE":"RC6 off",r6?"on":"","the RC6 override - status only")}
+function vehLine(v){const e=$("veh");e.classList.remove("latched","fault");
+  if(!v){e.innerHTML='<span class="dim">vehicle: no mission manager state (local/usv/mm/state)</span>';return}
+  const ekf=v.ekf_pos_ok==null?"EKF ?":v.ekf_pos_ok?'<span class="ok">EKF pos ok</span>':'<span class="bad">EKF NO POS</span>',fix=v.gps_fix==null?"":` · fix ${v.gps_fix}`;
+  let t=`vehicle <b>${v.state||"?"}</b>`;
+  if(v.state==="FAULT"||v.state==="KILLED"){
+    if(v.latched){e.classList.add("latched");t+=` · ${v.fault||v.state} <span class="warn">latched - the cause is gone: confirm_safe, then enable_auto</span>`}
+    else{e.classList.add("fault");t+=` · <span class="bad">${(v.faults_now||[]).join(", ")||v.fault||v.state}</span>`}}
+  else if(v.hold_reason)t+=` · ${v.hold_reason}`;
+  e.innerHTML=t+` · ${ekf}${fix}`}
+// ---- the live state
+async function tick(){try{W=await (await fetch("/world.json",{cache:"no-store"})).json()}catch(e){$("fcu").innerHTML='<span class="bad">simview not reachable</span>';return}
+  const f=W.fcu||{};$("wname").textContent=W.name||"";
+  const md=f.mode_name||"?";$("fcu").innerHTML=f.mode==null?'<span class="bad">no fake FCU (start the bench)</span>':
+   `${md} · ${f.armed?'<span class="warn">ARMED</span>':"disarmed"}${f.kill?' · <span class="bad">KILL</span>':""}${(f.estop||(f.rc5||0)>=1700)?' · <span class="bad">E-STOP</span>':""}${f.gps_fix<3?' · <span class="bad">GPS LOST</span>':""} · N ${W.boat.x_n} E ${W.boat.y_e} · ${W.boat.hdg_deg}° · u ${(f.u||0).toFixed(2)} m/s`;
+  txChips(f);vehLine(W.vehicle);$("gps").classList.toggle("on",f.gps_fix!=null&&f.gps_fix<3);
+  $("drivehint").innerHTML=f.mode===0?(f.armed&&!f.kill?'<span class="ok">MANUAL: the arrow keys drive</span>':'<span class="warn">MANUAL, but disarmed / killed: nothing moves</span>'):`<span class="dim">mode ${md}: the arrow keys drive in MANUAL only (MANUAL from the OCS page's FCU bar or usv_ui: mode 0)</span>`;
+  courseCard();tpButtons();const c=W.camera||{};$("camst").textContent=`${c.frames||0} frames · ${c.age_s==null?"-":c.age_s+" s"} · ${c.clients||0} viewer(s)`;draw()}
+// ---- v0.1.53: the course banner and the course / world picker (POST /world; the OCS map has the same through its /sim proxy)
+function courseCard(){const R=W.received;
+  $("crsinfo").textContent=`the world: ${W.name||"?"} on ${W.course_id||"no course"}`+(R?` · the judge's: ${R.match||R.course_id} (${R.src}, ${R.age_s} s)`:" · no course received");
+  $("crsbanner").hidden=!W.banner;if(W.banner)$("crsbtxt").textContent=W.banner;
+  const opts=(W.courses||[]).map(c=>[c.id,`${c.id} · ${c.length_m} x ${c.width_m} m · ${c.tasks.join(" ")}`]).concat(R&&!R.match?[["received",`received ${R.course_id} (not in the catalogue)`]]:[]);
+  const key=opts.map(o=>o[0]).join("|");if($("crssel").dataset.k!==key){$("crssel").dataset.k=key;$("crssel").innerHTML=opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join("");
+    $("crssel").value=(R&&(R.match||"received"))||W.course_id||((W.courses||[])[0]||{}).id||""}
+  const wk=(W.worlds||[]).join("|");if($("wsel").dataset.k!==wk){$("wsel").dataset.k=wk;
+    $("wsel").innerHTML='<option value="">the course\'s own world</option><option value="=keep">the current world (re-anchored)</option>'+(W.worlds||[]).map(w=>`<option value="${w}">${w}</option>`).join("")}}
+async function moveWorld(body){$("crsmsg").textContent="moving the world …";const r=await post("/world",body);
+  $("crsmsg").innerHTML=r.ok?`<span class="ok">${r.world} on ${r.course_id||"no course"}${r.report&&r.report.rotation_deg?" (turned "+r.report.rotation_deg+"°)":""} · ${r.hook||""}${r.teleport?" · boat: "+(r.teleport.ok?"at "+r.teleport.to:r.teleport.why):""}</span>`:`<span class="bad">${r.why||"refused"}</span>`;
+  view.fitted=false;tick();return r}
+$("crsgo").onclick=()=>{const w=$("wsel").value,b={course:$("crssel").value,force:$("crsforce").checked};if(w==="=keep")b.keep=true;else if(w)b.world=w;moveWorld(b)};
+$("wgo").onclick=()=>{const w=$("wsel").value;if(!w||w==="=keep"){$("crsmsg").textContent="pick a named world to load";return}moveWorld({world:w})};
+$("crsmove").onclick=()=>{const R=W&&W.received;if(R)moveWorld({course:R.match||"received"})};
+$("crsign").onclick=async()=>{const r=await post("/world",{ignore:true});$("crsmsg").textContent=r.ok?`ignored ${r.ignored}: ${r.why}`:(r.why||"refused");tick()};
+tick();setInterval(tick,400);showKeys();
+</script></body></html>

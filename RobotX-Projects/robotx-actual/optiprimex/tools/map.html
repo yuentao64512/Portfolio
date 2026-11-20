@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USV map</title>
+<!--
+  map.html — the pop-up map for pool tests and the bench (no internet needed: the MQTT-over-WebSocket client is inline).
+
+  Reads telemetry/usv/map (usv_ui or the mission manager: boat, trail, perception-map entities, gates, dock, path,
+  saved points), status/usv (mode, armed, V state) and sim/truth (bench only) from a broker's websocket listener:
+
+     file:///.../map.html?host=127.0.0.1&port=9001            bench: the hub broker (config/mosquitto/hub.conf, ws 9001)
+     file:///.../map.html?host=192.168.1.218&port=9002        pool:  the boat broker on the Orin NX (boat_pool.conf, ws 9002)
+     ...&vehicle=usv&ns=team/optiprime/v1&source=usv_ui   optional: topic tokens, pin the map source
+
+  Mouse: wheel = zoom, drag = pan, double-click = fit.  Keys: f fit, b follow boat, g grid, t truth, 1/2/3 source.
+-->
+<style>
+  :root { --bg:#0e1116; --panel:#161b22; --ink:#e6edf3; --dim:#8b949e; --line:#30363d; --red:#ff5a5a; --green:#3fd16b;
+          --cyan:#4cc2ff; --yellow:#f2c94c; --magenta:#d87cff; --white:#f0f0f0; }
+  html[data-theme="light"] { --bg:#ffffff; --panel:#f6f8fa; --ink:#1f2328; --dim:#57606a; --line:#d0d7de; }
+  html[data-theme="contrast"] { --bg:#000000; --panel:#000000; --ink:#ffffff; --dim:#e6e6e6; --line:#ffffff; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.35 ui-monospace, Menlo, Consolas, monospace; }
+  #wrap { display:grid; grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr auto; height:100%; }
+  header { grid-column:1/3; display:flex; gap:14px; align-items:center; padding:6px 10px; background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header b { color:var(--cyan); }
+  #conn { padding:2px 8px; border-radius:4px; background:var(--alarmBg, #3a1d1d); color:var(--alarmText, var(--red)); }
+  #conn.ok { background:var(--chipBg, #1d3a24); color:var(--ok, var(--green)); }
+  button { background:var(--btnBg, #21262d); color:var(--ink); border:1px solid var(--line); border-radius:4px; padding:3px 8px; font:inherit; cursor:pointer; }
+  button.on { border-color:var(--cyan); color:var(--cyan); }
+  button.stale { color:var(--dim); border-style:dashed; }      /* source seen, but no digest for > 3 s */
+  button.gone { opacity:.35; }                                 /* no digest for > 30 s: forgotten, never auto-picked */
+  canvas { display:block; width:100%; height:100%; background:var(--mapBg, #0b0f14); cursor:grab; }
+  #cv { position:relative; overflow:hidden; }
+  #hover { position:absolute; right:8px; bottom:8px; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:3px 7px; color:var(--ink); pointer-events:none; white-space:pre; }
+  #legendov { position:absolute; left:8px; top:8px; max-width:360px; background:var(--panel); opacity:.96; border:1px solid var(--line); border-radius:6px; padding:8px 10px; display:none; }
+  #addbar select, #addbar input { background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:4px; font:inherit; padding:2px 4px; }
+  body.mini #wrap { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+  body.mini header, body.mini aside, body.mini footer, body.mini #hover { display:none; }
+  body.mini canvas { cursor:pointer; }
+  /* v0.1.47 (WP10k-a B8): ?judge=1 - the judge page's map: no side panel, no boat-only controls */
+  body.judge #wrap { grid-template-columns: 1fr; }
+  #tools{display:inline-block;position:relative}#tools>summary{cursor:pointer;list-style:none;padding:2px 8px;border:1px solid var(--line,#444);border-radius:4px;display:inline-block}
+  #tools[open]{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex-basis:100%}
+  body.judge #tools, body.mini #tools{display:none !important;}
+  body.judge aside, body.judge #b_clear, body.judge #b_drop, body.judge #b_add, body.judge #b_fituav, body.mini #b_fituav, body.judge #addbar, body.judge #tpbar, body.judge #camlink { display:none !important; }
+  body.judge canvas { cursor:crosshair; }
+  /* v0.1.51 (WP10k-c item 30): the waypoint route editor (aside); hidden on the mini-map and the judge's map */
+  #route { border:1px solid var(--line); border-radius:6px; padding:6px 8px; margin:4px 0 8px; }
+  #route .rbtns { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; }
+  #route .wp { display:grid; grid-template-columns:30px 1fr auto; gap:4px; align-items:center; padding:2px 0; border-bottom:1px solid var(--line2, var(--line)); font-size:11.5px; }
+  #route .wp b { color:var(--accText, var(--cyan)); } #route .wp button { padding:0 5px; min-width:22px; }
+  #route .wp .ll { font-variant-numeric:tabular-nums; }
+  #rsay { min-height:16px; font-size:11.5px; color:var(--muted, var(--dim)); }
+  body.mini #route, body.judge #route { display:none !important; }
+  /* v0.1.53: the FCU fence box (the USV's geofence on the FCU) - OCS map only, never the judge's map or the mini-map */
+  #fcubox { border:1px solid var(--line); border-radius:4px; padding:1px 5px; }
+  #fcubox select { background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:4px; font:inherit; padding:1px 3px; }
+  body.mini #fcubox, body.judge #fcubox { display:none !important; }
+  aside { background:var(--panel); border-left:1px solid var(--line); padding:8px 10px; overflow:auto; }
+  aside h3 { margin:8px 0 4px; font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; }
+  table { border-collapse:collapse; width:100%; }
+  td, th { padding:1px 4px; text-align:right; white-space:nowrap; }
+  th { color:var(--dim); font-weight:normal; }
+  td:first-child, th:first-child { text-align:left; }
+  .red { color:var(--red); } .green { color:var(--green); } .dim { color:var(--dim); } .mag { color:var(--magenta); } .yel { color:var(--yellow); }
+  footer { grid-column:1/3; padding:4px 10px; background:var(--panel); border-top:1px solid var(--line); color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  kbd { border:1px solid var(--line); border-radius:3px; padding:0 4px; color:var(--ink); }
+  /* v0.1.54: the map controls (pan, zoom, box zoom, fit) */
+  #navctl { position:absolute; right:10px; top:10px; z-index:4; display:grid; grid-template-columns:repeat(4, 28px); gap:3px; }
+  #navctl button { width:28px; height:26px; padding:0; font:14px ui-monospace, Menlo, monospace; background:var(--panel, #161b22); color:var(--ink); border:1px solid var(--line); border-radius:4px; cursor:pointer; opacity:.92; }
+  #navctl button.on { background:var(--actionPale, #3a2f0e); border-color:var(--actionLine, #ff5a5a); }
+  #boxsel { position:absolute; display:none; border:2px dashed var(--acc, #4cc2ff); background:transparent; pointer-events:none; z-index:3; }
+  body.mini #navctl { display:none; }
+  /* v0.1.78 (WP34, by hand): embedded in the OCS MISSION tab the map is the page - the side column (route · boat · run · perception · gates ·
+     dock · sim · legend) folds behind a "details" button, the key hints go to ? ; standalone, the mini and the judge maps are as they were */
+  body.embed #wrap { grid-template-columns: 1fr 0; } body.embed aside { display:none; } body.embed.details #wrap { grid-template-columns: 1fr 300px; } body.embed.details aside { display:block; }
+  body.embed footer { display:none; } body.embed header > b { display:none; } body.embed #b_details.on { background: var(--actionPale, #3a2f0e); border-color: var(--actionLine, #ff5a5a); }
+</style><link rel="stylesheet" href="/themes.css">
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <b>USV map</b>
+    <span id="conn">connecting</span>
+    <span>source <button id="s_auto" title="the map source: auto = the mission manager's map once it has detections, else usv_ui's (key 1)" class="on">auto</button><button id="s_ui" title="show usv_ui's map (the boat console's own; key 2)">usv_ui</button><button id="s_mm" title="show the mission manager's map (what the tasks use; key 3)">mission_manager</button></span>
+    <span><button id="b_fit" title="fit the view to everything (key f; double-click the map)">fit</button> <button id="b_fituav" title="v0.1.69: fit the view to the UAV's items only (the boat's map, source uav) - they may be far from the course (dry uavmap)">fit UAV</button> <button id="b_follow" title="keep the boat in the middle (key b)">follow boat</button> <button id="b_grid" title="the 1 / 2 / 5 / 10 m grid on / off (key g)" class="on">grid</button> <button id="b_truth" title="the simulator's truth layer (where the world file puts things) on / off (key t)" class="on">truth</button> <button id="b_stale" title="show buoys not seen for a while (hollow) on / off" class="on">stale</button></span>
+    <span id="age" class="dim">no map yet</span>
+    <a id="camlink" target="_blank" style="color:#4cc2ff;display:none">camera</a>
+    <button id="b_refresh" title="refresh: forget what this page has buffered (both maps, the trail, the sim truth) and refit - the next digests redraw it">refresh</button>
+    <details id="tools" title="v0.1.71 (WP27): the map's tools folded - clear the boat map · drop point · the geofence · the FCU fence · add an object · teleport (sim)"><summary>TOOLS ▾</summary>
+    <button id="b_clear" style="display:none" title="clear the BOAT's map: the mission manager forgets every detected buoy / dock (clear_map; refused while a task runs) - the camera fills it again">clear boat map</button>
+    <button id="b_drop" style="display:none" title="click the map to drop a named point (saved on the boat: save_point NAME --lat --lon) - m0t2 --names">drop point</button>
+    <span id="fencebar" style="display:none"><button id="b_fence" title="edit the geofence (v0.1.33): drag a corner · click an edge = a new corner there · click elsewhere = a corner at the end · shift-click a corner = delete it · save writes the OCS profile's geofence: line">geofence</button><span id="fenceedit" style="display:none"> <button id="b_fsave" title="write the corners into the OCS profile (geofence:)">save</button><button id="b_fclear" title="no geofence (save afterwards)">clear</button><button id="b_fcancel" title="leave the geofence editor, nothing saved">cancel</button></span></span>
+    <span id="fcubox" style="display:none" title="v0.1.53: the USV's geofence on the FCU (Pixhawk) - one inclusion polygon uploaded with the MAVLink fence protocol and read back; off by default. What a breach does is the FCU's FENCE_ACTION (an apply_params.py preset)">FCU fence <select id="fcu_src" title="what Apply uploads: course = the received course boundary (RxCourse); geofence = the OCS profile's geofence as saved (it must lie inside the received course)"><option value="course">course</option><option value="geofence">geofence</option></select><button id="b_fapply" title="Apply to FCU: upload the chosen polygon as the FCU's fence (replaces the FCU's fence; does not switch it on), then read it back - the answer names the FCU's MISSION_ACK (fence apply course|geofence)">Apply to FCU</button><button id="b_fon" title="fence on: MAV_CMD_DO_FENCE_ENABLE 1 - the FCU acts on a breach as its FENCE_ACTION says (refused in AUTO_TASK; needs a fence on the FCU)">on</button><button id="b_foff" title="fence off: MAV_CMD_DO_FENCE_ENABLE 0 (the default)">off</button> <span id="fcustat" class="dim" title="the FCU's fence as the boat reports it (status/usv fence): on / off from the FCU, points held, read back identical, breach">fence ?</span></span>
+    <span><button id="b_add" title="add an object: pick the kind (a sim buoy / dock bay / box face - only with a simulator attached; a waypoint = save_point on the boat; a marker = a note on this map only), then click where it goes. Drag moves an object, Delete removes the selected one">add</button><span id="addbar" style="display:none"> <select id="addkind" title="what to add"><option value="buoy">sim buoy</option><option value="dock">sim dock bay</option><option value="box">sim box face</option><option value="waypoint">waypoint (save_point)</option><option value="marker">marker (a note)</option></select>
+      <select id="addcol" title="colour (sim objects)"><option>red</option><option>green</option><option>blue</option><option>black</option><option>yellow</option><option>white</option></select>
+      <select id="addlight" title="the buoy's light (sim buoys)"><option value="flash">flash</option><option value="steady">steady</option><option value="off">off</option></select>
+      <input id="addbay" title="bay number (a sim dock bay)" value="1" size="2"> <input id="addname" title="the name (a waypoint or a marker)" placeholder="name" size="8"> <span class="dim">then click the map</span></span></span>
+    <span id="tpbar" style="display:none" title="the simulator (v0.1.33): put the boat somewhere - the world's places, HOME / saved points, a click (snaps onto HOME / a saved point within 2 m), or lat lon [hdg]">teleport <select id="tpsel"></select><button id="b_tp" title="teleport the simulated boat to the place picked on the left (the world's places, HOME, saved points)">go</button><button id="b_tpclick" title="then click the map: the simulated boat goes there (onto HOME / a saved point within 2 m)">by click</button><input id="tpll" placeholder="lat lon [hdg]" size="22" style="background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;font:inherit;padding:2px 4px"></span>
+    </details>
+    <button id="b_details" title="v0.1.78: the side column - route · waypoints, the boat, the run, the perception map, gates, dock, sim, the legend (hidden by default when this map sits in the OCS page)">details ▾</button>
+    <button id="b_help" title="the legend: what every symbol, colour and line on this map means">?</button>
+  </header>
+  <div id="cv"><canvas id="c"></canvas><div id="hover"></div><div id="legendov"></div>
+    <div id="navctl"><button id="nv-u" title="pan north (up)">↑</button><button id="nv-l" title="pan west (left)">←</button><button id="nv-r" title="pan east (right)">→</button><button id="nv-d" title="pan south (down)">↓</button><button id="nv-in" title="zoom in (×1.4, about the centre)">＋</button><button id="nv-out" title="zoom out">−</button><button id="nv-box" title="box zoom: drag a rectangle on the map (Esc = cancel)">⬚</button><button id="nv-fit" title="fit everything (as double-click / f)">⤢</button></div><div id="boxsel"></div></div>
+  <aside>
+    <div id="route"><h3 style="margin-top:0">route · waypoints <span id="rcount" class="dim"></span></h3>
+      <div class="rbtns"><button id="r_add" title="add waypoint: then each click on the map places the next numbered waypoint W1, W2, ... (kept in this browser until saved); click again to stop">add waypoint</button>
+        <button id="r_save" title="save as points: save_point W1 --lat --lon, save_point W2 ... on the boat (points.json), one after the other through the OCS page's command path">save as points</button>
+        <button id="r_start" title="start path: TEST_PATH (start_task m0t2 --names W1,W2,...) through the OCS page's command path - unsaved waypoints are saved first; TEST MODE / the run rules apply as for the picker">start path</button>
+        <button id="r_clear" title="clear the route in this browser (the saved points on the boat stay; del_point removes those)">clear</button></div>
+      <div id="rlist"></div>
+      <div class="rbtns"><select id="r_pat" title="generate pattern = the existing pickers: orbit (m0t6, centre = a saved point) or sway (m0t3, two points A, B)"><option value="m0t6">orbit (m0t6)</option><option value="m0t3">sway A→B (m0t3)</option></select>
+        <button id="r_pick" title="generate pattern: open the MISSION picker on that mission (orbit / sway) - tick the saved waypoints there; no new planner">open picker</button></div>
+      <div id="rsay"></div></div>
+    <h3>boat</h3><div id="boat" class="dim">—</div>
+    <h3>run</h3><div id="run" class="dim">—</div>
+    <h3>perception map</h3><div id="cvinfo" class="dim">—</div>
+    <table id="ents"><thead><tr><th>#</th><th>kind</th><th>col</th><th>N</th><th>E</th><th>σ</th><th>n</th><th>age</th></tr></thead><tbody></tbody></table>
+    <h3>gates</h3><div id="gates" class="dim">—</div>
+    <h3>dock</h3><div id="dock" class="dim">—</div>
+    <h3>sim</h3><div id="sim" class="dim">—</div>
+    <h3>legend</h3>
+    <div>⩍ boat (the BlueBoat catamaran to scale, ≥ 22 px; the theme's text colour, heading line) · <span class="dim">· track</span> · ○ carrot (cyan) · <span class="red">●</span>/<span class="green">●</span> red/green buoy · <span style="color:#5aa0ff">●</span> blue · <span style="color:#f2c94c">●</span> yellow · <span>●</span> other · ○ stale · <span class="mag">⟂</span> gate + through arrow · <span class="yel">▬</span> dock line · <span class="cyan" style="color:var(--cyan)">·</span> path, ✕ carrot · A.. saved points · <span style="color:var(--warn,#f2994a)">✕ ◯</span> obstacle = its keep-clear ring (┄ seen by the ZED depth 3-8 m, ─ a guard STOP) · <span class="dim">┄ ray</span> = a bearing beyond the depth (far buoy), crossing rays make a point · <span style="color:#7fc8ff">▭</span> course (solid = received, ┄ = the profile's default) · <span class="yel">┄</span> geofence · N~ flashing, ENTRY / EXIT · <span class="dim">+ truth (sim): ○ buoy, ▭ bay + indicator, ▪ window, ┄ pool</span></div>
+  </aside>
+  <footer id="foot">wheel zoom · drag pan · dbl-click fit · <kbd>f</kbd> fit <kbd>b</kbd> follow <kbd>g</kbd> grid <kbd>t</kbd> truth <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> source</footer>
+</div>
+<script>
+try { document.documentElement.dataset.theme = localStorage.getItem('ocs.theme') || 'dark'; } catch (e) { /* the page's theme, v0.1.37 */ }
+// v0.1.47 (UI_QOL item 6): follow the shared theme (the OCS page's GET /prefs, same origin); the canvas colours re-read on change
+async function followPrefs() { try { const r = await fetch('/prefs', { cache: 'no-store' }); if (!r.ok) return; const t = ((await r.json()).prefs || {}).theme;
+  if (t && t !== document.documentElement.dataset.theme) { document.documentElement.dataset.theme = t; try { localStorage.setItem('ocs.theme', t); } catch (e) {} if (typeof mapColours === 'function') mapColours(); } } catch (e) { /* standalone: keep the stored theme */ } }
+followPrefs(); setInterval(followPrefs, 2000);
+'use strict';
+// ------------------------------------------------------------------ parameters
+const Q = new URLSearchParams(location.search);
+const HOST = Q.get('host') || location.hostname || '127.0.0.1';
+const PORT = Q.get('port') || '9001';
+const VEH = Q.get('vehicle') || 'usv';
+const NS = Q.get('ns') || 'team/optiprime/v1';
+let sourcePin = Q.get('source') || 'auto';             // auto | usv_ui | mission_manager
+const CAM = Q.get('cam');                                // v0.1.24: the AGX camera stream (cv/stream), http://AGX_HOST:CAM_PORT/
+if (CAM) { const a = document.getElementById('camlink'); a.href = CAM; a.style.display = ''; a.title = CAM; }
+const T_MAP = `${NS}/telemetry/${VEH}/map`, T_STATUS = `${NS}/status/${VEH}`, T_TRUTH = 'sim/truth', T_UAV = `${NS}/status/uav`;   // v0.1.65: + the UAV
+
+// ------------------------------------------------------------------ a minimal MQTT 3.1.1 client over WebSocket
+class Mqtt {
+  constructor(url, onMsg, onState) { this.url = url; this.onMsg = onMsg; this.onState = onState; this.buf = new Uint8Array(0); this.pid = 1; this.open(); }
+  open() {
+    this.onState(false);
+    try { this.ws = new WebSocket(this.url, 'mqtt'); } catch (e) { setTimeout(() => this.open(), 2000); return; }
+    this.ws.binaryType = 'arraybuffer';
+    this.ws.onopen = () => this.send(this.connectPacket());
+    this.ws.onmessage = (ev) => this.feed(new Uint8Array(ev.data));
+    this.ws.onclose = () => { clearInterval(this.ping); this.onState(false); setTimeout(() => this.open(), 2000); };
+    this.ws.onerror = () => {};
+  }
+  send(bytes) { if (this.ws && this.ws.readyState === 1) this.ws.send(bytes); }
+  static str(s) { const b = new TextEncoder().encode(s); return [b.length >> 8, b.length & 255, ...b]; }
+  static packet(type, body) { const len = []; let n = body.length; do { let d = n % 128; n = Math.floor(n / 128); if (n > 0) d |= 128; len.push(d); } while (n > 0); return new Uint8Array([type, ...len, ...body]); }
+  connectPacket() { const id = 'map-' + Math.random().toString(16).slice(2, 8); return Mqtt.packet(0x10, [...Mqtt.str('MQTT'), 4, 0x02, 0, 30, ...Mqtt.str(id)]); }
+  subscribe(topics) { const body = [this.pid >> 8, this.pid & 255]; this.pid++; for (const t of topics) body.push(...Mqtt.str(t), 0); this.send(Mqtt.packet(0x82, body)); }
+  feed(data) {
+    const b = new Uint8Array(this.buf.length + data.length); b.set(this.buf); b.set(data, this.buf.length); this.buf = b;
+    for (;;) {
+      if (this.buf.length < 2) return;
+      let i = 1, mult = 1, len = 0, d;
+      do { if (i >= this.buf.length) return; d = this.buf[i++]; len += (d & 127) * mult; mult *= 128; } while (d & 128);
+      if (this.buf.length < i + len) return;
+      const hdr = this.buf[0], type = hdr >> 4, body = this.buf.subarray(i, i + len);
+      this.buf = this.buf.slice(i + len);
+      if (type === 2) { this.onState(true); this.subscribe([T_MAP, T_STATUS, T_TRUTH, T_UAV]); clearInterval(this.ping); this.ping = setInterval(() => this.send(new Uint8Array([0xC0, 0])), 15000); }
+      else if (type === 3) {                                   // PUBLISH: topic, [packet id when qos > 0], payload
+        const qos = (hdr >> 1) & 3;
+        const tl = (body[0] << 8) | body[1]; const topic = new TextDecoder().decode(body.subarray(2, 2 + tl));
+        let p = 2 + tl; if (qos > 0) p += 2;
+        if (p >= body.length) { this.onMsg(topic, null); continue; }   // empty = a retained message deleted (sim/truth when the sim stops)
+        try { this.onMsg(topic, JSON.parse(new TextDecoder().decode(body.subarray(p)))); } catch (e) { /* not JSON */ }
+      }
+    }
+  }
+}
+
+// ------------------------------------------------------------------ state
+const maps = {};                 // source -> {body, t}; a source is forgotten after SOURCE_FORGET_MS without a digest
+const SOURCE_STALE_MS = 3000, SOURCE_FORGET_MS = 30000;
+let status = null, truth = null, truthT = 0, uavSt = null, uavT = 0;   // v0.1.65: the UAV's status/uav
+let course = null;              // v0.1.33: {default, received, geofence} from the OCS page's /course.json (same origin)
+const fence = { editing: false, pts: [], drag: -1 };
+const view = { scale: 8, cx: 0, cy: 0, follow: false, grid: true, truth: true, stale: true, fitted: false };
+const C = document.getElementById('c'), ctx = C.getContext('2d');
+
+function ageSources() {         // forget a source that stopped publishing (an old usv_ui run, a stopped mission manager)
+  const now = performance.now();
+  for (const [s, m] of Object.entries(maps)) if (now - m.t > SOURCE_FORGET_MS) delete maps[s];
+}
+function pickSource() {
+  const now = performance.now();
+  if (sourcePin !== 'auto') return maps[sourcePin] ? sourcePin : null;
+  const fresh = Object.entries(maps).filter(([, m]) => now - m.t < SOURCE_STALE_MS).map(([s]) => s);
+  // v0.1.29.1: the mission manager's map wins once it holds detections (usv_ui's map takes none in: at the pool it hid the buoys);
+  // else usv_ui's while it runs (its saved points, who holds the FCU)
+  const mm = maps['mission_manager'], ui = maps['usv_ui'], det = (m) => m && ((m.body.entities || []).length || m.body.n_ingested);
+  if (fresh.includes('mission_manager') && det(mm) && !(fresh.includes('usv_ui') && det(ui))) return 'mission_manager';
+  if (fresh.includes('usv_ui')) return 'usv_ui';
+  if (fresh.length) return fresh[0];
+  const any = Object.entries(maps).sort((a, b) => b[1].t - a[1].t)[0];
+  return any ? any[0] : null;
+}
+
+const mq = new Mqtt(`ws://${HOST}:${PORT}/mqtt`, (topic, env) => {
+  if (env === null && topic === T_TRUTH) { truth = null; return; }
+  const body = env && env.body;
+  if (!body) return;
+  if (topic === T_MAP) { const src = env.source || 'unknown'; maps[src] = { body, t: performance.now() }; if (!view.fitted) fit(); }
+  else if (topic === T_STATUS) status = body;
+  else if (topic === T_TRUTH) { truth = body; truthT = performance.now(); }
+  else if (topic === T_UAV) { uavSt = body; uavT = performance.now(); }
+}, (ok) => { const e = document.getElementById('conn'); e.textContent = ok ? `ws://${HOST}:${PORT}` : `connecting ws://${HOST}:${PORT}`; e.className = ok ? 'ok' : ''; });
+
+// ------------------------------------------------------------------ geometry: local (x_n up, y_e right) -> canvas px
+function toPx(x, y) { const W = C.width, H = C.height; return [W / 2 + (y - view.cy) * view.scale, H / 2 - (x - view.cx) * view.scale]; }
+function toLocal(px, py) { const W = C.width, H = C.height; return [view.cx + (H / 2 - py) / view.scale, view.cy + (px - W / 2) / view.scale]; }
+
+function allPoints(body) {
+  const pts = [[0, 0]];
+  if (body.boat) pts.push([body.boat.x_n, body.boat.y_e]);
+  for (const e of body.entities || []) pts.push([e.x_n, e.y_e]);
+  for (const p of body.path || []) pts.push(p);
+  for (const p of Object.values(body.points || {})) pts.push(p);
+  if (view.truth && truth) { const [dn, de] = truthOffset(body); for (const o of truth.objects || []) pts.push([o.x_n + dn, o.y_e + de]); }
+  if (course && body.co && body.co.lat != null) { const c = (course.received && (course.received.boundary || []).length > 2) ? course.received : course.default;
+    for (const p of (c && c.boundary) || []) pts.push(llToLocal(body, p[0], p[1])); }
+  if (JUDGE && body.co && body.co.lat != null) for (const p of judgePoints()) pts.push(llToLocal(body, p[0], p[1]));   // v0.1.47
+  if (!JUDGE && !MINI && body.co && body.co.lat != null) for (const p of ROUTE.pts) pts.push(llToLocal(body, p.lat, p.lon));   // v0.1.51: fit takes the route in
+  return pts;
+}
+function fitUav() {                                                         // v0.1.69 (WP25): the UAV's items, wherever they are
+  const src = pickSource(); if (!src) return;
+  const pts = (maps[src].body.entities || []).filter(e => e.source === 'uav').map(e => [e.x_n, e.y_e]);
+  if (!pts.length) { const b = document.getElementById('b_fituav'); b.textContent = 'no UAV items'; setTimeout(() => { b.textContent = 'fit UAV'; }, 1500); return; }
+  fitPts(pts);
+}
+function fit() {
+  const src = pickSource(); if (!src) return;
+  fitPts(allPoints(maps[src].body));
+}
+function fitPts(pts) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  view.cx = (x0 + x1) / 2; view.cy = (y0 + y1) / 2;
+  const span = Math.max(x1 - x0, 10) * 1.2, spanY = Math.max(y1 - y0, 10) * 1.2;
+  view.scale = Math.max(0.5, Math.min(C.height / span, C.width / spanY));
+  view.fitted = true;
+}
+
+// ------------------------------------------------------------------ drawing
+function resize() { const r = C.parentElement.getBoundingClientRect(); C.width = Math.max(200, r.width | 0); C.height = Math.max(200, r.height | 0); }
+window.addEventListener('resize', resize); resize();
+
+function gridStep() { const px = 60 / view.scale; for (const s of [1, 2, 5, 10, 20, 50, 100]) if (s >= px) return s; return 200; }
+function txt(s, x, y, col, align) { ctx.fillStyle = col || MC.fg; ctx.textAlign = align || 'left'; ctx.fillText(s, x, y); }
+// v0.1.46.1: label de-confliction - each label tries a few spots round its anchor, takes the first that overlaps nothing placed this frame
+let LBL = [];
+function lbl(s, x, y, col) {
+  const w = ctx.measureText(s).width + 2, h = 11;
+  const tries = [[8, -6], [8, 13], [-w - 8, -6], [-w - 8, 13], [-w / 2, -12], [-w / 2, 20], [12, 26], [-w - 12, 26], [12, -18], [-w - 12, -18]];
+  let best = tries[0];
+  for (const [dx, dy] of tries) {
+    const r = [x + dx, y + dy - h + 2, w, h];
+    if (!LBL.some(q => r[0] < q[0] + q[2] && q[0] < r[0] + r[2] && r[1] < q[1] + q[3] && q[1] < r[1] + r[3])) { best = [dx, dy]; break; }
+  }
+  LBL.push([x + best[0], y + best[1] - h + 2, w, h]);
+  txt(s, x + best[0], y + best[1], col);
+}
+const MC = { fg: '#e6edf3', muted: '#8b949e', dim: '#3b4654', grid: '#1c232c', line: '#2a3a4a' };   // v0.1.46.1: the canvas follows the theme
+function mapColours() { MC.fg = themeVar('--text', '#e6edf3'); MC.muted = themeVar('--muted', '#8b949e'); MC.dim = themeVar('--dim', '#3b4654'); MC.grid = themeVar('--grid', '#1c232c'); MC.line = themeVar('--line', '#2a3a4a'); }
+// v0.1.52: the BlueBoat top view (1.19 m long, 0.76 m beam overall, hulls ~0.20 m wide) as polygons of [forward, starboard] metres
+// about the boat's reference point: the two hulls (a pointed bow) and the cross beam between them. The same shape on the SIM page.
+const BOAT = { L: 1.19, B: 0.76, hull_w: 0.20, min_px: 22 };
+function catamaran() {
+  const L = BOAT.L / 2, w = BOAT.hull_w / 2, yc = (BOAT.B - BOAT.hull_w) / 2, bow = 0.18;
+  const hull = sg => [[L, sg * yc], [L - bow, sg * yc + w], [-L, sg * yc + w], [-L, sg * yc - w], [L - bow, sg * yc - w]];
+  return [hull(-1), hull(1), [[0.10, -yc + w], [0.10, yc - w], [-0.10, yc - w], [-0.10, -yc + w]]];
+}
+function boatPxPerM(scale) { return Math.max(scale, BOAT.min_px / BOAT.L); }   // px per metre: to scale, or the minimum size
+function themeVar(n, d) { try { const v = getComputedStyle(document.documentElement).getPropertyValue(n).trim(); return v || d; } catch (e) { return d; } }
+
+// the sim world (sim/truth) is in its own frame (origin lat/lon); the map is in its CO frame: shift by the difference
+function truthOffset(m) {
+  if (!truth || !truth.origin || !m || !m.co || m.co.lat == null) return [0, 0];
+  const k = 6378137 * Math.PI / 180;
+  return [(truth.origin.lat - m.co.lat) * k, (truth.origin.lon - m.co.lon) * k * Math.cos(m.co.lat * Math.PI / 180)];
+}
+const SIM_COL = { red: '#b03a3a', green: '#2f8f4e', blue: '#3d7bd9', black: '#666', white: '#aaa' };
+function truthLit(o, t) {          // the light now (handbook: flash 1 s on / 1 s off; sim phases from fake_perception)
+  if (o.light === 'off') return 'black';
+  if (o.light === 'flash') { const L = truth.lights || {}, per = L.period_s || 2, on = L.on_s || 1, ph = (truth.phases || {})[o.id] || 0; return ((t + ph) % per) < on ? o.colour : 'black'; }
+  return o.colour;
+}
+function drawTruth(off) {
+  const [dn, de] = off, P = (x, y) => toPx(x + dn, y + de), t = Date.now() / 1000;
+  if (truth.bounds && truth.bounds.length > 2) {
+    ctx.strokeStyle = MC.line; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath();
+    truth.bounds.forEach((b, i) => { const [px, py] = P(b[0], b[1]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  }
+  for (const o of truth.objects || []) {
+    const [px, py] = P(o.x_n, o.y_e);
+    if (o.kind === 'pontoon') { const [qx, qy] = P(o.x2_n, o.y2_e); ctx.strokeStyle = '#5a5a40'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(qx, qy); ctx.stroke(); continue; }
+    if (o.kind === 'dock') {        // the bay's building + its indicator colour and number
+      ctx.strokeStyle = '#8a8a8a'; ctx.lineWidth = 1; ctx.strokeRect(px - 7, py - 4, 14, 8);
+      ctx.fillStyle = SIM_COL[o.colour] || '#555'; ctx.fillRect(px - 6, py + 1, 12, 3); lbl(`bay ${o.bay}`, px, py, '#8a8a8a'); continue;
+    }
+    if (o.kind === 'window') { ctx.fillStyle = o.lit ? (SIM_COL[o.colour] || '#555') : '#222'; ctx.strokeStyle = '#8a8a8a'; ctx.lineWidth = 1; ctx.fillRect(px - 2, py - 3, 4, 4); ctx.strokeRect(px - 2, py - 3, 4, 4); continue; }
+    const c = truthLit(o, t);
+    ctx.strokeStyle = SIM_COL[o.colour] || '#555'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px, py, 7, 0, 6.283); ctx.stroke();
+    if (c !== 'black') { ctx.fillStyle = (SIM_COL[c] || '#555') + '99'; ctx.beginPath(); ctx.arc(px, py, 3, 0, 6.283); ctx.fill(); }
+    if (o.role === 'entry' || o.role === 'exit') {   // v0.1.46.1: flashing = a dashed outer ring, solid (steady) = a full one
+      const fl = o.light === 'flash'; ctx.strokeStyle = '#3d7bd9'; ctx.lineWidth = 1.5; ctx.setLineDash(fl ? [3, 3] : []);
+      ctx.beginPath(); ctx.arc(px, py, 11, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+      lbl(`${o.role} · ${fl ? 'flashing' : o.light === 'steady' ? 'solid' : 'light ?'}`, px + 4, py, '#3d7bd9');
+    }
+  }
+}
+
+// v0.1.33 (WP10b): the course and the geofence, lat / lon -> the map's CO frame
+function llToLocal(m, lat, lon) { const R = 6378137, k = Math.PI / 180; return [(lat - m.co.lat) * R * k, (lon - m.co.lon) * R * k * Math.cos(m.co.lat * k)]; }
+function poly(m, pts, col, dash, width, label, open) {
+  if (!pts || pts.length < 2 || !m || !m.co || m.co.lat == null) return;
+  ctx.strokeStyle = col; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.beginPath();
+  pts.forEach((p, i) => { const [x, y] = llToLocal(m, p[0], p[1]); const [px, py] = toPx(x, y); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  if (!open) ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  if (label) { const [x, y] = llToLocal(m, pts[0][0], pts[0][1]); const [px, py] = toPx(x, y); txt(label, px + 4, py - 4, col); }
+}
+// v0.1.65 (D17): the UAV marker - from status/uav (lat / lon / heading / HAE); hidden when the adapter is silent > 5 s or OFFLINE
+function drawUav(m) {
+  if (!uavSt || uavSt.lat == null || uavSt.state === 'OFFLINE' || performance.now() - uavT > 5000 || !m || !m.co || m.co.lat == null) return;
+  const [x, y] = llToLocal(m, uavSt.lat, uavSt.lon), [px, py] = toPx(x, y), h = (uavSt.hdg_deg || 0) * Math.PI / 180;
+  const pt = (a, r) => [px + r * Math.sin(h + a), py - r * Math.cos(h + a)];
+  ctx.fillStyle = '#f2994a'; ctx.strokeStyle = MC.fg; ctx.lineWidth = 1.5; ctx.beginPath();
+  const a = pt(0, 11), b = pt(2.5, 8), c = pt(-2.5, 8); ctx.moveTo(...a); ctx.lineTo(...b); ctx.lineTo(...c); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (!MINI) lbl(`UAV ${uavSt.altitude_hae_m != null ? uavSt.altitude_hae_m.toFixed(0) + ' m' : ''}`, px + 8, py - 8, '#f2994a');
+}
+function drawCourse(m) {
+  if (!course) return;
+  const rc = course.received, df = course.default;
+  if (rc && (rc.boundary || []).length > 2) { poly(m, rc.boundary, '#7fc8ff', [], 2, `course ${rc.course_id || ''}`); if ((rc.uav_transit_area || []).length > 2) poly(m, rc.uav_transit_area, '#56708a', [2, 4], 1, 'UAV transit'); }
+  else if (df && (df.boundary || []).length > 2) poly(m, df.boundary, '#7fc8ff99', [8, 6], 1.5, `${df.course_id || 'course'} · default`);
+  if (course.scene && course.scene.lines) for (const ln of course.scene.lines) if (ln.length > 1) poly(m, ln, '#9aa6b366', [3, 3], 1, course.scene.illustrative ? 'scene · illustrative' : 'scene', true);   // v0.1.44
+  const g = fence.editing ? fence.pts : course.geofence;
+  if (g && g.length > 1) poly(m, g, '#f2c94c', [6, 4], fence.editing ? 2 : 1.5, fence.editing ? `geofence (editing, ${g.length})` : 'geofence');
+  if (fence.editing) for (const p of fence.pts) { const [x, y] = llToLocal(m, p[0], p[1]); const [px, py] = toPx(x, y); ctx.fillStyle = '#f2c94c'; ctx.fillRect(px - 4, py - 4, 8, 8); }
+}
+async function pollCourse() { if (!location.protocol.startsWith('http')) return; try { course = await (await fetch('/course.json', { cache: 'no-store' })).json();
+  document.getElementById('fencebar').style.display = ''; } catch (e) { /* not served by ocs_web */ } }
+pollCourse(); setInterval(pollCourse, 3000);
+
+function draw() {
+  const W = C.width, H = C.height;
+  ctx.clearRect(0, 0, W, H);
+  LBL = []; mapColours();
+  const src = pickSource();
+  const m = src ? maps[src].body : null;
+  if (m && view.follow && m.boat) { view.cx = m.boat.x_n; view.cy = m.boat.y_e; }
+  ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
+  // grid
+  if (view.grid) {
+    const s = gridStep(); const [xa, ya] = toLocal(0, H), [xb, yb] = toLocal(W, 0);
+    ctx.strokeStyle = MC.grid; ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = Math.floor(xa / s) * s; x <= xb; x += s) { const [, py] = toPx(x, 0); ctx.moveTo(0, py); ctx.lineTo(W, py); }
+    for (let y = Math.floor(ya / s) * s; y <= yb; y += s) { const [px] = toPx(0, y); ctx.moveTo(px, 0); ctx.lineTo(px, H); }
+    ctx.stroke();
+    if (!MINI) for (let x = Math.floor(xa / s) * s; x <= xb; x += s) { const [, py] = toPx(x, 0); txt(`${x} N`, 4, py - 2, MC.dim); }
+    if (!MINI) for (let y = Math.floor(ya / s) * s; y <= yb; y += s) { const [px] = toPx(0, y); txt(`${y} E`, px + 2, H - 4, MC.dim); }
+  }
+  // CO
+  { const [px, py] = toPx(0, 0); ctx.strokeStyle = '#f2c94c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px - 7, py); ctx.lineTo(px + 7, py); ctx.moveTo(px, py - 7); ctx.lineTo(px, py + 7); ctx.stroke(); lbl('CO', px, py, '#f2c94c'); }
+  // truth (sim): the world file in the map's frame (shifted by world origin - map CO), pool walls, lights, dock bays
+  if (view.truth && truth) drawTruth(truthOffset(m));
+  if (!m) { txt('waiting for ' + T_MAP, W / 2, H / 2, MC.muted, 'center'); return; }
+  drawCourse(m);
+  if (JUDGE) drawJudge(m);                 // v0.1.47: the judge's vehicles, incidents and the next command's position
+  drawObjects(m);
+  drawUav(m);                              // v0.1.65 (D17): the UAV - a triangle (the adapter's status/uav), never a boat glyph
+  drawRoute(m);                            // v0.1.51 (item 30): the waypoint route
+  // v0.1.34: rays = bearings without a range (beyond the camera's depth), from where the boat saw them; never a position by themselves
+  for (const r of m.rays || []) {
+    const col = { red: '#ff5a5a', green: '#3fd16b', blue: '#5aa0ff', yellow: '#f2c94c', white: '#f0f0f0', black: '#7d8590' }[r.colour] || '#c9d1d9';
+    const th = r.az_deg * Math.PI / 180, L = 45, [ax, ay] = toPx(r.x_n, r.y_e), [bx, by] = toPx(r.x_n + L * Math.cos(th), r.y_e + L * Math.sin(th));
+    ctx.globalAlpha = Math.max(0.25, 1 - (r.age_s || 0) / 30); ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    lbl(`${r.colour} ${r.az_deg.toFixed(0)}°`, bx, by, col);
+  }
+  // path + carrot
+  if (m.path && m.path.length) { ctx.fillStyle = '#4cc2ff'; for (const p of m.path) { const [px, py] = toPx(p[0], p[1]); ctx.fillRect(px - 1, py - 1, 2, 2); } }
+  if (m.carrot) { const [px, py] = toPx(m.carrot[0], m.carrot[1]); ctx.strokeStyle = themeVar('--acc', '#4cc2ff'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, 5, 0, 6.283); ctx.stroke(); }   // v0.1.46.1: hollow, the accent
+  // saved points
+  for (const [name, p] of Object.entries(m.points || {})) { const [px, py] = toPx(p[0], p[1]); ctx.strokeStyle = '#6e9bd6'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px, py, 5, 0, 6.283); ctx.stroke(); lbl(name, px, py, '#6e9bd6'); }
+  // dock line
+  if (m.dock) {
+    const d = m.dock, th = d.line_hdg_deg * Math.PI / 180, L = Math.max(d.length_m, 2) / 2 + 1;
+    const [ax, ay] = toPx(d.x_n - L * Math.cos(th), d.y_e - L * Math.sin(th)), [bx, by] = toPx(d.x_n + L * Math.cos(th), d.y_e + L * Math.sin(th));
+    ctx.strokeStyle = '#f2c94c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    const ps = d.psi_n * Math.PI / 180, [cx, cy] = toPx(d.x_n, d.y_e), [nx, ny] = toPx(d.x_n + 3 * Math.cos(ps), d.y_e + 3 * Math.sin(ps));
+    ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke(); txt(`dock ${d.psi_n.toFixed(0)}°`, nx + 4, ny, '#f2c94c');
+  }
+  // v0.1.62 (Dmitrii 2026-11-07): the dock as m3t1 sees it - the faces' key points (left / right open, midpoint filled), the sway path
+  // at standoff_m (dashed, the one SWAY_SEARCH drives), the inner line at standoff2_m (dotted) - from local/<v>/map dock_view
+  if (m.dock_view) {
+    const v = m.dock_view, KPC = { red: '#ff5a5a', green: '#3fd16b', white: '#e8e8e8', blue: '#4aa3ff' };
+    for (const f of v.faces || []) {
+      const c = KPC[f.colour] || '#e8e8e8', [lx, ly] = toPx(f.left[0], f.left[1]), [mx, my] = toPx(f.mid[0], f.mid[1]), [rx, ry] = toPx(f.right[0], f.right[1]);
+      ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(rx, ry); ctx.stroke();
+      for (const [x, y] of [[lx, ly], [rx, ry]]) { ctx.beginPath(); ctx.arc(x, y, 4, 0, 6.283); ctx.lineWidth = 1.5; ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(mx, my, 4, 0, 6.283); ctx.fillStyle = c; ctx.fill();
+    }
+    if (v.sway) {
+      const [ax, ay] = toPx(v.sway[0][0], v.sway[0][1]), [bx, by] = toPx(v.sway[1][0], v.sway[1][1]);
+      ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 2.5; ctx.setLineDash([8, 5]); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+      for (const [x, y] of [[ax, ay], [bx, by]]) { ctx.beginPath(); ctx.arc(x, y, 3, 0, 6.283); ctx.fillStyle = '#4cc2ff'; ctx.fill(); }
+      txt(`sway ${(+v.standoff_m).toFixed(2)} m · ${v.geom_source || v.source}${v.rms_m ? ' · rms ' + v.rms_m + ' m' : ''}`, bx + 5, by - 4, '#4cc2ff');
+    }
+    if (v.sway2) {
+      const [ax, ay] = toPx(v.sway2[0][0], v.sway2[0][1]), [bx, by] = toPx(v.sway2[1][0], v.sway2[1][1]);
+      ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+  // gates
+  const ents = m.entities || [], byId = {}; for (const e of ents) byId[e.id] = e;
+  for (const g of m.gates || []) {
+    const r = byId[g.red], gr = byId[g.green]; if (!r || !gr) continue;
+    const [ax, ay] = toPx(r.x_n, r.y_e), [bx, by] = toPx(gr.x_n, gr.y_e);
+    ctx.strokeStyle = g.passed ? '#5a3a6a' : '#d87cff'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+    const th = g.through_hdg_deg * Math.PI / 180, [mx, my] = toPx(g.mid_n, g.mid_e), [tx, ty] = toPx(g.mid_n + 2.5 * Math.cos(th), g.mid_e + 2.5 * Math.sin(th));
+    ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx, ty, 3, 0, 6.283); ctx.fillStyle = '#d87cff'; ctx.fill();
+    txt(`${g.through_hdg_deg.toFixed(0)}°`, tx + 5, ty + 4, '#d87cff');
+  }
+  // v0.1.66 (D22): provisional gates - two UAV-only buoys, dashed: leads, never planned through
+  for (const g of m.provisional_gates || []) {
+    const r = byId[g.red], gr = byId[g.green]; if (!r || !gr) continue;
+    const [ax, ay] = toPx(r.x_n, r.y_e), [bx, by] = toPx(gr.x_n, gr.y_e);
+    ctx.strokeStyle = '#f2994a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // entities
+  for (const e of ents) {
+    if (!view.stale && e.state !== 'tracked') continue;
+    const [px, py] = toPx(e.x_n, e.y_e);
+    if (e.kind === 'obstacle') {     // v0.1.81.1: an obstacle = its keep-clear ring (ring_m, centred behind the seen face): dashed = seen by depth, full = a guard STOP
+      const oc = themeVar('--warn', '#f2994a'), rr = Math.max(4, (e.ring_m || e.sigma_m || 2) * view.scale);
+      ctx.strokeStyle = oc; ctx.lineWidth = 1.5; ctx.setLineDash(e.source === 'depth' ? [5, 4] : []); ctx.beginPath(); ctx.arc(px, py, rr, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+      ctx.globalAlpha = 0.12; ctx.fillStyle = oc; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.moveTo(px - 4, py - 4); ctx.lineTo(px + 4, py + 4); ctx.moveTo(px + 4, py - 4); ctx.lineTo(px - 4, py + 4); ctx.stroke();
+      lbl(`${e.id} ${e.source === 'depth' ? 'obstacle (depth)' : 'obstacle (stop)'}`, px, py, oc);
+      continue;
+    }
+    const col = e.colour === 'red' ? '#ff5a5a' : e.colour === 'green' ? '#3fd16b' : e.colour === 'white' ? '#f0f0f0' : e.colour === 'yellow' ? '#f2c94c' : e.colour === 'blue' ? '#5aa0ff' : e.colour === 'black' ? '#7d8590' : '#c9d1d9';
+    if (e.sigma_m > 0.3) { ctx.strokeStyle = col + '55'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px, py, Math.max(2, e.sigma_m * view.scale), 0, 6.283); ctx.stroke(); }
+    ctx.beginPath();
+    if (e.kind === 'dock') ctx.rect(px - 5, py - 5, 10, 10); else ctx.arc(px, py, 5, 0, 6.283);
+    if (e.source === 'uav') { ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }   // v0.1.66: UAV-only = hollow, dashed
+    else if (e.state === 'tracked') { ctx.fillStyle = col; ctx.fill(); } else { ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke(); }
+    if (e.uav_colour && e.source !== 'uav') { ctx.strokeStyle = '#f2994a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px + 4, py - 7); ctx.lineTo(px + 8, py - 11); ctx.stroke(); }   // v0.1.66: the UAV tick on a linked buoy
+    if (e.disagree) lbl(`UAV ${e.uav_colour} · cam ${e.cam_colour}`, px + 8, py + 10, '#f2994a');
+    if (((m.scout || {}).visited_ids || []).includes(e.id)) { ctx.strokeStyle = '#3fd16b'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(px - 9, py - 9); ctx.lineTo(px - 6, py - 5); ctx.lineTo(px - 1, py - 13); ctx.stroke(); }   // v0.1.79: the scout's visited tick
+    if ((m.scout || {}).target === e.id) { ctx.strokeStyle = '#f2c94c'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.arc(px, py, 12, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); }   // v0.1.79: its target
+    const mk = m.markers || {}, role = mk.entry === e.id ? 'ENTRY' : mk.exit === e.id ? 'EXIT' : '';
+    if (role) { ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.setLineDash(e.light === 'flash' ? [3, 3] : []); ctx.beginPath(); ctx.arc(px, py, 9, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); }
+    lbl(`${e.id}${e.light === 'flash' ? '~' : ''}${role ? ' ' + role + (e.light === 'flash' ? ' flashing' : e.light === 'steady' ? ' solid' : '') : ''}`, px, py, e.state === 'tracked' ? col : MC.muted);
+  }
+  // boat + track (v0.1.46.1; v0.1.52 the BlueBoat catamaran): two hulls + the cross beam in the theme's text colour + a heading line
+  // ahead of the bow; to scale zoomed in, never under BOAT.min_px long zoomed out; no object colour on the boat
+  if (m.boat) {
+    const b = m.boat, fg = themeVar('--text', '#e6edf3');
+    if (b.trail && b.trail.length > 1) { ctx.globalAlpha = 0.45; ctx.strokeStyle = fg; ctx.lineWidth = 1; ctx.beginPath(); b.trail.forEach((p, i) => { const [px, py] = toPx(p[0], p[1]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.stroke(); ctx.globalAlpha = 1; }
+    const [px, py] = toPx(b.x_n, b.y_e), h = (b.hdg_deg || 0) * Math.PI / 180, S = Math.sin(h), C = Math.cos(h);
+    const P = (f, s) => [px + f * S + s * C, py - f * C + s * S];          // f = forward (bow), s = starboard, in px
+    const k = boatPxPerM(view.scale), Q = (f, s) => P(f * k, s * k);       // the same in metres
+    const ghost = b.nav === 'ghost';                                       // v0.1.68 (WP17 F6): free run - the ghost plant's pose, dashed
+    ctx.fillStyle = fg + (ghost ? '11' : '33'); ctx.strokeStyle = fg; ctx.lineWidth = 1.5; ctx.setLineDash(ghost ? [4, 3] : []);
+    for (const poly of catamaran()) { ctx.beginPath(); poly.forEach((q, i) => i ? ctx.lineTo(...Q(...q)) : ctx.moveTo(...Q(...q))); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    const hd = P(BOAT.L / 2 * k + Math.max(14, BOAT.L / 2 * k), 0), bw = Q(BOAT.L / 2, 0); ctx.beginPath(); ctx.moveTo(...bw); ctx.lineTo(...hd); ctx.stroke();
+    ctx.setLineDash([]);
+    lbl(`${ghost ? 'ghost ' : ''}${(b.hdg_deg || 0).toFixed(0)}°`, px, py, fg);
+  }
+  // scale bar
+  { const s = gridStep(), w = s * view.scale; ctx.strokeStyle = MC.muted; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(12, H - 14); ctx.lineTo(12 + w, H - 14); ctx.stroke(); txt(`${s} m`, 12 + w + 6, H - 10, MC.muted); }
+  if (!MINI) txt(`source ${src}`, W - 8, 16, MC.muted, 'right');
+}
+
+function panel() {
+  const src = pickSource(); const m = src ? maps[src].body : null; const age = src ? (performance.now() - maps[src].t) / 1000 : null;
+  const el = (id) => document.getElementById(id);
+  el('age').textContent = src ? `${src}  map ${age.toFixed(1)} s ago${age > 3 ? '  STALE' : ''}` : (sourcePin === 'auto' ? 'no map yet' : `no map from ${sourcePin} (1 = auto)`);
+  el('age').className = age !== null && age > 3 ? 'red' : 'dim';
+  for (const [id, name] of [['s_ui', 'usv_ui'], ['s_mm', 'mission_manager']]) {
+    const b = el(id), mm = maps[name], a = mm ? (performance.now() - mm.t) : null;
+    b.classList.toggle('gone', !mm); b.classList.toggle('stale', !!mm && a > SOURCE_STALE_MS);
+    b.title = mm ? `last digest ${(a / 1000).toFixed(0)} s ago` : `no digest from ${name} in the last ${SOURCE_FORGET_MS / 1000} s`;
+  }
+  if (!m) { el('boat').textContent = '—'; el('run').textContent = '—'; el('cvinfo').textContent = '—'; el('ents').querySelector('tbody').innerHTML = ''; return; }
+  const b = m.boat;
+  el('boat').innerHTML = b ? `N ${b.x_n.toFixed(1)}  E ${b.y_e.toFixed(1)}  hdg ${(b.hdg_deg || 0).toFixed(0)}°<br>` : 'no fix<br>';
+  el('boat').innerHTML += `CO ${m.co ? m.co.lat.toFixed(6) + ' ' + m.co.lon.toFixed(6) : '—'}<br>` + (m.mode ? `${m.mode} ${m.armed ? 'ARMED' : 'disarmed'} ` : '') +
+    (status ? `V ${status.state}${status.task_name ? ' ' + status.task_name + '/' + status.task_state : ''}${status.kill ? ' KILL' : ''}` : '');
+  el('run').textContent = `${m.task_state || ''} ${m.task || ''}` + (status && status.run ? `  run ${status.run.run_id || '-'} ` : '');
+  const cv = m.cv || {};
+  el('cvinfo').textContent = `${m.cv ? (cv.on ? 'cv ON' : 'cv off') + '  rx ' + cv.n_rx + ' used ' + cv.n_used + '  detector ' + (cv.health_age_s == null ? 'none' : cv.health_age_s + ' s') : 'mission manager map'}` +
+    `  ingested ${m.n_ingested || 0}${m.ingest_age_s != null ? ' (' + m.ingest_age_s + ' s ago)' : ''}` +
+    ((m.rays || []).length || m.n_triangulated ? `  rays ${(m.rays || []).length} · triangulated ${m.n_triangulated || 0}` : '');
+  const tb = el('ents').querySelector('tbody'); tb.innerHTML = '';
+  for (const e of (m.entities || []).slice(0, 40)) {
+    const tr = document.createElement('tr'); tr.className = e.state === 'tracked' ? (e.colour === 'red' ? 'red' : e.colour === 'green' ? 'green' : '') : 'dim';
+    if (e.state === 'tracked' && ['blue', 'yellow', 'white'].includes(e.colour)) tr.style.color = e.colour === 'blue' ? '#5aa0ff' : e.colour === 'yellow' ? '#f2c94c' : '#f0f0f0';   // v0.1.31
+    tr.innerHTML = `<td>${e.id}</td><td>${e.kind}</td><td>${e.colour}</td><td>${e.x_n.toFixed(1)}</td><td>${e.y_e.toFixed(1)}</td><td>${e.sigma_m.toFixed(1)}</td><td>${e.n_obs}</td><td>${e.age_s == null ? '' : e.age_s.toFixed(0)}</td>`;
+    tb.appendChild(tr);
+  }
+  el('gates').innerHTML = (m.gates || []).length ? m.gates.map(g => `<span class="mag">#${g.red}/#${g.green}</span> mid N ${g.mid_n.toFixed(1)} E ${g.mid_e.toFixed(1)} through ${g.through_hdg_deg.toFixed(0)}° w ${g.width_m.toFixed(1)}${g.passed ? ' passed' : ''}`).join('<br>') : 'none';
+  const ds = truth && truth.dock_state;
+  el('sim').innerHTML = truth ? `world <b>${truth.name || '?'}</b> (${truth.source || 'sim'} on ${truth.host || '?'})` +
+    (ds ? `<br>dock: GREEN bay ${ds.green_bay} · ${ds.phase}${ds.window && ds.window.window ? ' · window ' + ds.window.window + ' ' + ds.window.colour : ''}${ds.inside_green_bay ? ' · boat in bay' : ''}` : '') : 'no sim/truth (real CV)';
+  el('dock').innerHTML = m.dock ? `<span class="yel">N ${m.dock.x_n.toFixed(1)} E ${m.dock.y_e.toFixed(1)}</span> normal ${m.dock.psi_n.toFixed(0)}° line ${m.dock.line_hdg_deg.toFixed(0)}° faces ${m.dock.faces.length} rms ${m.dock.rms_m}` : 'none';
+  if (m.dock_view) { const v = m.dock_view; el('dock').innerHTML += `<br>key points ${(v.faces || []).length} face(s) · m3t1 source ${v.source === "boxes" ? "boxes" : "map"}${v.sway ? ` · <span style="color:#4cc2ff">sway ${(+v.standoff_m).toFixed(2)} m</span> / ${(+v.standoff2_m).toFixed(2)} m` : ' · no line yet'}`; }   // v0.1.62
+}
+
+// ------------------------------------------------------------------ interaction
+let drag = null;
+// v0.1.29 (WP8b): inside the OCS page (an iframe), `drop point` + a click = a named point there: the map's local frame (its CO) ->
+// lat / lon, handed to the page (postMessage), which asks the name and sends save_point NAME --lat --lon
+const EMBED = window.parent !== window;
+let dropMode = false;
+document.getElementById('b_refresh').onclick = () => { for (const k of Object.keys(maps)) delete maps[k]; truth = null; view.fitted = false;
+  document.getElementById('age').textContent = 'refreshed: waiting for the next digest'; };
+if (EMBED) { const c = document.getElementById('b_clear'); c.style.display = '';
+  c.onclick = () => window.parent.postMessage({ type: 'ocs-clear-map' }, '*'); }
+if (EMBED) { const b = document.getElementById('b_drop'); b.style.display = '';
+  b.onclick = () => { dropMode = !dropMode; b.className = dropMode ? 'on' : ''; C.style.cursor = dropMode ? 'crosshair' : ''; }; }
+window.addEventListener('message', (e) => { if (e.data && e.data.type === 'ocs-drop-mode') { dropMode = !!e.data.on; const b = document.getElementById('b_drop'); b.className = dropMode ? 'on' : ''; C.style.cursor = dropMode ? 'crosshair' : ''; } });
+function localToLatLon(m, x, y) { const R = 6378137, k = Math.PI / 180; return [m.co.lat + x / (R * k), m.co.lon + y / (R * k * Math.cos(m.co.lat * k))]; }
+// v0.1.33: the geofence editor and the simulator's teleports (POSTs to the OCS page's backend, same origin, its header)
+const OCSPOST = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OCS-Web': '1' }, body: JSON.stringify(body) }).then(r => r.json()).catch(() => ({ ok: false, why: 'the OCS page backend is not reachable' }));
+const say = (t, bad) => { const a = document.getElementById('age'); a.textContent = t; a.className = bad ? 'red' : 'green'; };
+let tpClick = false, SIMW = null;
+function fenceMode(on) { fence.editing = on; fence.drag = -1; if (on) fence.pts = ((course && course.geofence) || []).map(p => p.slice());
+  document.getElementById('fenceedit').style.display = on ? '' : 'none'; document.getElementById('b_fence').className = on ? 'on' : ''; C.style.cursor = on ? 'crosshair' : ''; }
+document.getElementById('b_fence').onclick = () => fenceMode(!fence.editing);
+document.getElementById('b_fcancel').onclick = () => fenceMode(false);
+document.getElementById('b_fclear').onclick = () => { fence.pts = []; };
+document.getElementById('b_fsave').onclick = async () => { const r = await OCSPOST('/geofence', { points: fence.pts });
+  say(r.ok ? `geofence saved: ${r.corners} corners in ${r.profile}` : `geofence: ${r.why}`, !r.ok); if (r.ok) { fenceMode(false); pollCourse(); } };
+function fenceDown(e, m) {
+  const r = C.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  const P = fence.pts.map(p => { const [x, y] = llToLocal(m, p[0], p[1]); return toPx(x, y); });
+  const near = P.findIndex(q => Math.hypot(q[0] - px, q[1] - py) < 9);
+  if (near >= 0) { if (e.shiftKey) fence.pts.splice(near, 1); else fence.drag = near; return; }
+  const [x, y] = toLocal(px, py), ll = localToLatLon(m, x, y);
+  let best = -1, bd = 9;
+  for (let i = 0; i < P.length && P.length > 2; i++) { const a = P[i], b = P[(i + 1) % P.length], ex = b[0] - a[0], ey = b[1] - a[1], L2 = ex * ex + ey * ey || 1;
+    const t = Math.max(0, Math.min(1, ((px - a[0]) * ex + (py - a[1]) * ey) / L2)), d = Math.hypot(a[0] + t * ex - px, a[1] + t * ey - py); if (d < bd) { bd = d; best = i; } }
+  if (best >= 0) { fence.pts.splice(best + 1, 0, ll); fence.drag = best + 1; } else { fence.pts.push(ll); fence.drag = fence.pts.length - 1; }
+}
+async function simTeleport(body) { const r = await OCSPOST('/sim', { path: '/teleport', body });
+  say(r.ok ? `boat teleported to ${r.to}${r.snapped ? ' (snapped)' : ''} · ${r.lat}, ${r.lon} · ${r.hdg}°` : `teleport: ${r.why}`, !r.ok); return r; }
+async function pollSim() {         // the teleport bar shows while a simulator answers (its world.json: the places + HOME / saved points)
+  if (!location.protocol.startsWith('http')) return;
+  try { const meta = await (await fetch('/meta.json', { cache: 'no-store' })).json(); if (!meta.sim_url) return;
+    SIMW = await (await fetch(meta.sim_url.replace(/\/$/, '') + '/world.json', { cache: 'no-store' })).json(); } catch (e) { SIMW = null; }
+  const bar = document.getElementById('tpbar'); bar.style.display = SIMW ? '' : 'none'; if (!SIMW) return;
+  const items = (SIMW.teleports || []).map(t => t.name).concat((SIMW.points || []).map(p => p.name)), sel = document.getElementById('tpsel');
+  if (sel.dataset.k !== items.join('|')) { sel.dataset.k = items.join('|'); sel.innerHTML = items.map(n => `<option>${n}</option>`).join(''); }
+}
+pollSim(); setInterval(pollSim, 5000);
+document.getElementById('b_tp').onclick = () => simTeleport({ name: document.getElementById('tpsel').value });
+document.getElementById('b_tpclick').onclick = () => { tpClick = !tpClick; document.getElementById('b_tpclick').className = tpClick ? 'on' : ''; C.style.cursor = tpClick ? 'crosshair' : ''; };
+document.getElementById('tpll').addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; const f = e.target.value.trim().split(/[\s,]+/).map(Number);
+  if (f.length < 2 || f.some(isNaN)) { say('teleport: lat lon [hdg]', true); return; } simTeleport({ lat: f[0], lon: f[1], hdg: f.length > 2 ? f[2] : null }); });
+// ---- v0.1.35 (WP10c): add / move / delete objects, the hover readout, the legend ----------------------------------------------
+let MARKERS = {}, sel = null, odrag = null, downAt = null;
+const KCOL = { red: '#ff5a5a', green: '#3fd16b', blue: '#5aa0ff', yellow: '#f2c94c', white: '#f0f0f0', black: '#9aa4ae' };
+const cmdOK = (r) => !!r && r.ok !== false && !(Array.isArray(r.lines) && r.lines.some(l => /REJECTED|refused|usage:|error/i.test(l)));
+const cmdWhy = (r) => (r && (r.why || (Array.isArray(r.lines) && r.lines.find(l => /REJECTED|refused|usage:|error/i.test(l))) || r.text)) || 'refused';
+const curMap = () => { const src = pickSource(); const m = src ? maps[src].body : null; return m && m.co && m.co.lat != null ? m : null; };
+const evLocal = (e) => { const r = C.getBoundingClientRect(); return toLocal(e.clientX - r.left, e.clientY - r.top); };
+async function pollMarkers() { if (!location.protocol.startsWith('http')) return; try { MARKERS = (await (await fetch('/markers.json', { cache: 'no-store' })).json()).markers || {}; } catch (e) { /* standalone */ } }
+pollMarkers(); setInterval(pollMarkers, 3000);
+function worldLL(o) {                 // a simview object (world frame of its origin) -> lat, lon (the WorldFrame model)
+  const R = 6378137, k = Math.PI / 180, lat0 = SIMW.origin.lat, lon0 = SIMW.origin.lon;
+  return [lat0 + o.x_n / (R * k), lon0 + o.y_e / (R * k * Math.cos(lat0 * k))];
+}
+function objects(m) {                 // what can be selected: sim objects, markers, saved points (lat / lon + where on the canvas)
+  const out = [];
+  if (SIMW && SIMW.origin) for (const o of SIMW.objects || []) { if (!['buoy', 'dock', 'box'].includes(o.kind)) continue;
+    const ll = worldLL(o); out.push({ type: 'sim', key: o.id, ll, label: `sim ${o.kind} #${o.id} ${o.colour || ''}`, o }); }
+  for (const [n, k] of Object.entries(MARKERS)) out.push({ type: 'marker', key: n, ll: [k.lat, k.lon], label: `marker ${n}` });
+  for (const [n, k] of Object.entries(m.points_ll || {})) out.push({ type: 'point', key: n, ll: [k.lat, k.lon], label: `point ${n}` });
+  for (const it of out) { const ll = odrag && odrag.it.type === it.type && odrag.it.key === it.key && odrag.ll ? odrag.ll : it.ll;
+    const [x, y] = llToLocal(m, ll[0], ll[1]); [it.px, it.py] = toPx(x, y); it.x = x; it.y = y; }
+  return out;
+}
+function hitObject(m, e) { const r = C.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  let best = null, bd = 10; for (const it of objects(m)) { const d = Math.hypot(it.px - px, it.py - py); if (d < bd) { bd = d; best = it; } } return best; }
+function drawObjects(m) {
+  if (!m.co || m.co.lat == null) return;
+  for (const it of objects(m)) {
+    const isSel = sel && sel.type === it.type && sel.key === it.key;
+    if (it.type === 'sim' && it.o.mock) {     // added on a map / the SIM page (the file's own objects are the truth layer)
+      ctx.strokeStyle = KCOL[it.o.colour] || '#c9d1d9'; ctx.lineWidth = 2; ctx.setLineDash([3, 2]); ctx.beginPath();
+      if (it.o.kind === 'buoy') ctx.arc(it.px, it.py, 6, 0, 6.283); else ctx.rect(it.px - 7, it.py - 4, 14, 8); ctx.stroke(); ctx.setLineDash([]);
+      txt(`sim${it.o.kind === 'dock' ? ' bay ' + (it.o.bay || '') : ''}`, it.px + 8, it.py + 12, MC.muted);
+    } else if (it.type === 'marker') {
+      ctx.fillStyle = '#ffa657'; ctx.beginPath(); ctx.moveTo(it.px, it.py - 7); ctx.lineTo(it.px + 6, it.py); ctx.lineTo(it.px, it.py + 7); ctx.lineTo(it.px - 6, it.py); ctx.closePath(); ctx.fill();
+      txt(it.key, it.px + 9, it.py + 4, '#ffa657');
+    }
+    if (isSel) { ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(it.px, it.py, 11, 0, 6.283); ctx.stroke(); }
+  }
+}
+async function addAt(m, e) {
+  const [x, y] = evLocal(e), [lat, lon] = localToLatLon(m, x, y), kind = document.getElementById('addkind').value;
+  const name = document.getElementById('addname').value.trim();
+  let r;
+  if (['buoy', 'dock', 'box'].includes(kind)) {
+    if (!SIMW) { say('add: no simulator attached - sim objects need scripts/run_sim.sh', true); return; }
+    r = await OCSPOST('/sim', { path: '/objects', body: { op: 'add', kind, colour: document.getElementById('addcol').value, light: document.getElementById('addlight').value,
+      bay: +document.getElementById('addbay').value || 1, lat, lon } });
+    if (r.ok) pollSim();
+  } else if (kind === 'waypoint') {
+    if (!name) { say('add waypoint: type its name first', true); return; }
+    r = await OCSPOST('/cmd', { line: `save_point ${name} --lat ${lat.toFixed(8)} --lon ${lon.toFixed(8)}` });
+  } else {
+    if (!name) { say('add marker: type its name first', true); return; }
+    r = await OCSPOST('/markers', { op: 'add', name, lat, lon }); pollMarkers();
+  }
+  say(cmdOK(r) ? `added ${kind}${name ? ' ' + name : ''} at ${lat.toFixed(7)}, ${lon.toFixed(7)}` : `add ${kind}: ${cmdWhy(r)}`, !cmdOK(r));
+}
+async function commitMove(it, ll) {
+  let r;
+  if (it.type === 'sim') { r = await OCSPOST('/sim', { path: '/objects', body: { op: 'move', id: it.key, lat: ll[0], lon: ll[1] } }); pollSim(); }
+  else if (it.type === 'marker') { r = await OCSPOST('/markers', { op: 'move', name: it.key, lat: ll[0], lon: ll[1] }); pollMarkers(); }
+  else r = await OCSPOST('/cmd', { line: `save_point ${it.key} --lat ${ll[0].toFixed(8)} --lon ${ll[1].toFixed(8)}` });
+  say(cmdOK(r) ? `moved ${it.label}` : `move: ${cmdWhy(r)}`, !cmdOK(r));
+}
+async function removeSel() {
+  const it = sel; if (!it) return; let r;
+  if (it.type === 'sim') { r = await OCSPOST('/sim', { path: '/objects', body: { op: 'del', id: it.key } }); pollSim(); }
+  else if (it.type === 'marker') { r = await OCSPOST('/markers', { op: 'del', name: it.key }); pollMarkers(); }
+  else { if (!confirm(`delete the saved point ${it.key} on the boat (del_point)?`)) return; r = await OCSPOST('/cmd', { line: `del_point ${it.key}` }); }
+  sel = null; say(cmdOK(r) ? `removed ${it.label}` : `remove: ${cmdWhy(r)}`, !cmdOK(r));
+}
+// v0.1.56 (D9): a dock face's indicator votes in the hover - G n · R m (perception_map digest `votes`)
+function voteText(en) { const v = en && en.votes; if (!v) return ''; return ` · votes G ${v.green || 0} · R ${v.red || 0}`; }
+function hoverText(m, e) {
+  const [x, y] = evLocal(e), [lat, lon] = localToLatLon(m, x, y);
+  let s = `${lat.toFixed(7)}, ${lon.toFixed(7)}   N ${x.toFixed(1)} E ${y.toFixed(1)}`;
+  const near = hitObject(m, e) || (() => { const r = C.getBoundingClientRect(); let b = null, bd = 10;
+    for (const en of m.entities || []) { const [px, py] = toPx(en.x_n, en.y_e), d = Math.hypot(px - (e.clientX - r.left), py - (e.clientY - r.top)); if (d < bd) { bd = d; b = { label: `#${en.id} ${en.kind} ${en.colour}${voteText(en)}`, x: en.x_n, y: en.y_e }; } } return b; })();
+  if (near && m.boat) { const dx = near.x - m.boat.x_n, dy = near.y - m.boat.y_e, az = ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360,
+    rel = ((az - (m.boat.hdg_deg || 0) + 540) % 360) - 180;
+    s += `\n${near.label}: ${Math.hypot(dx, dy).toFixed(1)} m · ${az.toFixed(0)}° (${rel >= 0 ? '+' : ''}${rel.toFixed(0)}° off the bow)`; }
+  return s;
+}
+document.getElementById('b_add').onclick = () => { const on = document.getElementById('addbar').style.display === 'none';
+  document.getElementById('addbar').style.display = on ? '' : 'none'; document.getElementById('b_add').className = on ? 'on' : ''; C.style.cursor = on ? 'crosshair' : ''; };
+const legendHTML = () => document.querySelector('aside div:last-of-type') ? document.querySelector('aside').lastElementChild.innerHTML : '';
+document.getElementById('b_help').onclick = () => { const L = document.getElementById('legendov'); const on = L.style.display !== 'block';
+  L.innerHTML = '<b>legend</b><br>' + legendHTML() + '<br><span class="dim">dashed ring = a sim object added by hand · ENTRY / EXIT ring: dashed = flashing, full = solid · ◆ marker (OCS only) · hover = lat / lon, N / E, range / bearing from the boat; click copies lat lon</span>';
+  L.style.display = on ? 'block' : 'none'; document.getElementById('b_help').className = on ? 'on' : ''; };
+C.addEventListener('mousemove', (e) => { const m = curMap(); const h = document.getElementById('hover');
+  if (m) { h.textContent = hoverText(m, e); h.style.display = ''; } else h.style.display = 'none';
+  if (odrag && m) { const [x, y] = evLocal(e); odrag.ll = localToLatLon(m, x, y); odrag.moved = true; } });
+C.addEventListener('mouseleave', () => { document.getElementById('hover').style.display = 'none'; });
+window.addEventListener('mouseup', async (e) => {
+  if (odrag) { const d = odrag; odrag = null; if (d.moved && d.ll) await commitMove(d.it, d.ll); return; }
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 3 && e.target === C) { const m = curMap();   // a click: copy the position
+    if (m && ROUTE.on && !JUDGE && !MINI) { const [x, y] = evLocal(e); routeAdd(localToLatLon(m, x, y)); }          // v0.1.51: add waypoint
+    else if (m && JUDGE) { const [x, y] = evLocal(e), [lat, lon] = localToLatLon(m, x, y);        // v0.1.47: the judge page fills its form
+      window.parent.postMessage({ type: 'judge-pos', lat: +lat.toFixed(7), lon: +lon.toFixed(7) }, '*'); say(`placed ${lat.toFixed(7)} ${lon.toFixed(7)}`); }
+    else if (m && navigator.clipboard) { const [x, y] = evLocal(e), [lat, lon] = localToLatLon(m, x, y); navigator.clipboard.writeText(`${lat.toFixed(7)} ${lon.toFixed(7)}`).then(() => say(`copied ${lat.toFixed(7)} ${lon.toFixed(7)}`), () => {}); } }
+  downAt = null; });
+window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && sel && !(e.target && e.target.tagName === 'INPUT')) { e.preventDefault(); removeSel(); } });
+const MINI = Q.get('mini') === '1';
+if (MINI) { document.body.classList.add('mini'); setTimeout(resize, 0); setInterval(() => { view.fitted = false; fit(); }, 4000);
+  C.addEventListener('click', () => window.parent.postMessage({ type: 'ocs-show-map' }, '*')); }
+C.addEventListener('mousedown', (e) => {
+  { const src = pickSource(); const m = src ? maps[src].body : null; const hasCo = m && m.co && m.co.lat != null;
+    if (fence.editing) { if (hasCo) fenceDown(e, m); else say('geofence: no map with a control origin yet', true); return; }
+    if (tpClick) { tpClick = false; document.getElementById('b_tpclick').className = ''; C.style.cursor = '';
+      if (!hasCo) { say('teleport: no map with a control origin yet', true); return; }
+      const r = C.getBoundingClientRect(); const [x, y] = toLocal(e.clientX - r.left, e.clientY - r.top); const [lat, lon] = localToLatLon(m, x, y);
+      simTeleport({ lat, lon, snap: true }); return; } }
+  if (MINI) return;
+  { const m = curMap();
+    if (document.getElementById('addbar').style.display !== 'none' && !dropMode) { if (m) addAt(m, e); else say('add: no map with a control origin yet', true); return; }
+    if (m && !dropMode && !ROUTE.on) { const it = hitObject(m, e); if (it) { sel = it; odrag = { it, ll: null, moved: false }; return; } sel = null; } }
+  downAt = [e.clientX, e.clientY];
+  if (dropMode) { const src = pickSource(); const m = src ? maps[src].body : null;
+    if (!m || !m.co || m.co.lat == null) { document.getElementById('age').textContent = 'drop point: no map with a control origin yet'; return; }
+    const r = C.getBoundingClientRect(); const [x, y] = toLocal(e.clientX - r.left, e.clientY - r.top); const [lat, lon] = localToLatLon(m, x, y);
+    window.parent.postMessage({ type: 'ocs-drop-point', lat: +lat.toFixed(8), lon: +lon.toFixed(8), x_n: +x.toFixed(2), y_e: +y.toFixed(2) }, '*');
+    dropMode = false; document.getElementById('b_drop').className = ''; C.style.cursor = ''; return; }
+  drag = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy }; view.follow = false; setBtn(); });
+window.addEventListener('mousemove', (e) => {
+  if (fence.editing && fence.drag >= 0) { const src = pickSource(); const m = src ? maps[src].body : null; if (!m || !m.co) return;
+    const r = C.getBoundingClientRect(); const [x, y] = toLocal(e.clientX - r.left, e.clientY - r.top); fence.pts[fence.drag] = localToLatLon(m, x, y); return; }
+  if (!drag) return; view.cx = drag.cx + (e.clientY - drag.y) / view.scale; view.cy = drag.cy - (e.clientX - drag.x) / view.scale; });
+window.addEventListener('mouseup', () => { drag = null; fence.drag = -1; });
+C.addEventListener('wheel', (e) => { e.preventDefault(); const r = C.getBoundingClientRect(); const [lx, ly] = toLocal(e.clientX - r.left, e.clientY - r.top);
+  view.scale = Math.max(0.3, Math.min(200, view.scale * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+  const [nx, ny] = toLocal(e.clientX - r.left, e.clientY - r.top); view.cx += lx - nx; view.cy += ly - ny; }, { passive: false });
+C.addEventListener('dblclick', fit);
+// ---- v0.1.54: the map controls - pan by 20 % of the view, zoom ×1.4 about the centre, box zoom (drag a rectangle), fit ----------------
+const NAV = { box: false, b0: null };
+function navPan(dx, dy) { const W = C.width, H = C.height; view.follow = false; setBtn();
+  view.cx += dy * 0.2 * H / view.scale; view.cy += dx * 0.2 * W / view.scale; }
+function navZoom(f) { view.scale = Math.max(0.3, Math.min(200, view.scale * f)); }
+function navBox(on) { NAV.box = on; NAV.b0 = null; document.getElementById('nv-box').className = on ? 'on' : ''; C.style.cursor = on ? 'crosshair' : '';
+  document.getElementById('boxsel').style.display = 'none'; }
+document.getElementById('nv-u').onclick = () => navPan(0, 1); document.getElementById('nv-d').onclick = () => navPan(0, -1);
+document.getElementById('nv-l').onclick = () => navPan(-1, 0); document.getElementById('nv-r').onclick = () => navPan(1, 0);
+document.getElementById('nv-in').onclick = () => navZoom(1.4); document.getElementById('nv-out').onclick = () => navZoom(1 / 1.4);
+document.getElementById('nv-fit').onclick = () => { view.fitted = false; fit(); };
+document.getElementById('nv-box').onclick = () => navBox(!NAV.box);
+C.addEventListener('mousedown', (e) => { if (!NAV.box) return; e.stopImmediatePropagation(); e.preventDefault();
+  const r = C.getBoundingClientRect(); NAV.b0 = [e.clientX - r.left, e.clientY - r.top]; }, true);
+window.addEventListener('mousemove', (e) => { if (!NAV.box || !NAV.b0) return; const r = C.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, b = document.getElementById('boxsel');
+  b.style.display = 'block'; b.style.left = Math.min(x, NAV.b0[0]) + 'px'; b.style.top = Math.min(y, NAV.b0[1]) + 'px';
+  b.style.width = Math.abs(x - NAV.b0[0]) + 'px'; b.style.height = Math.abs(y - NAV.b0[1]) + 'px'; }, true);
+window.addEventListener('mouseup', (e) => { if (!NAV.box || !NAV.b0) return; const r = C.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  const w = Math.abs(x - NAV.b0[0]), h = Math.abs(y - NAV.b0[1]);
+  if (w > 8 && h > 8) { const [ax, ay] = toLocal(Math.min(x, NAV.b0[0]), Math.min(y, NAV.b0[1])), [bx, by] = toLocal(Math.max(x, NAV.b0[0]), Math.max(y, NAV.b0[1]));
+    view.cx = (ax + bx) / 2; view.cy = (ay + by) / 2; view.follow = false; setBtn();
+    view.scale = Math.max(0.3, Math.min(200, Math.min(C.width / Math.abs(by - ay), C.height / Math.abs(ax - bx)))); }
+  navBox(false); }, true);
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && NAV.box) navBox(false); });
+
+function setBtn() {
+  for (const [id, on] of [['b_follow', view.follow], ['b_grid', view.grid], ['b_truth', view.truth], ['b_stale', view.stale],
+                          ['s_auto', sourcePin === 'auto'], ['s_ui', sourcePin === 'usv_ui'], ['s_mm', sourcePin === 'mission_manager']])
+    document.getElementById(id).classList.toggle('on', on);
+}
+document.getElementById('b_fit').onclick = fit;
+document.getElementById('b_fituav').onclick = fitUav;
+document.getElementById('b_follow').onclick = () => { view.follow = !view.follow; setBtn(); };
+document.getElementById('b_grid').onclick = () => { view.grid = !view.grid; setBtn(); };
+document.getElementById('b_truth').onclick = () => { view.truth = !view.truth; setBtn(); };
+document.getElementById('b_stale').onclick = () => { view.stale = !view.stale; setBtn(); };
+document.getElementById('s_auto').onclick = () => { sourcePin = 'auto'; setBtn(); };
+document.getElementById('s_ui').onclick = () => { sourcePin = 'usv_ui'; setBtn(); };
+document.getElementById('s_mm').onclick = () => { sourcePin = 'mission_manager'; setBtn(); };
+window.addEventListener('keydown', (e) => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.key === 'f') fit(); else if (e.key === 'b') view.follow = !view.follow; else if (e.key === 'g') view.grid = !view.grid; else if (e.key === 't') view.truth = !view.truth;
+  else if (e.key === '1') sourcePin = 'auto'; else if (e.key === '2') sourcePin = 'usv_ui'; else if (e.key === '3') sourcePin = 'mission_manager';
+  setBtn();
+});
+// ---- v0.1.47 (WP10k-a B8): ?judge=1 - the judge page's map. judge_web serves this file: /state.json = the judge's view (vehicles from
+// their heartbeats, the incidents it sent: assist ✕, keep-out circle, moving object ▫ + heading); /course.json and POST /geofence are
+// proxied to the OCS page (the geofence editor writes the OCS profile's geofence: as on the OCS map). A click posts {type: 'judge-pos',
+// lat, lon} to the page (it fills the chosen command's lat / lon); the page sends back {type: 'judge-marks'} = the positions placed.
+// No boat map with a control origin yet -> a pseudo source 'judge' whose origin is the course's centre (or the first vehicle).
+const JUDGE = Q.get('judge') === '1';
+let JST = null, JMARKS = [];
+function judgeCo() {
+  const c = course && ((course.received && (course.received.boundary || []).length > 2) ? course.received : course.default);
+  const b = (c && c.boundary) || (JST && JST.course && JST.course.boundary) || [];
+  if (b.length) return { lat: b.reduce((a, p) => a + p[0], 0) / b.length, lon: b.reduce((a, p) => a + p[1], 0) / b.length, course: true };
+  const v = JST && Object.values(JST.vehicles || {}).find(o => o.heartbeat && o.heartbeat.lat != null);
+  return v ? { lat: v.heartbeat.lat, lon: v.heartbeat.lon } : null;
+}
+async function pollJudge() {
+  try { JST = await (await fetch('/state.json', { cache: 'no-store' })).json(); } catch (e) { return; }
+  const real = Object.entries(maps).some(([k, v]) => k !== 'judge' && v.body.co && v.body.co.lat != null), co = judgeCo();
+  if (real) { delete maps.judge; return; }
+  if (!co) return;
+  const J0 = maps.judge, better = J0 && co.course && !J0.body.co.course;          // the course's centre replaces a vehicle's (then refit)
+  if (!J0 || better) { maps.judge = { body: { co, entities: [] }, t: performance.now() }; view.fitted = false; fit(); } else J0.t = performance.now();
+}
+function judgePoints() {          // what the judge map fits: the judge's course, the vehicles, the incidents
+  if (!JST) return [];
+  const out = ((JST.course && JST.course.boundary) || []).slice();
+  for (const o of Object.values(JST.vehicles || {})) if (o.heartbeat && o.heartbeat.lat != null) out.push([o.heartbeat.lat, o.heartbeat.lon]);
+  for (const it of JST.incidents || []) out.push([it.lat, it.lon]);
+  return out;
+}
+function drawJudge(m) {
+  if (!JST || !m.co || m.co.lat == null) return;
+  const rc = course && course.received && (course.received.boundary || []).length > 2;     // the OCS has none: the judge's RxCourse
+  if (!rc && JST.course && (JST.course.boundary || []).length > 2) poly(m, JST.course.boundary, MC.muted, [], 1.5, `course ${JST.course.course_id || ''} (judge)`);
+  const P = (lat, lon) => { const [x, y] = llToLocal(m, lat, lon); return toPx(x, y); };
+  const warn = themeVar('--warn', '#ffc239'), acc = themeVar('--acc', '#4bb9d2');
+  for (const it of JST.incidents || []) {
+    const [px, py] = P(it.lat, it.lon); ctx.globalAlpha = it.cleared ? 0.45 : 1; ctx.strokeStyle = warn; ctx.lineWidth = 1.5; ctx.beginPath();
+    if (it.kind === 'keepout') ctx.arc(px, py, Math.max(4, (it.r || 0) * view.scale), 0, 6.283);
+    else if (it.kind === 'moving') { const h = (it.hdg || 0) * Math.PI / 180; ctx.rect(px - 4, py - 4, 8, 8); ctx.moveTo(px, py); ctx.lineTo(px + 18 * Math.sin(h), py - 18 * Math.cos(h)); }
+    else { ctx.moveTo(px - 6, py - 6); ctx.lineTo(px + 6, py + 6); ctx.moveTo(px + 6, py - 6); ctx.lineTo(px - 6, py + 6); }
+    ctx.stroke(); lbl(`${it.kind} #${it.seq}${it.cleared ? ' · cleared' : ''}`, px, py, warn); ctx.globalAlpha = 1;
+  }
+  for (const mk of JMARKS) { if (mk.lat == null || mk.lon == null) continue; const [px, py] = P(mk.lat, mk.lon);
+    ctx.strokeStyle = acc; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(px, py, 7, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); lbl(`next ${mk.w}`, px, py, acc); }
+  for (const [v, o] of Object.entries(JST.vehicles || {})) {
+    const h = o.heartbeat; if (!h || h.lat == null) continue;
+    const [px, py] = P(h.lat, h.lon), a = (h.heading_deg || 0) * Math.PI / 180, S = Math.sin(a), K = Math.cos(a), stale = o.age_s == null || o.age_s > 2, col = stale ? MC.muted : MC.fg;
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px + 10 * S, py - 10 * K); ctx.lineTo(px - 6 * S + 5 * K, py + 6 * K + 5 * S); ctx.lineTo(px - 6 * S - 5 * K, py + 6 * K - 5 * S); ctx.closePath(); ctx.stroke();
+    lbl(`${v} ${String(h.state || '').replace('STATE_', '')}${stale ? ' · stale' : ''}`, px, py, col);
+  }
+}
+if (JUDGE) { document.body.classList.add('judge'); setTimeout(resize, 0); pollJudge(); setInterval(pollJudge, 1000);
+  window.addEventListener('message', (e) => { if (e.data && e.data.type === 'judge-marks') JMARKS = e.data.marks || []; }); }
+// ---- end v0.1.47 B8 --------------------------------------------------------------------------------------------------------------
+// ---- v0.1.51 (WP10k-c item 30): the waypoint route editor ------------------------------------------------------------------------------
+// add waypoint + clicks place W1..Wn (lat / lon, in this browser's localStorage until saved); the list in the aside: up / down / delete;
+// save as points = save_point Wi --lat --lon one by one through the OCS page's /cmd (the drop-point / add-waypoint path); start path =
+// save what is unsaved, wait until the boat's map digest lists every name (the page's own check refuses unknown names), then
+// start_task m0t2 --names W1,..,Wn (TEST_PATH) through the same /cmd - the authority's TEST MODE / run rules decide as for the picker.
+// ---- route: pure (tests/test_v0151_kc.py runs this block in node) ----
+const ROUTE_KEY = 'ocs.route', ROUTE_PREFIX = 'W', ROUTE_TASK = 'm0t2';
+function routeNames(pts) { return pts.map((_, i) => ROUTE_PREFIX + (i + 1)); }
+function routeSaveLines(pts) { return pts.map((p, i) => `save_point ${ROUTE_PREFIX}${i + 1} --lat ${(+p.lat).toFixed(8)} --lon ${(+p.lon).toFixed(8)}`); }
+function routeStartLine(pts) { return `start_task ${ROUTE_TASK} --names ${routeNames(pts).join(',')}`; }
+function routeMove(pts, i, d) { const j = i + d; if (i < 0 || j < 0 || i >= pts.length || j >= pts.length) return pts.slice(); const o = pts.slice(); [o[i], o[j]] = [o[j], o[i]]; return o; }
+function routeDel(pts, i) { return pts.filter((_, k) => k !== i); }
+function routeMissing(pts, digests) { const have = new Set(); for (const d of digests || []) for (const k of ['points', 'points_ll']) for (const n of Object.keys((d && d[k]) || {})) have.add(n);
+  return routeNames(pts).filter(n => !have.has(n)); }
+function routeLoad(raw) { try { const o = JSON.parse(raw || 'null'); if (!o || !Array.isArray(o.pts)) return { pts: [], saved: false };
+  return { pts: o.pts.filter(p => p && isFinite(p.lat) && isFinite(p.lon)).map(p => ({ lat: +p.lat, lon: +p.lon })), saved: !!o.saved }; } catch (e) { return { pts: [], saved: false }; } }
+// ---- route: end pure ----
+const ROUTE = Object.assign({ on: false, busy: false }, (() => { try { return routeLoad(localStorage.getItem(ROUTE_KEY)); } catch (e) { return routeLoad(null); } })());
+function routeStore() { try { localStorage.setItem(ROUTE_KEY, JSON.stringify({ pts: ROUTE.pts, saved: ROUTE.saved })); } catch (e) { /* private window: this session only */ } }
+const rsay = (t, bad) => { const r = document.getElementById('rsay'); r.textContent = t; r.className = bad ? 'red' : ''; };
+function routeSet(pts, saved) { ROUTE.pts = pts; ROUTE.saved = !!saved; routeStore(); routeList(); }
+function routeAdd(ll) { routeSet(ROUTE.pts.concat([{ lat: ll[0], lon: ll[1] }]), false); rsay(`${ROUTE_PREFIX}${ROUTE.pts.length} at ${ll[0].toFixed(7)}, ${ll[1].toFixed(7)} (not saved yet)`); }
+function routeList() {
+  const L = document.getElementById('rlist'), names = routeNames(ROUTE.pts);
+  document.getElementById('rcount').textContent = ROUTE.pts.length ? `${ROUTE.pts.length} · ${ROUTE.saved ? 'saved on the boat' : 'not saved'}` : '';
+  L.innerHTML = ROUTE.pts.length ? ROUTE.pts.map((p, i) => `<div class="wp" data-wp="${names[i]}"><b>${names[i]}</b><span class="ll">${p.lat.toFixed(7)}, ${p.lon.toFixed(7)}</span><span>` +
+    `<button data-up="${i}" title="move ${names[i]} up (earlier in the path; the numbers follow the order)"${i === 0 ? ' disabled' : ''}>↑</button>` +
+    `<button data-dn="${i}" title="move ${names[i]} down (later in the path)"${i === ROUTE.pts.length - 1 ? ' disabled' : ''}>↓</button>` +
+    `<button data-del="${i}" title="delete ${names[i]} from the route (a point already saved on the boat stays: del_point)">✕</button></span></div>`).join('')
+    : '<div class="dim">no waypoints: add waypoint, then click the map</div>';
+  for (const b of L.querySelectorAll('button')) b.onclick = () => {
+    if (b.dataset.up != null) routeSet(routeMove(ROUTE.pts, +b.dataset.up, -1), false);
+    else if (b.dataset.dn != null) routeSet(routeMove(ROUTE.pts, +b.dataset.dn, 1), false);
+    else routeSet(routeDel(ROUTE.pts, +b.dataset.del), false); };
+}
+function drawRoute(m) {
+  if (MINI || JUDGE || !ROUTE.pts.length || !m.co || m.co.lat == null) return;
+  const acc = themeVar('--acc', '#4bb9d2'), P = ROUTE.pts.map(p => { const [x, y] = llToLocal(m, p.lat, p.lon); return toPx(x, y); });
+  ctx.strokeStyle = acc; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.beginPath(); P.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.stroke(); ctx.setLineDash([]);
+  P.forEach(([px, py], i) => { ctx.beginPath(); ctx.arc(px, py, 7, 0, 6.283); ctx.fillStyle = themeVar('--panel', '#151c24'); ctx.fill(); ctx.strokeStyle = acc; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = '10px ui-monospace, Menlo, monospace'; txt(String(i + 1), px, py + 3.5, MC.fg, 'center'); ctx.font = '12px ui-monospace, Menlo, Consolas, monospace'; lbl(ROUTE_PREFIX + (i + 1), px + 4, py, acc); });
+}
+async function routeSave() {
+  const lines = routeSaveLines(ROUTE.pts);
+  for (let i = 0; i < lines.length; i++) { rsay(`saving ${ROUTE_PREFIX}${i + 1} / ${lines.length} …`);
+    const r = await OCSPOST('/cmd', { line: lines[i] });
+    if (!cmdOK(r)) { rsay(`save ${ROUTE_PREFIX}${i + 1}: ${cmdWhy(r)}`, true); return false; } }
+  routeSet(ROUTE.pts, true); rsay(`saved ${lines.length} point${lines.length === 1 ? '' : 's'} on the boat: ${routeNames(ROUTE.pts).join(' ')}`); return true;
+}
+const digests = () => Object.values(maps).map(x => x.body);      // every map source this page hears (usv_ui's, the mission manager's)
+async function routeWaitDigest(ms) { const t0 = performance.now(); let miss = routeMissing(ROUTE.pts, digests());
+  while (miss.length && performance.now() - t0 < ms) { await new Promise(r => setTimeout(r, 500)); miss = routeMissing(ROUTE.pts, digests()); } return miss; }
+document.getElementById('r_add').onclick = () => { ROUTE.on = !ROUTE.on; document.getElementById('r_add').className = ROUTE.on ? 'on' : ''; C.style.cursor = ROUTE.on ? 'crosshair' : '';
+  rsay(ROUTE.on ? 'click the map: each click = the next waypoint (drag still pans)' : ''); };
+document.getElementById('r_clear').onclick = () => { if (ROUTE.pts.length && !confirm(`clear the ${ROUTE.pts.length} waypoints of this browser's route? (saved points stay on the boat)`)) return; routeSet([], false); rsay('route cleared'); };
+document.getElementById('r_save').onclick = async () => { if (ROUTE.busy) return; if (!ROUTE.pts.length) { rsay('no waypoints to save', true); return; }
+  ROUTE.busy = true; try { await routeSave(); } finally { ROUTE.busy = false; } };
+document.getElementById('r_start').onclick = async () => {
+  if (ROUTE.busy) return; if (!ROUTE.pts.length) { rsay('no waypoints: add waypoint first', true); return; }
+  const line = routeStartLine(ROUTE.pts);
+  if (!confirm(`start the path test (TEST_PATH): ${line}${ROUTE.saved ? '' : '\n(the waypoints are saved on the boat first)'}\nthe boat drives through ${routeNames(ROUTE.pts).join(' → ')}`)) return;
+  ROUTE.busy = true;
+  try {
+    if (!ROUTE.saved && !(await routeSave())) return;
+    const miss = await routeWaitDigest(8000);
+    if (miss.length) { rsay(`not started: the boat's map does not list ${miss.join(', ')} yet (saved? the digest is 2 Hz) - try again`, true); return; }
+    rsay(`sending ${line} …`); const r = await OCSPOST('/cmd', { line });
+    rsay(cmdOK(r) ? `${line}: sent - the MISSION tab shows the stages` : `${line}: ${cmdWhy(r)}`, !cmdOK(r));
+  } finally { ROUTE.busy = false; }
+};
+document.getElementById('r_pick').onclick = () => {          // "generate pattern" = the existing orbit / sway pickers (same-origin parent page)
+  const code = document.getElementById('r_pat').value;
+  try { const d = window.parent.document, sel = d.getElementById('csel');
+    if (window.parent === window || !sel) throw new Error('no picker');
+    sel.value = code; sel.dispatchEvent(new Event('change')); sel.scrollIntoView({ block: 'center' }); sel.focus();
+    rsay(`picker set to ${code}: tick ${code === 'm0t6' ? 'one saved waypoint as the centre' : 'two saved waypoints (A, B)'} there`); }
+  catch (e) { rsay(`open the OCS page's MISSION picker and pick ${code} (${code === 'm0t6' ? 'orbit' : 'sway'}) - this map is not inside it`, true); }
+};
+routeList();
+// ---- v0.1.53: the FCU fence box - `fence apply course|geofence`, `fence on|off` through the OCS page's /cmd; the status from /state.json
+const FCU = { busy: false, reply: '', bad: false };
+const fenceBad = (r) => !r || r.ok === false || (Array.isArray(r.lines) && r.lines.some(l => /REJECTED|refused|FAILED|usage:|error|no intent result|no vehicle ack|unknown command/i.test(l)));
+const fenceReply = (r) => (r && (r.why || (Array.isArray(r.lines) && (r.lines.filter(l => /ack (DONE|FAILED|REJECTED)/.test(l)).pop() || r.lines.filter(l => l.trim()).pop())))) || 'no answer';
+function fenceLine(src) {
+  if (src === 'course') return 'fence apply course';
+  const g = (course && course.geofence) || [];
+  return g.length >= 3 ? `fence apply geofence --points "${g.map(p => (+p[0]).toFixed(7) + ',' + (+p[1]).toFixed(7)).join(';')}"` : null;
+}
+function fenceText(f) {
+  if (!f) return 'fence ? (no status)';
+  const on = f.enabled === true ? 'ON' : f.enabled === false ? 'off' : 'on/off ?';
+  const pts = f.points_n == null ? '? pts' : `${f.points_n} pts`, m = f.matches === true ? 'read back identical' : f.matches === false ? 'read back DIFFERENT' : '';
+  const b = f.breach ? (f.breach.status ? `BREACH (${f.breach.count})` : 'no breach') : '';
+  return ['fence ' + on, pts, f.source || '', m, b, f.busy ? `busy: ${f.busy}` : ''].filter(Boolean).join(' · ');
+}
+async function fenceSend(line, what) {
+  if (FCU.busy) return; FCU.busy = true; FCU.reply = `${what}: waiting for the FCU …`; FCU.bad = false; fenceDraw();
+  try { const r = await OCSPOST('/cmd', { line }); FCU.bad = fenceBad(r); FCU.reply = `${what}: ${fenceReply(r)}`; }
+  finally { FCU.busy = false; fenceDraw(); pollFence(); }
+}
+let FSTAT = null;
+function fenceDraw() { const e = document.getElementById('fcustat'); const t = fenceText(FSTAT);
+  e.textContent = FCU.reply ? `${t} | ${FCU.reply}` : t; e.className = FCU.bad || (FSTAT && FSTAT.breach && FSTAT.breach.status) ? 'red' : (FSTAT && FSTAT.enabled ? 'green' : 'dim');
+  document.getElementById('b_fon').classList.toggle('on', !!(FSTAT && FSTAT.enabled === true));
+  document.getElementById('b_foff').classList.toggle('on', !!(FSTAT && FSTAT.enabled === false)); }
+async function pollFence() { if (JUDGE || MINI || !location.protocol.startsWith('http') || document.getElementById('fcubox').style.display === 'none') return;
+  try { const st = await (await fetch('/state.json', { cache: 'no-store' })).json(); FSTAT = (st && st.status && st.status.fence) || null; fenceDraw(); } catch (e) { /* no OCS page */ } }
+if (!JUDGE && !MINI) {
+  document.getElementById('b_fapply').onclick = () => { const src = document.getElementById('fcu_src').value;
+    if (src === 'geofence' && fence.editing) { FCU.reply = 'save the geofence first (the FCU gets the saved one)'; FCU.bad = true; fenceDraw(); return; }
+    const line = fenceLine(src); if (!line) { FCU.reply = 'no geofence saved: draw one (geofence, save) or pick course'; FCU.bad = true; fenceDraw(); return; }
+    if (!confirm(`Apply the ${src} to the FCU as its fence? It replaces the FCU's fence and is read back; it does not switch the fence on.`)) return;
+    fenceSend(line, `apply ${src}`); };
+  document.getElementById('b_fon').onclick = () => { if (confirm('Switch the FCU fence ON? A breach then triggers the FCU\'s FENCE_ACTION.')) fenceSend('fence on', 'fence on'); };
+  document.getElementById('b_foff').onclick = () => fenceSend('fence off', 'fence off');
+  (async function fenceShow() { if (!location.protocol.startsWith('http')) return; try { const r = await fetch('/course.json', { cache: 'no-store' }); if (!r.ok) return;
+    document.getElementById('fcubox').style.display = ''; pollFence(); setInterval(pollFence, 2000); } catch (e) { /* not served by ocs_web */ } })();
+}
+// ---- end v0.1.53 ----
+// ---- end v0.1.51 item 30 ----------------------------------------------------------------------------------------------------------------
+setBtn();
+setInterval(() => { ageSources(); draw(); panel(); }, 200);
+// v0.1.78 (WP34, by hand): inside the OCS page (an iframe, neither the mini nor the judge map) the side column is folded by default
+try { const EMBED = window.self !== window.top && !(typeof MINI !== 'undefined' && MINI) && !(typeof JUDGE !== 'undefined' && JUDGE);
+  if (EMBED) { document.body.classList.add('embed'); let on = false; try { on = localStorage.getItem('ocs.mapdetails') === '1'; } catch (e) {}
+    const b = document.getElementById('b_details'); const apply = () => { document.body.classList.toggle('details', on); if (b) b.className = on ? 'on' : ''; if (typeof fit === 'function' && !on) setTimeout(() => { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }, 50); };
+    if (b) b.onclick = () => { on = !on; try { localStorage.setItem('ocs.mapdetails', on ? '1' : '0'); } catch (e) {} apply(); }; apply(); }
+  else { const b = document.getElementById('b_details'); if (b) b.style.display = 'none'; } } catch (e) { console.error('N7 map', e); }
+</script>
+</body>
+</html>

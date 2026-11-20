@@ -1,0 +1,52 @@
+{
+ "source": "python -m optiprimex.sim.campaign --seeds 8 --perception camera,geometric --jobs 12 --stages-out optiprimex/tools/stage_typical.json",
+ "when": "2026-11-06",
+ "median_s": {
+  "m1t1": {
+   "SEARCH_ENTRY": 18.0,
+   "CIRCLE_ENTRY_CW": 25.0,
+   "TRANSIT": 23.5,
+   "EXIT": 2.0,
+   "CIRCLE_EXIT_CCW": 19.0,
+   "APPROACH_LEAD": 16.0,
+   "LOOK": 6.5
+  },
+  "m3t1": {
+   "FIND_DOCK": 7.0,
+   "TO_LINE": 19.5,
+   "SWAY_SEARCH": 68.0,
+   "SWAY_TO_ABEAM": 34.0,
+   "TURN_IN": 1.0,
+   "ENTER": 21.5,
+   "DOCKED": 3.0,
+   "AIM_FIRE": 8.0,
+   "UNDOCK": 15.0,
+   "REPORT_DOCK": 0.5,
+   "REPORT_FIRE": 0.5
+  },
+  "m4t0": {
+   "LISTEN": 1.0,
+   "TRANSIT": 11.5
+  },
+  "m0t4": {
+   "GO_SCAN": 37.0,
+   "OBSERVE": 1.5,
+   "ALIGN": 13.5,
+   "APPROACH": 3.0,
+   "STOP": 77.5,
+   "STRAFE": 1.5
+  },
+  "m1t2": {
+   "WAIT_UAV_MAP": 80.0,
+   "SEARCH_ENTRY": 18.0,
+   "CIRCLE_ENTRY_CW": 25.0,
+   "TRANSIT": 23.5,
+   "EXIT": 2.0,
+   "CIRCLE_EXIT_CCW": 19.0,
+   "APPROACH_LEAD": 16.0,
+   "LOOK": 6.5
+  }
+ },
+ "m3t1_source": "v0.1.56: python -m optiprimex.sim.campaign --missions m3t1 --seeds 12 --worlds pool,marina,extra --perception geometric,camera (+ the model on 4 seeds)",
+ "m1t2_source": "v0.1.66: m1t1's medians + WAIT_UAV_MAP = the fake UAV's survey of world_extra_t1adv (238 m at 3 m/s = 79 s)"
+}
