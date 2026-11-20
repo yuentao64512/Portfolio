@@ -220,6 +220,15 @@
     .tag-row { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .8rem; }
     .tag { display: inline-block; padding: .28rem .62rem; border-radius: 999px; font-size: .78rem; font-weight: 650; background: rgba(85,216,255,.09); border: 1px solid rgba(85,216,255,.2); color: #ccefff; }
 
+    .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; margin-top: 1.4rem; }
+    .status-card { padding: 1rem; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--line); }
+    .status-card h3 { margin: 0 0 .35rem; font-size: 1rem; }
+    .status-card p { color: var(--text-muted); font-size: .9rem; line-height: 1.5; }
+    .status-label { display: inline-flex; align-items: center; gap: .45rem; margin-bottom: .6rem; color: var(--green); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .status-label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+    .status-label.prototype { color: #ffd078; }
+    .status-links { margin-top: .5rem; }
+
     .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin: 1.25rem 0; }
     .metric { padding: .9rem; border-radius: 12px; background: rgba(85,216,255,.055); border: 1px solid rgba(85,216,255,.14); }
     .metric strong { display: block; color: #fff; font-size: 1.35rem; line-height: 1.2; }
@@ -283,6 +292,7 @@
       .project-card::before { font-size: 2rem; }
       .figure-grid { grid-template-columns: 1fr; }
       .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .status-grid { grid-template-columns: 1fr; }
       .project-figure img { height: auto; max-height: 440px; object-fit: cover; }
       .skill-row { align-items: flex-start; flex-direction: column; }
       .dot { width: 20px; }
@@ -297,6 +307,7 @@
   <nav>
     <ul>
       <li><a href="#about">About</a></li>
+      <li><a href="#status">Status</a></li>
       <li><a href="#project">Projects</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#contact">Contact</a></li>
@@ -316,8 +327,51 @@
       computer vision, embedded AI, simulation validation, and hardware-software integration.
     </p>
     <div class="hero-actions">
-      <a class="button primary" href="#project">Explore projects <span aria-hidden="true">↓</span></a>
-      <a class="button secondary" href="https://github.com/yuentao64512" target="_blank" rel="noopener">View GitHub <span aria-hidden="true">↗</span></a>
+      <a class="button primary" href="#project">Explore projects</a>
+      <a class="button secondary" href="https://github.com/yuentao64512" target="_blank" rel="noopener">View GitHub</a>
+    </div>
+  </section>
+
+  <!-- Current status -->
+  <section id="status">
+    <h2>Current Project Status</h2>
+    <p class="projects-intro">Active work and research prototypes, updated from the current source repositories.</p>
+    <div class="status-grid">
+      <article class="status-card">
+        <div class="status-label">Finished</div>
+        <h3>RobotX Actual Stack</h3>
+        <p>Physical UAV, USV, OCS, UI, robocommand and AGX perception source is now documented.</p>
+        <p class="status-links"><a href="https://github.com/yuentao64512/Portfolio/tree/main/RobotX-Projects/robotx-actual">Control stack</a> · <a href="https://github.com/yuentao64512/Portfolio/tree/main/cv/robotx-actual">CV stack</a></p>
+      </article>
+      <article class="status-card">
+        <div class="status-label">Ongoing</div>
+        <h3>SAFMC 2027</h3>
+        <p>High-speed multi-drone flocking development, building on the completed three-drone foundation.</p>
+      </article>
+      <article class="status-card">
+        <div class="status-label">Finished</div>
+        <h3>RobotX Simulation</h3>
+        <p>Completed Gazebo boat/drone mission rehearsal, MAVLink control and OCS workflow source.</p>
+        <p class="status-links"><a href="https://github.com/yuentao64512/Portfolio/tree/main/RobotX-Projects/simulation">View simulation source</a></p>
+      </article>
+      <article class="status-card">
+        <div class="status-label prototype">Research prototype</div>
+        <h3>Hospital Fall Detection</h3>
+        <p>Multi-person bed/floor context and fall-to-lying alert evaluation for fixed CCTV scenes.</p>
+        <p class="status-links"><a href="https://github.com/yuentao64512/Portfolio/tree/main/hospitall-fall-detection">View hospital project</a></p>
+      </article>
+      <article class="status-card">
+        <div class="status-label prototype">Research prototype</div>
+        <h3>Hiker Fall Detection</h3>
+        <p>Pose-sequence preparation, action training and recorded-video prediction evidence.</p>
+        <p class="status-links"><a href="https://github.com/yuentao64512/Portfolio/tree/main/Fall-Action-Project/hiker-fall-detection">View hiker project</a></p>
+      </article>
+      <article class="status-card">
+        <div class="status-label">Maintained</div>
+        <h3>CV Collection</h3>
+        <p>Reusable 5060 training pipelines and actual AGX RobotX deployment source.</p>
+        <p class="status-links"><a href="https://github.com/yuentao64512/Portfolio/tree/main/cv">Browse CV scripts</a></p>
+      </article>
     </div>
   </section>
 
@@ -326,62 +380,28 @@
     <h2>Projects</h2>
     <p class="projects-intro">A few highlights of what I’m building and contributing to.</p>
 
-    <!-- FWISH -->
-    <div class="project-card" id="fwish">
-      <div class="project-top">
-        <div>
-          <h3 class="project-title">FWISH — Water Takeoff Flying Craft</h3>
-          <div class="project-meta">
-            <strong>Status:</strong> Prototype (Model Complete) • <strong>Next:</strong> Flying prototype pending budget approval
-          </div>
-          <div class="tag-row">
-            <span class="tag">Systems</span>
-            <span class="tag">Prototype</span>
-            <span class="tag">Design</span>
-          </div>
-        </div>
-      </div>
-
-      <ul class="project-details">
-        <li><strong>Concept:</strong> A craft that can take off from water like a jet ski and transition into flight.</li>
-        <li><strong>Progress:</strong> Built physical prototypes for design validation and presentation.</li>
-        <li><strong>Next Steps:</strong> Develop the flying prototype once funding is approved (airframe + propulsion + control testing).</li>
-      </ul>
-
-      <div class="figure-grid">
-        <figure class="project-figure">
-          <img src="images/6307354255697841364.jpg" alt="FWISH 1:12 scaled 3D printed prototype">
-          <figcaption>FWISH prototype — 1:12 scaled-down 3D printed model.</figcaption>
-        </figure>
-
-        <figure class="project-figure">
-          <img src="images/6307354255697841365.jpg" alt="FWISH 1:1 foam fitted display model">
-          <figcaption>FWISH prototype — 1:1 foam-fitted display model.</figcaption>
-        </figure>
-      </div>
-    </div>
-
-    <!-- SAFMC -->
+    <!-- SAFMC 2027 -->
     <div class="project-card" id="safmc">
       <div class="project-top">
         <div>
-          <h3 class="project-title">SAFMC — Drone Swarm Flocking</h3>
+          <h3 class="project-title">SAFMC 2027 — High-Speed Drone Flocking</h3>
           <div class="project-meta">
-            <strong>Role:</strong> Autonomous Drone Programmer • <strong>Scope:</strong> 3-drone flocking from scratch • <strong>Status:</strong> Completed
+            <strong>Focus:</strong> High-speed multi-drone flocking • <strong>Status:</strong> Ongoing
           </div>
           <div class="tag-row">
             <span class="tag">Swarm</span>
             <span class="tag">Control</span>
             <span class="tag">Autonomy</span>
-            <span class="tag">Completed</span>
+            <span class="tag">Ongoing</span>
+            <span class="tag">High-Speed Flocking</span>
           </div>
         </div>
       </div>
 
       <ul class="project-details">
-        <li><strong>Challenge:</strong> Build autonomous behavior for a 3-drone team that could coordinate flocking, positioning, and validation in a controlled environment.</li>
-        <li><strong>Action:</strong> Developed and tested Python/ROS 2/MAVROS/MAVLink flight functions, integrated UWB indoor positioning with the flight controller, and processed UWB data for hover and navigation workflows.</li>
-        <li><strong>Result:</strong> Produced a tested autonomous drone pipeline for non-GPS positioning experiments, improving reliability through ROS 2 communication and flight-controller debugging.</li>
+        <li><strong>Current objective:</strong> Develop the 2027 high-speed flocking iteration and validate coordinated multi-drone behaviour.</li>
+        <li><strong>Foundation:</strong> Previously completed a three-drone pipeline using Python, ROS 2, MAVROS, MAVLink and UWB indoor positioning.</li>
+        <li><strong>Status:</strong> Ongoing development. Implementation and validation evidence will be added as the system matures.</li>
       </ul>
     </div>
 
@@ -391,10 +411,10 @@
         <div>
           <h3 class="project-title">RobotX — UAV Autonomy &amp; Multi-Robot Systems</h3>
           <div class="project-meta">
-            <strong>Role:</strong> Lead - Unmanned Aerial Vehicle (UAV) &bull; <strong>Status:</strong> Ongoing &bull; <strong>Timeline:</strong> Apr 2026 - Nov 2026
+            <strong>Role:</strong> Lead - Unmanned Aerial Vehicle (UAV) &bull; <strong>Status:</strong> Finished &bull; <strong>Timeline:</strong> Apr 2026 - Nov 2026
           </div>
           <div class="tag-row">
-            <span class="tag">Ongoing</span>
+            <span class="tag">Finished</span>
             <span class="tag">UAV Autonomy</span>
             <span class="tag">ROS 2</span>
             <span class="tag">MAVROS</span>
@@ -427,12 +447,16 @@
 
       <h3>Result</h3>
       <p>
-        The ongoing work is creating a deployable UAV autonomy stack that connects simulation,
-        perception, flight control, onboard compute, communications, and field validation into one mission-ready system.
+        The completed project connected simulation, perception, flight control, onboard compute, communications,
+        OCS integration, and the physical RobotX source stack into one documented system. Repository evidence records
+        the implemented workflows without claiming unverified competition-field performance.
       </p>
 
       <p>
-        <a href="RobotX-Projects/">View the documented RobotX drone vision code, training workflows, and detection cases.</a>
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/RobotX-Projects">View RobotX projects</a> ·
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/RobotX-Projects/robotx-actual">Actual control stack</a> ·
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/RobotX-Projects/simulation">Gazebo simulation</a> ·
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/cv/robotx-actual">Actual AGX perception source</a>
       </p>
 
       <h3>Development Evidence</h3>
@@ -509,7 +533,9 @@
       </p>
 
       <p>
-        <a href="Fall-Action-Project/">View the source code, model, evaluation reports, limitations, and setup guide.</a>
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/Fall-Action-Project">View the drone fall/action project</a> ·
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/Fall-Action-Project/hiker-fall-detection">Hiker fall detection</a> ·
+        <a href="https://github.com/yuentao64512/Portfolio/tree/main/hospitall-fall-detection">Hospital fall detection</a>
       </p>
 
       <div class="figure-grid">

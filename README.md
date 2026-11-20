@@ -14,17 +14,28 @@ View the portfolio here:
 
 [https://yuentao64512.github.io/Portfolio](https://yuentao64512.github.io/Portfolio)
 
+## Current Project Status
+
+| Project | Status | Current focus |
+| --- | --- | --- |
+| RobotX actual USV/UAV/OCS stack | Finished | Physical-system source integration across the Orin NX, AGX Orin, OCS, UI and robocommand |
+| RobotX Gazebo simulation | Finished | Boat/drone mission rehearsal, MAVLink control and OCS workflow validation |
+| SAFMC 2027 high-speed flocking | Ongoing | Developing the next high-speed multi-drone flocking iteration |
+| Hospital fall detection | Research prototype | Multi-person bed/floor context, tracking and fall-to-lying alert evaluation |
+| Hiker fall/action detection | Research prototype | Pose-sequence training, action classification and recorded-video validation |
+| CV training and deployment collection | Maintained | Reusable training, dataset-preparation and deployed RobotX perception source |
+
 ## Featured Projects
 
 ### RobotX - UAV Autonomy & Multi-Robot Systems
 
-**Status:** Ongoing<br>
+**Status:** Finished<br>
 **Role:** Lead - Unmanned Aerial Vehicle (UAV)<br>
 **Stack:** Python, YOLOv11, OpenCV, ROS 2, MAVROS, MAVLink, ArduPilot, Jetson Orin, serial radio
 
-Developing the aerial component of a multi-domain robotics platform involving aerial, marine, and underwater systems. The work includes Gazebo simulation, ROS 2/MAVROS flight control, ArduPilot/MAVLink integration, YOLOv11 perception on Jetson Orin, and communication pipelines between the UAV, ASV, and ground station.
+Developed the aerial component of a multi-domain robotics platform involving aerial, marine, and underwater systems. The work includes Gazebo simulation, ROS 2/MAVROS flight control, ArduPilot/MAVLink integration, YOLOv11 perception on Jetson Orin, and communication pipelines between the UAV, ASV, and ground station.
 
-The organized [RobotX drone vision projects](RobotX-Projects/) cover several aerial perception and control cases:
+The organized [RobotX projects](RobotX-Projects/) now include the [actual physical-system source](RobotX-Projects/robotx-actual/), [Gazebo simulation stack](RobotX-Projects/simulation/), and the earlier aerial perception and control cases:
 
 - Detecting green and orange/red buoys and boats from drone imagery.
 - Detecting blue, red, and green course markers from above.
@@ -33,6 +44,15 @@ The organized [RobotX drone vision projects](RobotX-Projects/) cover several aer
 - Converting camera detections to grid coordinates and transmitting mission data over a serial radio link.
 
 The collection separates [aerial buoy and boat training](RobotX-Projects/01-buoy-boat-training/), [marker training](RobotX-Projects/02-marker-training/), [training rejects](RobotX-Projects/03-training-rejects/), [drone surface inspection](RobotX-Projects/04-clean-dirty-inspection/), and [drone RC control](RobotX-Projects/05-drone-rc-control/) into documented, reusable project folders.
+
+The centralized [CV collection](cv/) contains GitHub-safe training and deployment scripts from the RTX 5060 and the actual RobotX AGX Orin perception stack. Runtime logs, credentials, private recordings, environments and generated model files are intentionally excluded.
+
+### SAFMC 2027 - High-Speed Drone Flocking
+
+**Status:** Ongoing<br>
+**Focus:** High-speed multi-drone flocking
+
+Developing the 2027 high-speed flocking iteration, building on the completed three-drone autonomy, ROS 2, MAVROS, MAVLink and UWB positioning foundation. Implementation and validation evidence will be added as the ongoing system matures.
 
 ### Drone Fall and Action Detection
 
@@ -45,6 +65,15 @@ The current subject-grouped baseline reports 84.1% accuracy, 85.2% falling-down 
 
 [View the Fall Action Project, evidence, limitations, and setup instructions](Fall-Action-Project/).
 
+### Hospital Fall Detection
+
+**Status:** Research prototype<br>
+**Stack:** Python, YOLO11 Pose, OpenCV, scikit-learn, multi-person tracking
+
+Extended the action-recognition work for fixed hospital CCTV scenes with bed/floor context regions, patient-location state, multi-person tracking, stitched synthetic scenarios, prediction evidence and unit-tested transition logic. This is development evidence rather than proof of clinical performance.
+
+[View the hospital source, reports, test media, models and limitations](hospitall-fall-detection/).
+
 ### Autonomous 3-Axis Robotic Crane System
 
 **Role:** Robotics Software / Autonomy Developer<br>
@@ -52,22 +81,18 @@ The current subject-grouped baseline reports 84.1% accuracy, 85.2% falling-down 
 
 Designed a vision-guided robotic crane workflow for logistics side pallet-loading. The system connects perception, AI inference, motion planning, and robotic control into an autonomous pick-and-place pipeline.
 
-### SAFMC - Drone Swarm Flocking
+### SAFMC - Three-Drone Flocking Foundation
 
 **Status:** Completed<br>
 **Role:** Autonomous Drone Programmer
 
-Built and tested autonomous drone flight functions using Python, ROS 2, MAVROS, and MAVLink. Integrated UWB indoor positioning with the flight controller to support non-GPS navigation experiments.
+Built and tested autonomous drone flight functions using Python, ROS 2, MAVROS, and MAVLink. Integrated UWB indoor positioning with the flight controller to support non-GPS navigation experiments. This completed work is the foundation for the ongoing SAFMC 2027 high-speed flocking project.
 
 ### SEP1 - Limo Autonomous Robot
 
 **Stack:** ROS, LIDAR, SLAM, computer vision
 
 Integrated ROS-based navigation, SLAM, and computer vision workflows on the AgileX Limo platform, including mapping, waypoint navigation, and object-detection experiments.
-
-### FWISH - Water Takeoff Flying Craft
-
-Prototype concept for a craft designed to take off from water and transition into flight. Current work includes scaled and full-size prototype models for design validation and presentation.
 
 ## Technical Focus
 
@@ -89,7 +114,11 @@ Portfolio/
 +-- launch_files/       # ROS launch configurations
 +-- python_files/       # Python scripts and experiments
 +-- RobotX-Projects/    # Aerial vision, detection training, and drone RC experiments
-+-- Fall-Action-Project/ # Aerial pose-based fall/action detection and alert prototype
++   +-- robotx-actual/  # Actual NX UAV/USV/OCS/UI/robocommand source
++   +-- simulation/     # Gazebo boat/drone and OCS simulation stack
++-- cv/                 # CV training scripts and actual AGX RobotX perception source
++-- Fall-Action-Project/ # Drone and hiker pose-based fall/action projects
++-- hospitall-fall-detection/ # Hospital CCTV fall-detection research prototype
 +-- turtlesim/          # ROS fundamentals and examples
 ```
 
